@@ -44,15 +44,13 @@ export const CONFIG = {
         { code: 'QAR', name: 'Qatari Riyal', icon: '117-currency-qarx.png' }
     ],
     
-    // أزواج العملات المفضلة للعرض
-    FAVORITE_PAIRS: [
-        { from: 'EUR', to: 'USD' },
-        { from: 'USD', to: 'EUR' },
-        { from: 'SAR', to: 'USD' },
-        { from: 'USD', to: 'SAR' },
-        { from: 'USD', to: 'CAD' },
+    // أزواج العملات المفضلة الافتراضية
+    DEFAULT_FAVORITE_PAIRS: [
         { from: 'USD', to: 'GBP' },
-        { from: 'USD', to: 'JPY' }
+        { from: 'USD', to: 'CAD' },
+        { from: 'USD', to: 'CHF' },
+        { from: 'CHF', to: 'USD' },
+        { from: 'USD', to: 'EUR' }
     ]
 };
 
@@ -72,8 +70,14 @@ export function getCurrencyIconConvert(code) {
     return `https://raw.githubusercontent.com/jamalkatabeuro-sketch/My-website/main/${info?.icon || '101-currency-usd.png'}`;
 }
 
-// الحصول على صورة العملة للأسعار
+// الحصول على صورة العملة للأسعار (بـ x)
 export function getCurrencyIconRates(code) {
     const info = getCurrencyInfoRates(code);
-    return `https://raw.githubusercontent.com/jamalkatabeuro-sketch/My-website/main/${info?.icon || '101-currency-usdx.png'}`;
+    if (info && info.icon) {
+        return `https://raw.githubusercontent.com/jamalkatabeuro-sketch/My-website/main/${info.icon}`;
+    }
+    
+    // إذا لم توجد صورة x، استخدم الصورة العادية
+    const convertInfo = getCurrencyInfoConvert(code);
+    return `https://raw.githubusercontent.com/jamalkatabeuro-sketch/My-website/main/${convertInfo?.icon || '101-currency-usd.png'}`;
 }
