@@ -1,6 +1,6 @@
 // App settings
 let appSettings = {
-    darkMode: 'on',
+    darkMode: 'off', // تغيير الافتراضي إلى off
     baseCurrency: 'USD',
     decimals: 4,
     notifications: true
@@ -66,6 +66,21 @@ function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--accent-color);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 10000;
+        animation: toastSlide 0.3s ease-out;
+        box-shadow: 0 8px 30px rgba(0, 122, 255, 0.3);
+    `;
     
     document.body.appendChild(toast);
     
@@ -111,7 +126,6 @@ export function initSettingsPage() {
             if (index === 0) {
                 // Rate app button
                 showToast('Thank you for rating!');
-                // Here you can open app store or rating page
             } else if (index === 1) {
                 // Terms and privacy button
                 showToast('Opening terms and privacy...');
