@@ -2,13 +2,34 @@ import { CONFIG, getCurrencyIconRates } from './config.js';
 import { getCacheInfo, fetchAllRates, getExchangeRate } from './converter.js';
 import storageManager from './storage.js';
 
-// الأزواج المطلوبة
-const REQUIRED_PAIRS = [
+// تخزين الأزواج المفضلة
+let favoritePairs = [
     { from: 'USD', to: 'EUR' },
     { from: 'USD', to: 'GBP' },
     { from: 'USD', to: 'CAD' },
     { from: 'USD', to: 'CHF' }
 ];
+
+// تحميل المفضلات
+export function loadFavorites() {
+    try {
+        const saved = localStorage.getItem('currencykik_favorites');
+        if (saved) {
+            favoritePairs = JSON.parse(saved);
+        }
+    } catch (error) {
+        console.error('Error loading favorites:', error);
+    }
+}
+
+// حفظ المفضلات
+function saveFavorites() {
+    try {
+        localStorage.setItem('currencykik_favorites', JSON.stringify(favoritePairs));
+    } catch (error) {
+        console.error('Error saving favorites:', error);
+    }
+}
 
 // عرض الأسعار
 export async function updateRatesDisplay() {
@@ -16,7 +37,7 @@ export async function updateRatesDisplay() {
     
     if (!ratesContainer) return;
     
-    ratesContainer.innerHTML = '<div class="loading">جاري التحميل...</div>';
+    ratesContainer.innerHTML = '<div class="loading">Loading...</div>';
     
     try {
         await fetchAllRates();
@@ -25,7 +46,20 @@ export async function updateRatesDisplay() {
         
         ratesContainer.innerHTML = '';
         
-        for (const pair of REQUIRED_PAIRS) {
+        if (favoritePairs.length === 0) {
+            ratesContainer.innerHTML = `
+                <div class="no-rates">
+                    <span class="icon">📊</span>
+                    <div>No currencies added</div>
+                    <div style="margin-top: 8px; font-size: 14px; color: var(--text-secondary);">
+                        Press + to add currencies
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        for (const pair of favoritePairs) {
             const rateItem = await createRateItem(pair.from, pair.to, rates);
             if (rateItem) {
                 ratesContainer.appendChild(rateItem);
@@ -33,8 +67,8 @@ export async function updateRatesDisplay() {
         }
         
     } catch (error) {
-        console.error('خطأ في تحميل الأسعار:', error);
-        ratesContainer.innerHTML = '<div class="error">فشل تحميل الأسعار</div>';
+        console.error('Error loading rates:', error);
+        ratesContainer.innerHTML = '<div class="error">Failed to load rates</div>';
     }
 }
 
@@ -52,27 +86,19 @@ async function createRateItem(from, to, rates) {
         
         const rate = currentRate ? currentRate.toFixed(4) : '---';
         
-        const fromIcon = await storageManager.cacheImage(getCurrencyIconRates(from), from);
-        const toIcon = await storageManager.cacheImage(getCurrencyIconRates(to), to);
-        
         item.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 40px; height: 40px; border-radius: 8px; overflow: hidden; background: var(--bg-secondary);">
-                        <img src="${fromIcon}" alt="${from}" loading="lazy" style="width: 100%; height: 100%; object-fit: contain; padding: 6px;">
-                    </div>
-                    <span style="font-size: 24px; color: var(--text-secondary);">=</span>
-                    <div style="width: 40px; height: 40px; border-radius: 8px; overflow: hidden; background: var(--bg-secondary);">
-                        <img src="${toIcon}" alt="${to}" loading="lazy" style="width: 100%; height: 100%; object-fit: contain; padding: 6px;">
-                    </div>
-                </div>
-                <div style="font-size: 22px; font-weight: 700; color: var(--text-primary);">
-                    ${from} = ${rate} ${to}
+            <div class="rate-content">
+                <div class="rate-value">
+                    <span>${from} = ${rate} ${to}</span>
                 </div>
             </div>
+            <button class="remove-rate-btn" data-from="${from}" data-to="${to}">×</button>
         `;
         
-        item.onclick = () => {
+        // حدث النقر للانتقال للمحول
+        item.onclick = (e) => {
+            if (e.target.closest('.remove-rate-btn')) return;
+            
             const currency1Select = document.getElementById('currency1');
             const currency2Select = document.getElementById('currency2');
             
@@ -93,10 +119,30 @@ async function createRateItem(from, to, rates) {
             }
         };
         
+        // حدث حذف الزوج
+        const removeBtn = item.querySelector('.remove-rate-btn');
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeFavorite(from, to);
+        };
+        
         return item;
     } catch (error) {
-        console.error('خطأ في إنشاء عنصر:', error);
+        console.error('Error creating rate item:', error);
         return null;
+    }
+}
+
+// إزالة من المفضلة
+function removeFavorite(from, to) {
+    const index = favoritePairs.findIndex(
+        pair => pair.from === from && pair.to === to
+    );
+    
+    if (index !== -1) {
+        favoritePairs.splice(index, 1);
+        saveFavorites();
+        updateRatesDisplay();
     }
 }
 
@@ -126,23 +172,177 @@ function updateConverterIcons(from, to) {
             }
         }
     } catch (error) {
-        console.error('خطأ في تحديث الأيقونات:', error);
+        console.error('Error updating icons:', error);
     }
 }
 
-// دوال المفضلة (مبسطة)
-export function loadFavorites() {
-    // لا شيء - نستخدم الأزواج الثابتة
-}
-
+// عرض نافذة إضافة عملات
 export function showAddCurrencyDialog() {
-    alert('هذه الخاصية غير متوفرة في النسخة الحالية');
+    const dialog = document.createElement('div');
+    dialog.className = 'dialog-overlay';
+    
+    const currenciesHTML = CONFIG.CURRENCIES_RATES.map(currency => 
+        `<option value="${currency.code}">${currency.code} - ${currency.name}</option>`
+    ).join('');
+    
+    dialog.innerHTML = `
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3>Add Currency</h3>
+                <button class="close-dialog">&times;</button>
+            </div>
+            <div class="dialog-body">
+                <div class="selection-group">
+                    <label>From currency:</label>
+                    <div class="selection-row">
+                        <select id="addFromCurrency" class="currency-select-dialog">
+                            ${currenciesHTML}
+                        </select>
+                        <div class="dialog-icon" id="dialogIconFrom">
+                            <img src="${getCurrencyIconRates('USD')}" alt="From">
+                        </div>
+                    </div>
+                </div>
+                <div class="selection-group">
+                    <label>To currency:</label>
+                    <div class="selection-row">
+                        <select id="addToCurrency" class="currency-select-dialog">
+                            ${currenciesHTML}
+                        </select>
+                        <div class="dialog-icon" id="dialogIconTo">
+                            <img src="${getCurrencyIconRates('EUR')}" alt="To">
+                        </div>
+                    </div>
+                </div>
+                <div class="dialog-actions">
+                    <button class="dialog-btn cancel-btn">Cancel</button>
+                    <button class="dialog-btn add-btn-dialog">Add</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    // تحديث الأيقونات
+    const fromSelect = dialog.querySelector('#addFromCurrency');
+    const toSelect = dialog.querySelector('#addToCurrency');
+    const iconFrom = dialog.querySelector('#dialogIconFrom img');
+    const iconTo = dialog.querySelector('#dialogIconTo img');
+    
+    fromSelect.addEventListener('change', () => {
+        iconFrom.src = getCurrencyIconRates(fromSelect.value);
+    });
+    
+    toSelect.addEventListener('change', () => {
+        iconTo.src = getCurrencyIconRates(toSelect.value);
+    });
+    
+    // إغلاق النافذة
+    const closeDialog = () => {
+        document.body.removeChild(dialog);
+        document.removeEventListener('keydown', escapeHandler);
+    };
+    
+    const closeBtn = dialog.querySelector('.close-dialog');
+    const cancelBtn = dialog.querySelector('.cancel-btn');
+    
+    closeBtn.onclick = closeDialog;
+    cancelBtn.onclick = closeDialog;
+    dialog.onclick = (e) => e.target === dialog && closeDialog();
+    
+    // إضافة العملة
+    const addBtn = dialog.querySelector('.add-btn-dialog');
+    addBtn.onclick = () => {
+        const from = fromSelect.value;
+        const to = toSelect.value;
+        
+        if (from && to && from !== to) {
+            const exists = favoritePairs.some(
+                pair => pair.from === from && pair.to === to
+            );
+            
+            if (!exists) {
+                favoritePairs.push({ from, to });
+                saveFavorites();
+                updateRatesDisplay();
+                closeDialog();
+            } else {
+                alert('This currency pair already exists!');
+            }
+        } else {
+            alert('Please select two different currencies');
+        }
+    };
+    
+    // حدث Escape
+    const escapeHandler = (e) => e.key === 'Escape' && closeDialog();
+    document.addEventListener('keydown', escapeHandler);
 }
 
+// عرض نافذة حذف عملات
 export function showDeleteCurrencyDialog() {
-    alert('هذه الخاصية غير متوفرة في النسخة الحالية');
+    const dialog = document.createElement('div');
+    dialog.className = 'dialog-overlay';
+    
+    dialog.innerHTML = `
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3>Delete All</h3>
+                <button class="close-dialog">&times;</button>
+            </div>
+            <div class="dialog-body">
+                <div style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px; text-align: center;">
+                    Are you sure you want to delete all currency pairs?
+                </div>
+                <div class="dialog-actions">
+                    <button class="dialog-btn cancel-btn">Cancel</button>
+                    <button class="dialog-btn delete-all-btn">Delete All</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    const closeDialog = () => {
+        document.body.removeChild(dialog);
+        document.removeEventListener('keydown', escapeHandler);
+    };
+    
+    const closeBtn = dialog.querySelector('.close-dialog');
+    const cancelBtn = dialog.querySelector('.cancel-btn');
+    
+    closeBtn.onclick = closeDialog;
+    cancelBtn.onclick = closeDialog;
+    dialog.onclick = (e) => e.target === dialog && closeDialog();
+    
+    // حذف الكل
+    const deleteAllBtn = dialog.querySelector('.delete-all-btn');
+    deleteAllBtn.onclick = () => {
+        favoritePairs = [];
+        saveFavorites();
+        updateRatesDisplay();
+        closeDialog();
+    };
+    
+    // حدث Escape
+    const escapeHandler = (e) => e.key === 'Escape' && closeDialog();
+    document.addEventListener('keydown', escapeHandler);
 }
 
-export function toggleFavorite() {
-    // لا شيء
+// إضافة/إزالة من المفضلة
+export function toggleFavorite(from, to) {
+    const index = favoritePairs.findIndex(
+        pair => pair.from === from && pair.to === to
+    );
+    
+    if (index === -1) {
+        favoritePairs.push({ from, to });
+    } else {
+        favoritePairs.splice(index, 1);
+    }
+    
+    saveFavorites();
+    updateRatesDisplay();
 }
