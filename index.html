@@ -61,8 +61,12 @@
             <div class="rates-header">
                 <h1 class="page-title">Rates</h1>
                 <div class="rates-actions">
-                    <button class="action-btn delete" id="deleteFavoriteBtn" title="Delete currencies">-</button>
-                    <button class="action-btn" id="addFavoriteBtn" title="Add currency">+</button>
+                    <button class="action-btn delete" id="deleteFavoriteBtn" title="Delete all currencies">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M6 6L18 18M6 18L18 6" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </button>
+                    <button class="add-rate-btn" id="addFavoriteBtn" title="Add currency">+</button>
                 </div>
             </div>
             
@@ -79,7 +83,7 @@
                 <h3 class="section-title">Dark mode</h3>
                 <div class="dark-mode-buttons">
                     <button class="dark-mode-btn" data-mode="off">Off</button>
-                    <button class="dark-mode-btn active" data-mode="on">On</button>
+                    <button class="dark-mode-btn" data-mode="on">On</button>
                     <button class="dark-mode-btn" data-mode="auto">Auto</button>
                 </div>
             </div>
@@ -127,23 +131,6 @@
                     <path d="M12 1v6m0 6v6M23 12h-6m-6 0H1" stroke="currentColor" stroke-width="2"/>
                 </svg>
                 <span>Settings</span>
-            </button>
-        </nav>
-    </div>
-
-    <script type="module" src="app.js"></script>
-</body>
-</html>idth="2"/>
-                </svg>
-                <span>Convert</span>
-            </button>
-            
-            <button class="nav-btn" id="navRates" onclick="showPage('rates')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M3 3v18h18" stroke="currentColor" stroke-width="2"/>
-                    <path d="M6 15l4-4 3 3 5-7" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                <span>Rates</span>
             </button>
         </nav>
     </div>
