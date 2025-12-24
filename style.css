@@ -286,13 +286,17 @@ body {
 
 .rate-item {
     background-color: var(--bg-card);
-    padding: 20px;
+    padding: 18px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     transition: all 0.2s;
     border-bottom: 1px solid var(--border-color);
     position: relative;
+}
+
+.rate-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .rate-item:last-child {
@@ -308,19 +312,71 @@ body {
     border-radius: 16px;
 }
 
-.rate-content {
+.rate-item-left {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     flex: 1;
+    gap: 15px;
 }
 
-.rate-value {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text-primary);
+/* أنماط الأيقونات في صفحة الأسعار */
+.currency-icons-double {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-right: 10px;
+}
+
+.currency-icon-small {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.currency-icon-small img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.equals-icon {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin: 0 4px;
+}
+
+.rate-content {
+    flex: 1;
+}
+
+.rate-value-with-icons {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.currency-code {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.equals-sign {
+    color: var(--text-secondary);
+    margin: 0 4px;
+}
+
+.rate-number {
+    font-weight: 700;
+    color: var(--accent-color);
 }
 
 .remove-rate-btn {
@@ -364,6 +420,35 @@ body {
     display: block;
 }
 
+/* Chart Styles */
+.chart-container {
+    width: 80px;
+    height: 40px;
+    margin-left: auto;
+    position: relative;
+}
+
+.mini-chart {
+    width: 100%;
+    height: 100%;
+}
+
+.chart-up {
+    color: var(--success-color);
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 2px;
+}
+
+.chart-down {
+    color: var(--error-color);
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 2px;
+}
+
 /* Settings Page */
 .settings-section {
     background-color: var(--bg-card);
@@ -381,6 +466,37 @@ body {
     margin-bottom: 20px;
 }
 
+/* Language Buttons */
+.language-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.language-btn {
+    flex: 1;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.language-btn.active {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+.language-btn:hover:not(.active) {
+    background-color: var(--border-color);
+}
+
+/* Dark Mode Buttons */
 .dark-mode-buttons {
     display: flex;
     gap: 12px;
@@ -410,6 +526,7 @@ body {
     background-color: var(--border-color);
 }
 
+/* General Settings */
 .setting-item {
     display: flex;
     justify-content: space-between;
@@ -730,8 +847,18 @@ body {
         font-size: 40px;
     }
     
-    .rate-value {
-        font-size: 20px;
+    .rate-value-with-icons {
+        font-size: 16px;
+    }
+    
+    .currency-icon-small {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .currency-icon-small img {
+        width: 20px;
+        height: 20px;
     }
     
     .bottom-nav {
@@ -755,5 +882,21 @@ body {
     .action-btn.delete svg {
         width: 18px;
         height: 18px;
+    }
+    
+    .chart-container {
+        width: 70px;
+        height: 35px;
+    }
+    
+    .dark-mode-buttons,
+    .language-buttons {
+        gap: 8px;
+    }
+    
+    .dark-mode-btn,
+    .language-btn {
+        padding: 14px 12px;
+        font-size: 14px;
     }
 }
