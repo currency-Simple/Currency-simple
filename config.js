@@ -44,13 +44,12 @@ export const CONFIG = {
         { code: 'QAR', name: 'Qatari Riyal', icon: '117-currency-qarx.png' }
     ],
     
-    // أزواج العملات المفضلة الافتراضية
+    // أزواج العملات المفضلة الافتراضية (العملات المطلوبة فقط)
     DEFAULT_FAVORITE_PAIRS: [
+        { from: 'USD', to: 'EUR' },
         { from: 'USD', to: 'GBP' },
         { from: 'USD', to: 'CAD' },
-        { from: 'USD', to: 'CHF' },
-        { from: 'CHF', to: 'USD' },
-        { from: 'USD', to: 'EUR' }
+        { from: 'USD', to: 'CHF' }
     ]
 };
 
