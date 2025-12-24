@@ -4,11 +4,10 @@ import storageManager from './storage.js';
 
 // تخزين الأزواج المفضلة
 let favoritePairs = [
+    { from: 'USD', to: 'EUR' },
     { from: 'USD', to: 'GBP' },
     { from: 'USD', to: 'CAD' },
-    { from: 'USD', to: 'CHF' },
-    { from: 'CHF', to: 'USD' },
-    { from: 'USD', to: 'EUR' }
+    { from: 'USD', to: 'CHF' }
 ];
 
 // تحميل المفضلات
@@ -91,9 +90,6 @@ async function createRateItem(from, to, rates) {
         const fromIcon = await storageManager.cacheImage(getCurrencyIconRates(from), from);
         const toIcon = await storageManager.cacheImage(getCurrencyIconRates(to), to);
         
-        // جلب بيانات الـ Chart
-        const chartData = await fetchChartData(from, to);
-        
         item.innerHTML = `
             <div class="rate-item-left">
                 <div class="currency-icons-double">
@@ -113,7 +109,6 @@ async function createRateItem(from, to, rates) {
                         <span class="currency-code">${to}</span>
                     </div>
                 </div>
-                ${chartData.html || ''}
             </div>
             <button class="remove-rate-btn" data-from="${from}" data-to="${to}">×</button>
         `;
