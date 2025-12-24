@@ -73,6 +73,12 @@ function initElements() {
     rateDisplay = document.getElementById('rateDisplay');
     icon1 = document.getElementById('icon1');
     icon2 = document.getElementById('icon2');
+    
+    // إخفاء أزرار المفضلة
+    const addBtn = document.getElementById('addFavoriteBtn');
+    const deleteBtn = document.getElementById('deleteFavoriteBtn');
+    if (addBtn) addBtn.style.display = 'none';
+    if (deleteBtn) deleteBtn.style.display = 'none';
 }
 
 // ملء قوائم العملات (للمحول)
@@ -154,10 +160,6 @@ function initEvents() {
     document.getElementById('navSettings')?.addEventListener('click', () => showPage('settings'));
     document.getElementById('navConvert')?.addEventListener('click', () => showPage('convert'));
     document.getElementById('navRates')?.addEventListener('click', () => showPage('rates'));
-    
-    // أزرار المفضلة
-    document.getElementById('addFavoriteBtn')?.addEventListener('click', showAddCurrencyDialog);
-    document.getElementById('deleteFavoriteBtn')?.addEventListener('click', showDeleteCurrencyDialog);
 }
 
 // تنفيذ التحويل
