@@ -87,7 +87,7 @@ async function createRateItem(from, to, rates) {
         
         const rate = currentRate ? currentRate.toFixed(4) : '---';
         
-        // تحميل الأيقونات - باستخدام الإصدار x للصور
+        // تحميل الأيقونات باستخدام الإصدار x للصور
         const fromIcon = await storageManager.cacheImage(getCurrencyIconRates(from), from);
         const toIcon = await storageManager.cacheImage(getCurrencyIconRates(to), to);
         
@@ -169,7 +169,7 @@ function removeFavorite(from, to) {
     }
 }
 
-// تحديث الأيقونات
+// تحديث الأيقونات في المحول
 function updateConverterIcons(from, to) {
     try {
         const icon1 = document.getElementById('icon1');
