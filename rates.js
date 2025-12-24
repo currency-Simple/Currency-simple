@@ -1,13 +1,14 @@
 import { CONFIG, getCurrencyIconRates } from './config.js';
-import { getCacheInfo, fetchAllRates, getExchangeRate } from './converter.js';
+import { getCacheInfo, fetchAllRates, getExchangeRate, fetchChartData } from './converter.js';
 import storageManager from './storage.js';
 
 // تخزين الأزواج المفضلة
 let favoritePairs = [
-    { from: 'USD', to: 'EUR' },
     { from: 'USD', to: 'GBP' },
     { from: 'USD', to: 'CAD' },
-    { from: 'USD', to: 'CHF' }
+    { from: 'USD', to: 'CHF' },
+    { from: 'CHF', to: 'USD' },
+    { from: 'USD', to: 'EUR' }
 ];
 
 // تحميل المفضلات
@@ -72,7 +73,7 @@ export async function updateRatesDisplay() {
     }
 }
 
-// إنشاء عنصر سعر
+// إنشاء عنصر سعر مع الأيقونات والـ Chart
 async function createRateItem(from, to, rates) {
     try {
         const item = document.createElement('div');
@@ -86,11 +87,33 @@ async function createRateItem(from, to, rates) {
         
         const rate = currentRate ? currentRate.toFixed(4) : '---';
         
+        // تحميل الأيقونات - باستخدام الإصدار x للصور
+        const fromIcon = await storageManager.cacheImage(getCurrencyIconRates(from), from);
+        const toIcon = await storageManager.cacheImage(getCurrencyIconRates(to), to);
+        
+        // جلب بيانات الـ Chart
+        const chartData = await fetchChartData(from, to);
+        
         item.innerHTML = `
-            <div class="rate-content">
-                <div class="rate-value">
-                    <span>${from} = ${rate} ${to}</span>
+            <div class="rate-item-left">
+                <div class="currency-icons-double">
+                    <div class="currency-icon-small">
+                        <img src="${fromIcon}" alt="${from}" class="currency-flag">
+                    </div>
+                    <span class="equals-icon">=</span>
+                    <div class="currency-icon-small">
+                        <img src="${toIcon}" alt="${to}" class="currency-flag">
+                    </div>
                 </div>
+                <div class="rate-content">
+                    <div class="rate-value-with-icons">
+                        <span class="currency-code">${from}</span>
+                        <span class="equals-sign">=</span>
+                        <span class="rate-number">${rate}</span>
+                        <span class="currency-code">${to}</span>
+                    </div>
+                </div>
+                ${chartData.html || ''}
             </div>
             <button class="remove-rate-btn" data-from="${from}" data-to="${to}">×</button>
         `;
