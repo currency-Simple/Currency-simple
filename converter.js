@@ -22,12 +22,7 @@ export async function fetchAllRates() {
         console.log('جارٍ جلب أسعار جديدة من API...');
         
         // الأزواج المطلوبة للعرض
-        const requiredPairs = [
-            { from: 'USD', to: 'EUR' },
-            { from: 'USD', to: 'GBP' },
-            { from: 'USD', to: 'CAD' },
-            { from: 'USD', to: 'CHF' }
-        ];
+        const requiredPairs = CONFIG.DEFAULT_FAVORITE_PAIRS;
 
         const rates = {};
         
