@@ -5,62 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Currency Converter</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* إضافات للتصحيح */
-        .debug-panel {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: #007aff;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 14px;
-            z-index: 9999;
-            max-width: 300px;
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
-            border: 2px solid white;
-        }
-        
-        .debug-status {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .status-ok {
-            color: #34c759;
-        }
-        
-        .status-error {
-            color: #ff3b30;
-        }
-        
-        .click-test {
-            position: fixed;
-            bottom: 100px;
-            right: 10px;
-            background: #34c759;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            z-index: 9998;
-            font-weight: bold;
-        }
-    </style>
 </head>
 <body>
-    <!-- لوحة التصحيح -->
-    <div class="debug-panel" id="debugPanel">
-        <div class="debug-status" id="debugStatus">⚡ جار التحميل...</div>
-        <div id="debugDetails"></div>
-    </div>
-    
-    <!-- زر اختبار النقر -->
-    <div class="click-test" id="clickTestBtn" onclick="testClick()">
-        🔍 اختبار النقر
-    </div>
-
     <div class="app-container">
         <!-- Convert Page -->
         <div id="convertPage" class="page active">
@@ -72,7 +18,7 @@
                     <input type="number" id="amount1" class="amount-input" value="1000" placeholder="0" min="0" step="0.01">
                     <div class="currency-selector">
                         <select id="currency1" class="currency-select">
-                            <!-- سيتم ملؤها فوراً -->
+                            <!-- سيتم ملؤها بالجافاسكريبت -->
                         </select>
                         <div class="currency-icon" id="icon1">
                             <img src="https://raw.githubusercontent.com/jamalkatabeuro-sketch/My-website/main/101-currency-usd.png" alt="USD">
@@ -95,7 +41,7 @@
                     <input type="number" id="amount2" class="amount-input" value="0" readonly placeholder="0">
                     <div class="currency-selector">
                         <select id="currency2" class="currency-select">
-                            <!-- سيتم ملؤها فوراً -->
+                            <!-- سيتم ملؤها بالجافاسكريبت -->
                         </select>
                         <div class="currency-icon" id="icon2">
                             <img src="https://raw.githubusercontent.com/jamalkatabeuro-sketch/My-website/main/121-currency-sar.png" alt="SAR">
@@ -125,7 +71,7 @@
             </div>
             
             <div id="ratesContainer" class="rates-list">
-                <div class="loading">Loading currency rates...</div>
+                <!-- سيتم ملؤها بالجافاسكريبت -->
             </div>
         </div>
 
@@ -196,52 +142,129 @@
         </nav>
     </div>
 
-    <!-- كود JavaScript الفوري -->
+    <!-- ملف JavaScript مبسط -->
     <script>
-        // تحديث لوحة التصحيح
-        function updateDebugInfo(message, type = 'info') {
-            const debugPanel = document.getElementById('debugPanel');
-            const debugStatus = document.getElementById('debugStatus');
-            const debugDetails = document.getElementById('debugDetails');
+        console.log('🚀 بدء تشغيل محول العملات');
+        
+        // العملات الافتراضية مقابل USD
+        const usdRates = {
+            'EUR': 0.92,
+            'GBP': 0.78,
+            'JPY': 150,
+            'SAR': 3.75,
+            'AED': 3.67,
+            'CAD': 1.37,
+            'AUD': 1.52,
+            'CHF': 0.88,
+            'CNY': 7.25,
+            'INR': 83,
+            'BRL': 5.10,
+            'MXN': 17.00,
+            'KRW': 1350,
+            'RUB': 91.00
+        };
+
+        // العملات المتاحة
+        const availableCurrencies = [
+            { code: 'USD', name: 'US Dollar', icon: 'usd' },
+            { code: 'EUR', name: 'Euro', icon: 'eur' },
+            { code: 'GBP', name: 'British Pound', icon: 'gbp' },
+            { code: 'JPY', name: 'Japanese Yen', icon: 'jpy' },
+            { code: 'SAR', name: 'Saudi Riyal', icon: 'sar' },
+            { code: 'AED', name: 'UAE Dirham', icon: 'aed' },
+            { code: 'CAD', name: 'Canadian Dollar', icon: 'cad' },
+            { code: 'AUD', name: 'Australian Dollar', icon: 'aud' },
+            { code: 'CHF', name: 'Swiss Franc', icon: 'chf' },
+            { code: 'CNY', name: 'Chinese Yuan', icon: 'cny' },
+            { code: 'INR', name: 'Indian Rupee', icon: 'inr' }
+        ];
+
+        // تهيئة التطبيق
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 الصفحة محملة');
             
-            if (!debugPanel) return;
+            // 1. تعبئة قوائم العملات
+            populateCurrencySelects();
             
-            const time = new Date().toLocaleTimeString();
-            const newMessage = `[${time}] ${message}`;
+            // 2. تهيئة الأحداث
+            initEvents();
             
-            console.log(newMessage);
+            // 3. تحميل العملات المفضلة
+            loadFavoriteRates();
             
-            if (debugDetails) {
-                const p = document.createElement('div');
-                p.textContent = newMessage;
-                p.style.fontSize = '12px';
-                p.style.marginTop = '3px';
-                p.style.color = type === 'error' ? '#ff3b30' : 
-                               type === 'success' ? '#34c759' : 'white';
-                debugDetails.appendChild(p);
+            // 4. التحويل الأولي
+            performConversion();
+            
+            console.log('✅ التطبيق جاهز');
+        });
+
+        // تعبئة قوائم العملات
+        function populateCurrencySelects() {
+            const select1 = document.getElementById('currency1');
+            const select2 = document.getElementById('currency2');
+            
+            if (!select1 || !select2) return;
+            
+            // تنظيف القوائم
+            select1.innerHTML = '';
+            select2.innerHTML = '';
+            
+            // إضافة العملات
+            availableCurrencies.forEach(currency => {
+                const option1 = document.createElement('option');
+                option1.value = currency.code;
+                option1.textContent = `${currency.code} - ${currency.name}`;
                 
-                // الاحتفاظ بـ 5 رسائل فقط
-                const messages = debugDetails.children;
-                if (messages.length > 5) {
-                    debugDetails.removeChild(messages[0]);
-                }
-            }
+                const option2 = document.createElement('option');
+                option2.value = currency.code;
+                option2.textContent = `${currency.code} - ${currency.name}`;
+                
+                select1.appendChild(option1);
+                select2.appendChild(option2);
+            });
+            
+            // تعيين القيم الافتراضية
+            select1.value = 'USD';
+            select2.value = 'SAR';
         }
 
-        // اختبار النقر
-        function testClick() {
-            updateDebugInfo('✅ زر الاختبار تم النقر عليه', 'success');
+        // تهيئة الأحداث
+        function initEvents() {
+            // زر التبديل
+            const swapBtn = document.getElementById('swapBtn');
+            if (swapBtn) {
+                swapBtn.addEventListener('click', swapCurrencies);
+            }
             
-            // اختبار جميع الأزرار
-            const buttons = document.querySelectorAll('button');
-            updateDebugInfo(`عدد الأزرار: ${buttons.length}`, 'info');
+            // أزرار التنقل
+            document.getElementById('navRates')?.addEventListener('click', () => showPage('rates'));
+            document.getElementById('navConvert')?.addEventListener('click', () => showPage('convert'));
+            document.getElementById('navSettings')?.addEventListener('click', () => showPage('settings'));
             
-            buttons.forEach((btn, index) => {
-                updateDebugInfo(`زر ${index + 1}: ${btn.id || btn.className}`, 'info');
+            // أزرار المفضلة
+            document.getElementById('addFavoriteBtn')?.addEventListener('click', showAddCurrencyDialog);
+            document.getElementById('deleteFavoriteBtn')?.addEventListener('click', showDeleteCurrencyDialog);
+            
+            // حقل الإدخال
+            const amount1 = document.getElementById('amount1');
+            if (amount1) {
+                amount1.addEventListener('input', performConversion);
+            }
+            
+            // قوائم العملات
+            const currency1 = document.getElementById('currency1');
+            const currency2 = document.getElementById('currency2');
+            
+            if (currency1) currency1.addEventListener('change', performConversion);
+            if (currency2) currency2.addEventListener('change', performConversion);
+            
+            // أزرار الإعدادات
+            document.getElementById('termsBtn')?.addEventListener('click', () => {
+                alert('شروط الخصوصية');
             });
         }
 
-        // وظيفة التحويل الأساسية
+        // تنفيذ التحويل
         function performConversion() {
             const amount1 = document.getElementById('amount1');
             const amount2 = document.getElementById('amount2');
@@ -249,10 +272,7 @@
             const currency2 = document.getElementById('currency2');
             const rateDisplay = document.getElementById('rateDisplay');
             
-            if (!amount1 || !amount2 || !currency1 || !currency2) {
-                updateDebugInfo('❌ عناصر التحويل غير موجودة', 'error');
-                return;
-            }
+            if (!amount1 || !amount2 || !currency1 || !currency2) return;
             
             const amount = parseFloat(amount1.value);
             const from = currency1.value;
@@ -263,36 +283,37 @@
                 return;
             }
             
-            // أسعار افتراضية
-            const rates = {
-                'USD': { 'EUR': 0.92, 'GBP': 0.78, 'SAR': 3.75, 'CAD': 1.37, 'CHF': 0.88, 'JPY': 150 },
-                'EUR': { 'USD': 1.09, 'GBP': 0.85, 'SAR': 4.10, 'CAD': 1.49, 'CHF': 0.96, 'JPY': 163 },
-                'GBP': { 'USD': 1.28, 'EUR': 1.18, 'SAR': 4.80, 'CAD': 1.75, 'CHF': 1.13, 'JPY': 192 },
-                'SAR': { 'USD': 0.27, 'EUR': 0.24, 'GBP': 0.21, 'CAD': 0.36, 'CHF': 0.23, 'JPY': 40 },
-                'CAD': { 'USD': 0.73, 'EUR': 0.67, 'GBP': 0.57, 'SAR': 2.74, 'CHF': 0.64, 'JPY': 110 },
-                'CHF': { 'USD': 1.14, 'EUR': 1.04, 'GBP': 0.88, 'SAR': 4.27, 'CAD': 1.56, 'JPY': 171 },
-                'JPY': { 'USD': 0.0067, 'EUR': 0.0061, 'GBP': 0.0052, 'SAR': 0.025, 'CAD': 0.0091, 'CHF': 0.0058 }
-            };
-            
-            let rate = 1;
-            if (from === to) {
-                rate = 1;
-            } else if (rates[from] && rates[from][to]) {
-                rate = rates[from][to];
-            } else if (rates[to] && rates[to][from]) {
-                rate = 1 / rates[to][from];
-            } else {
-                rate = 3.75; // سعر افتراضي
-            }
-            
+            const rate = getExchangeRate(from, to);
             const convertedAmount = amount * rate;
+            
             amount2.value = convertedAmount.toFixed(2);
             
             if (rateDisplay) {
                 rateDisplay.innerHTML = `<span>${from} = ${rate.toFixed(4)} ${to}</span> at the mid-market 1 rate`;
             }
+        }
+
+        // الحصول على سعر الصرف
+        function getExchangeRate(from, to) {
+            if (from === to) return 1;
             
-            updateDebugInfo(`💰 تحويل: ${amount} ${from} → ${convertedAmount.toFixed(2)} ${to}`, 'success');
+            // إذا كان من USD إلى عملة أخرى
+            if (from === 'USD' && usdRates[to]) {
+                return usdRates[to];
+            }
+            
+            // إذا كان من عملة أخرى إلى USD
+            if (to === 'USD' && usdRates[from]) {
+                return 1 / usdRates[from];
+            }
+            
+            // إذا كان بين عملتين غير USD
+            if (usdRates[from] && usdRates[to]) {
+                return usdRates[to] / usdRates[from];
+            }
+            
+            // سعر افتراضي
+            return 3.75;
         }
 
         // تبديل العملات
@@ -302,10 +323,7 @@
             const amount1 = document.getElementById('amount1');
             const amount2 = document.getElementById('amount2');
             
-            if (!currency1 || !currency2 || !amount1 || !amount2) {
-                updateDebugInfo('❌ عناصر التبديل غير موجودة', 'error');
-                return;
-            }
+            if (!currency1 || !currency2 || !amount1 || !amount2) return;
             
             const tempCurrency = currency1.value;
             const tempAmount = amount1.value;
@@ -316,11 +334,10 @@
             amount1.value = amount2.value;
             amount2.value = tempAmount;
             
-            updateDebugInfo('🔄 تم تبديل العملات', 'success');
             performConversion();
         }
 
-        // عرض صفحة معينة
+        // عرض صفحة
         function showPage(page) {
             // إخفاء جميع الصفحات
             document.querySelectorAll('.page').forEach(p => {
@@ -344,256 +361,164 @@
                 navBtn.classList.add('active');
             }
             
-            updateDebugInfo(`📄 تم عرض صفحة: ${page}`, 'success');
+            // إذا كانت صفحة الأسعار، قم بتحديثها
+            if (page === 'rates') {
+                loadFavoriteRates();
+            }
         }
 
-        // تعبئة قوائم العملات
-        function populateCurrencySelects() {
-            const currencies = [
-                { code: 'USD', name: 'US Dollar' },
-                { code: 'EUR', name: 'Euro' },
-                { code: 'GBP', name: 'British Pound' },
-                { code: 'JPY', name: 'Japanese Yen' },
-                { code: 'SAR', name: 'Saudi Riyal' },
-                { code: 'AED', name: 'UAE Dirham' },
-                { code: 'CAD', name: 'Canadian Dollar' },
-                { code: 'AUD', name: 'Australian Dollar' },
-                { code: 'CHF', name: 'Swiss Franc' },
-                { code: 'CNY', name: 'Chinese Yuan' },
-                { code: 'INR', name: 'Indian Rupee' }
+        // تحميل الأسعار المفضلة
+        function loadFavoriteRates() {
+            const ratesContainer = document.getElementById('ratesContainer');
+            if (!ratesContainer) return;
+            
+            ratesContainer.innerHTML = '';
+            
+            // العملات المفضلة الافتراضية (جميعها مقابل USD)
+            const favoritePairs = [
+                { from: 'USD', to: 'EUR' },
+                { from: 'USD', to: 'GBP' },
+                { from: 'USD', to: 'JPY' },
+                { from: 'USD', to: 'SAR' },
+                { from: 'USD', to: 'AED' },
+                { from: 'USD', to: 'CAD' },
+                { from: 'USD', to: 'AUD' },
+                { from: 'USD', to: 'CHF' },
+                { from: 'USD', to: 'CNY' },
+                { from: 'USD', to: 'INR' }
             ];
             
-            const select1 = document.getElementById('currency1');
-            const select2 = document.getElementById('currency2');
-            
-            if (select1 && select2) {
-                // تنظيف أولاً
-                select1.innerHTML = '';
-                select2.innerHTML = '';
-                
-                // إضافة الخيارات
-                currencies.forEach(currency => {
-                    const option1 = document.createElement('option');
-                    option1.value = currency.code;
-                    option1.textContent = `${currency.code} - ${currency.name}`;
-                    
-                    const option2 = document.createElement('option');
-                    option2.value = currency.code;
-                    option2.textContent = `${currency.code} - ${currency.name}`;
-                    
-                    select1.appendChild(option1);
-                    select2.appendChild(option2);
-                });
-                
-                // تعيين القيم الافتراضية
-                select1.value = 'USD';
-                select2.value = 'SAR';
-                
-                updateDebugInfo('✅ تم تعبئة قوائم العملات', 'success');
-            }
+            favoritePairs.forEach(pair => {
+                const rate = getExchangeRate(pair.from, pair.to);
+                const rateItem = createRateItem(pair.from, pair.to, rate);
+                ratesContainer.appendChild(rateItem);
+            });
         }
 
-        // تهيئة جميع الأحداث
-        function initAllEvents() {
-            updateDebugInfo('🔄 بدء تهيئة الأحداث...', 'info');
+        // إنشاء عنصر سعر
+        function createRateItem(from, to, rate) {
+            const item = document.createElement('div');
+            item.className = 'rate-item';
             
-            // 1. زر التبديل
-            const swapBtn = document.getElementById('swapBtn');
-            if (swapBtn) {
-                swapBtn.addEventListener('click', swapCurrencies);
-                updateDebugInfo('✅ تم إضافة حدث لزر التبديل', 'success');
-            }
+            item.innerHTML = `
+                <div class="rate-item-left">
+                    <div class="currency-icons-double">
+                        <div class="currency-icon-small">
+                            <span class="currency-symbol">${from}</span>
+                        </div>
+                        <span class="equals-icon">=</span>
+                        <div class="currency-icon-small">
+                            <span class="currency-symbol">${to}</span>
+                        </div>
+                    </div>
+                    <div class="rate-content">
+                        <div class="rate-value-with-icons">
+                            <span class="currency-code">${from}</span>
+                            <span class="equals-sign">=</span>
+                            <span class="rate-number">${rate.toFixed(4)}</span>
+                            <span class="currency-code">${to}</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="remove-rate-btn" onclick="removeRateItem(this)">×</button>
+            `;
             
-            // 2. أزرار التنقل
-            const navRates = document.getElementById('navRates');
-            const navConvert = document.getElementById('navConvert');
-            const navSettings = document.getElementById('navSettings');
-            
-            if (navRates) {
-                navRates.addEventListener('click', () => showPage('rates'));
-                updateDebugInfo('✅ تم إضافة حدث لزر Rates', 'success');
-            }
-            
-            if (navConvert) {
-                navConvert.addEventListener('click', () => showPage('convert'));
-                updateDebugInfo('✅ تم إضافة حدث لزر Convert', 'success');
-            }
-            
-            if (navSettings) {
-                navSettings.addEventListener('click', () => showPage('settings'));
-                updateDebugInfo('✅ تم إضافة حدث لزر Settings', 'success');
-            }
-            
-            // 3. أزرار المفضلة
-            const addBtn = document.getElementById('addFavoriteBtn');
-            const deleteBtn = document.getElementById('deleteFavoriteBtn');
-            
-            if (addBtn) {
-                addBtn.addEventListener('click', () => {
-                    updateDebugInfo('➕ زر الإضافة تم النقر', 'info');
-                    alert('إضافة عملة جديدة - قيد التطوير');
-                });
-            }
-            
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', () => {
-                    updateDebugInfo('🗑️ زر الحذف تم النقر', 'info');
-                    if (confirm('هل تريد حذف جميع العملات المفضلة؟')) {
-                        alert('تم الحذف بنجاح');
+            // حدث النقر للانتقال للمحول
+            item.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('remove-rate-btn')) {
+                    const currency1 = document.getElementById('currency1');
+                    const currency2 = document.getElementById('currency2');
+                    
+                    if (currency1 && currency2) {
+                        currency1.value = from;
+                        currency2.value = to;
+                        performConversion();
+                        showPage('convert');
                     }
-                });
-            }
-            
-            // 4. حقل الإدخال
-            const amount1 = document.getElementById('amount1');
-            if (amount1) {
-                amount1.addEventListener('input', performConversion);
-                updateDebugInfo('✅ تم إضافة حدث لحقل الإدخال', 'success');
-            }
-            
-            // 5. قوائم العملات
-            const currency1 = document.getElementById('currency1');
-            const currency2 = document.getElementById('currency2');
-            
-            if (currency1) {
-                currency1.addEventListener('change', performConversion);
-                updateDebugInfo('✅ تم إضافة حدث لقائمة العملة 1', 'success');
-            }
-            
-            if (currency2) {
-                currency2.addEventListener('change', performConversion);
-                updateDebugInfo('✅ تم إضافة حدث لقائمة العملة 2', 'success');
-            }
-            
-            // 6. أزرار الإعدادات
-            const termsBtn = document.getElementById('termsBtn');
-            if (termsBtn) {
-                termsBtn.addEventListener('click', () => {
-                    updateDebugInfo('📄 شروط الخصوصية', 'info');
-                    alert('صفحة الشروط والخصوصية - قيد التطوير');
-                });
-            }
-            
-            // أزرار الوضع الداكن
-            document.querySelectorAll('.dark-mode-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const mode = this.getAttribute('data-mode');
-                    if (mode === 'on') {
-                        document.body.classList.add('dark-mode');
-                    } else if (mode === 'off') {
-                        document.body.classList.remove('dark-mode');
-                    }
-                    updateDebugInfo(`🌙 الوضع الداكن: ${mode}`, 'success');
-                });
-            });
-            
-            // أزرار اللغة
-            document.querySelectorAll('.language-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const lang = this.getAttribute('data-lang');
-                    updateDebugInfo(`🌐 اللغة المحددة: ${lang}`, 'success');
-                });
-            });
-            
-            updateDebugInfo('🎉 تم تهيئة جميع الأحداث بنجاح', 'success');
-        }
-
-        // التحقق من وجود جميع العناصر
-        function checkAllElements() {
-            const requiredElements = [
-                'amount1', 'amount2', 'currency1', 'currency2',
-                'swapBtn', 'navRates', 'navConvert', 'navSettings',
-                'addFavoriteBtn', 'deleteFavoriteBtn', 'rateDisplay'
-            ];
-            
-            let missingElements = [];
-            
-            requiredElements.forEach(id => {
-                const element = document.getElementById(id);
-                if (!element) {
-                    missingElements.push(id);
-                    updateDebugInfo(`❌ العنصر ${id} غير موجود`, 'error');
-                } else {
-                    updateDebugInfo(`✅ العنصر ${id} موجود`, 'success');
                 }
             });
             
-            return missingElements.length === 0;
+            return item;
         }
 
-        // التهيئة الرئيسية
-        function initApp() {
-            console.log('🚀 بدء تشغيل محول العملات...');
-            updateDebugInfo('🚀 بدء تشغيل التطبيق...', 'info');
+        // إزالة عنصر سعر
+        function removeRateItem(button) {
+            const item = button.closest('.rate-item');
+            if (item) {
+                item.remove();
+            }
+        }
+
+        // عرض نافذة إضافة عملة
+        function showAddCurrencyDialog() {
+            const dialog = document.createElement('div');
+            dialog.className = 'dialog-overlay';
             
-            // التحقق من العناصر
-            const allElementsExist = checkAllElements();
+            dialog.innerHTML = `
+                <div class="dialog-content">
+                    <div class="dialog-header">
+                        <h3>Add Currency</h3>
+                        <button class="close-dialog" onclick="this.closest('.dialog-overlay').remove()">&times;</button>
+                    </div>
+                    <div class="dialog-body">
+                        <div class="selection-group">
+                            <label>To currency (from USD):</label>
+                            <select id="dialogCurrencySelect" class="currency-select-dialog">
+                                ${availableCurrencies.map(c => 
+                                    `<option value="${c.code}">${c.code} - ${c.name}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="dialog-actions">
+                            <button class="dialog-btn cancel-btn" onclick="this.closest('.dialog-overlay').remove()">Cancel</button>
+                            <button class="dialog-btn add-btn-dialog" onclick="addCurrencyPair()">Add</button>
+                        </div>
+                    </div>
+                </div>
+            `;
             
-            if (!allElementsExist) {
-                updateDebugInfo('❌ بعض العناصر مفقودة', 'error');
-                return;
+            document.body.appendChild(dialog);
+        }
+
+        // إضافة زوج عملات
+        function addCurrencyPair() {
+            const select = document.getElementById('dialogCurrencySelect');
+            if (!select) return;
+            
+            const toCurrency = select.value;
+            const fromCurrency = 'USD';
+            
+            // إضافة إلى صفحة الأسعار
+            const rate = getExchangeRate(fromCurrency, toCurrency);
+            const ratesContainer = document.getElementById('ratesContainer');
+            
+            if (ratesContainer) {
+                const rateItem = createRateItem(fromCurrency, toCurrency, rate);
+                ratesContainer.appendChild(rateItem);
             }
             
-            updateDebugInfo('✅ جميع العناصر موجودة', 'success');
-            
-            // تعبئة قوائم العملات
-            populateCurrencySelects();
-            
-            // تهيئة الأحداث
-            initAllEvents();
-            
-            // تنفيذ التحويل الأولي
-            setTimeout(() => {
-                performConversion();
-                updateDebugInfo('💰 تم تنفيذ التحويل الأولي', 'success');
-                updateDebugInfo('🎉 التطبيق جاهز للاستخدام!', 'success');
-                
-                // تحديث حالة التصحيح
-                document.getElementById('debugStatus').innerHTML = '✅ التطبيق جاهز';
-                document.getElementById('debugStatus').className = 'debug-status status-ok';
-            }, 500);
+            // إغلاق النافذة
+            const dialog = document.querySelector('.dialog-overlay');
+            if (dialog) {
+                dialog.remove();
+            }
+        }
+
+        // عرض نافذة حذف الكل
+        function showDeleteCurrencyDialog() {
+            if (confirm('هل تريد حذف جميع العملات من صفحة الأسعار؟')) {
+                const ratesContainer = document.getElementById('ratesContainer');
+                if (ratesContainer) {
+                    ratesContainer.innerHTML = '<div class="no-rates">لا توجد عملات مضافة. اضغط + لإضافة عملات.</div>';
+                }
+            }
         }
 
         // جعل الدوال متاحة عالمياً
         window.performConversion = performConversion;
         window.swapCurrencies = swapCurrencies;
         window.showPage = showPage;
-        window.testClick = testClick;
-        window.initApp = initApp;
-
-        // بدء التطبيق عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 DOM محمل بالكامل');
-            updateDebugInfo('📄 تم تحميل الصفحة', 'success');
-            
-            // بدء التطبيق بعد تأخير قصير
-            setTimeout(initApp, 100);
-        });
-
-        // بدء سريع أيضاً (في حالة تحميل DOM مسبقاً)
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            setTimeout(initApp, 100);
-        }
-    </script>
-
-    <!-- تحميل ملفات JavaScript الإضافية إذا كانت موجودة -->
-    <script>
-        // محاولة تحميل الملفات الخارجية
-        setTimeout(() => {
-            const scripts = ['app.js', 'converter.js', 'rates.js', 'settings.js', 'config.js'];
-            
-            scripts.forEach(script => {
-                const scriptElement = document.createElement('script');
-                scriptElement.src = script;
-                scriptElement.onload = () => {
-                    updateDebugInfo(`✅ تم تحميل: ${script}`, 'success');
-                };
-                scriptElement.onerror = () => {
-                    updateDebugInfo(`⚠️ لم يتم تحميل: ${script}`, 'error');
-                };
-                document.head.appendChild(scriptElement);
-            });
-        }, 2000);
+        window.removeRateItem = removeRateItem;
     </script>
 </body>
 </html>
