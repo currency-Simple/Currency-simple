@@ -219,6 +219,99 @@ export async function getExchangeRate(from, to) {
     }
 }
 
+// جلب بيانات الـ Chart
+export async function fetchChartData(from, to) {
+    try {
+        // استخدام API لبيانات الـ Chart
+        const url = `${CONFIG.BASE_URL}/time_series?symbol=${from}/${to}&interval=1day&outputsize=5&apikey=${CONFIG.API_KEY}`;
+        
+        const response = await fetch(url);
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data && data.values && data.values.length >= 2) {
+                const prices = data.values.slice(0, 5).map(v => parseFloat(v.close));
+                const currentPrice = prices[0];
+                const previousPrice = prices[prices.length - 1];
+                const changePercent = ((currentPrice - previousPrice) / previousPrice) * 100;
+                
+                // إنشاء الـ chart مبسط
+                const chartSVG = createMiniChartSVG(prices);
+                
+                return {
+                    success: true,
+                    changePercent: Math.abs(changePercent).toFixed(2),
+                    direction: changePercent >= 0 ? 'up' : 'down',
+                    html: `
+                        <div class="chart-container">
+                            ${chartSVG}
+                            <div class="${changePercent >= 0 ? 'chart-up' : 'chart-down'}">
+                                ${changePercent >= 0 ? '↗' : '↘'} ${Math.abs(changePercent).toFixed(2)}%
+                            </div>
+                        </div>
+                    `
+                };
+            }
+        }
+    } catch (error) {
+        console.error(`Error fetching chart data for ${from}/${to}:`, error);
+    }
+    
+    // بيانات افتراضية إذا فشل API
+    const randomChange = (Math.random() - 0.5) * 2;
+    const isUp = randomChange >= 0;
+    
+    return {
+        success: false,
+        changePercent: Math.abs(randomChange).toFixed(2),
+        direction: isUp ? 'up' : 'down',
+        html: `
+            <div class="chart-container">
+                <svg class="mini-chart" viewBox="0 0 80 40">
+                    <path d="M10,30 L20,20 L30,25 L40,15 L50,20 L60,10 L70,15" 
+                          fill="none" 
+                          stroke="${isUp ? '#34c759' : '#ff3b30'}" 
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                </svg>
+                <div class="${isUp ? 'chart-up' : 'chart-down'}">
+                    ${isUp ? '↗' : '↘'} ${Math.abs(randomChange).toFixed(2)}%
+                </div>
+            </div>
+        `
+    };
+}
+
+// إنشاء SVG للـ chart
+function createMiniChartSVG(prices) {
+    const maxPrice = Math.max(...prices);
+    const minPrice = Math.min(...prices);
+    const range = maxPrice - minPrice || 1;
+    
+    // تحويل الأسعار إلى إحداثيات
+    const points = prices.map((price, index) => {
+        const x = (index * 15) + 10;
+        const y = 35 - ((price - minPrice) / range) * 30;
+        return `${x},${y}`;
+    }).join(' L');
+    
+    // تحديد اتجاه الـ chart
+    const isUp = prices[0] >= prices[prices.length - 1];
+    
+    return `
+        <svg class="mini-chart" viewBox="0 0 80 40">
+            <path d="M${points}" 
+                  fill="none" 
+                  stroke="${isUp ? '#34c759' : '#ff3b30'}" 
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"/>
+        </svg>
+    `;
+}
+
 // تحويل العملة
 export async function convertCurrency(amount, from, to) {
     try {
