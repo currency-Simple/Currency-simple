@@ -21,35 +21,37 @@ export async function fetchAllRates() {
 
         console.log('جارٍ جلب أسعار جديدة من API...');
         
-        // بناء قائمة الأزواج الأساسية
-        const basePairs = [
-            'USD/EUR', 'USD/GBP', 'USD/JPY', 'USD/CAD',
-            'USD/AUD', 'USD/CHF', 'USD/CNY', 'USD/INR',
-            'USD/SAR', 'USD/AED', 'EUR/GBP', 'EUR/JPY'
+        // الأزواج المطلوبة للعرض
+        const requiredPairs = [
+            { from: 'USD', to: 'EUR' },
+            { from: 'USD', to: 'GBP' },
+            { from: 'USD', to: 'CAD' },
+            { from: 'USD', to: 'CHF' }
         ];
 
         const rates = {};
         
-        // جلب كل زوج على حدة لتجنب حدود API
-        for (const pair of basePairs) {
+        // جلب كل زوج على حدة
+        for (const pair of requiredPairs) {
             try {
-                const [from, to] = pair.split('/');
-                const rate = await fetchSingleRate(from, to);
+                const { from, to } = pair;
+                const rate = await fetchRealRate(from, to);
                 
                 if (rate) {
                     if (!rates[from]) rates[from] = {};
                     rates[from][to] = rate;
+                    console.log(`${from}/${to}: ${rate}`);
                 }
                 
-                // تأخير صغير بين الطلبات
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // تأخير بين الطلبات لتجنب حدود API
+                await new Promise(resolve => setTimeout(resolve, 200));
             } catch (error) {
-                console.error(`خطأ في جلب ${pair}:`, error);
+                console.error(`خطأ في جلب ${pair.from}/${pair.to}:`, error);
             }
         }
 
-        // ملء الأسعار المفقودة بالحساب
-        fillMissingRates(rates);
+        // ملء الأسعار الأخرى بالحساب
+        completeRates(rates);
 
         // تحديث الكاش المحلي
         ratesCache.data = rates;
@@ -76,10 +78,10 @@ export async function fetchAllRates() {
     }
 }
 
-// جلب سعر زوج واحد
-async function fetchSingleRate(from, to) {
+// جلب سعر حقيقي من API
+async function fetchRealRate(from, to) {
     try {
-        // استخدم API بسيط
+        // استخدم API الأساسي
         const url = `${CONFIG.BASE_URL}/exchange_rate?symbol=${from}/${to}&apikey=${CONFIG.API_KEY}`;
         
         const response = await fetch(url);
@@ -91,13 +93,33 @@ async function fetchSingleRate(from, to) {
             }
         }
         
-        // إذا فشل API، استخدم قيم افتراضية
-        return getDefaultRate(from, to);
+        // إذا فشل API الأساسي، جرب API بديل
+        return await fetchAlternativeRate(from, to);
         
     } catch (error) {
         console.error(`خطأ في جلب ${from}/${to}:`, error);
-        return getDefaultRate(from, to);
+        return await fetchAlternativeRate(from, to);
     }
+}
+
+// API بديل
+async function fetchAlternativeRate(from, to) {
+    try {
+        // استخدام ExchangeRate-API المجاني
+        const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${from}`);
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.rates && data.rates[to]) {
+                return data.rates[to];
+            }
+        }
+    } catch (error) {
+        console.error('فشل API البديل:', error);
+    }
+    
+    // استخدام قيم افتراضية حال فشل جميع المحاولات
+    return getDefaultRate(from, to);
 }
 
 // الحصول على سعر افتراضي
@@ -110,10 +132,16 @@ function getDefaultRate(from, to) {
             'MXN': 17, 'KRW': 1350, 'RUB': 91
         },
         'EUR': {
-            'USD': 1.09, 'GBP': 0.85, 'JPY': 171
+            'USD': 1.09, 'GBP': 0.85, 'JPY': 171, 'CHF': 0.96
         },
         'GBP': {
-            'USD': 1.28, 'EUR': 1.18
+            'USD': 1.28, 'EUR': 1.18, 'CHF': 1.13
+        },
+        'CAD': {
+            'USD': 0.73, 'EUR': 0.67, 'GBP': 0.57
+        },
+        'CHF': {
+            'USD': 1.14, 'EUR': 1.04, 'GBP': 0.88
         }
     };
 
@@ -121,32 +149,35 @@ function getDefaultRate(from, to) {
         return defaultRates[from][to];
     }
 
-    // قيمة عشوائية معقولة
-    return Math.random() * 5 + 0.5;
+    // إذا لم يكن هناك سعر محدد، حاول العكس
+    if (defaultRates[to] && defaultRates[to][from]) {
+        return 1 / defaultRates[to][from];
+    }
+
+    // قيمة معقولة
+    return Math.random() * 2 + 0.5;
 }
 
-// ملء الأسعار المفقودة
-function fillMissingRates(rates) {
+// إكمال الأسعار بالحساب
+function completeRates(rates) {
     // تأكد من وجود USD كمرجع
     if (!rates['USD']) rates['USD'] = {};
     
     // إضافة جميع العملات مقابل USD
-    CONFIG.CURRENCIES.forEach(currency => {
-        const code = currency.code;
+    const allCurrencies = [...CONFIG.CURRENCIES_CONVERT, ...CONFIG.CURRENCIES_RATES];
+    const uniqueCurrencies = Array.from(new Set(allCurrencies.map(c => c.code)));
+    
+    uniqueCurrencies.forEach(code => {
         if (code !== 'USD' && !rates['USD'][code]) {
             rates['USD'][code] = getDefaultRate('USD', code);
         }
     });
 
     // حساب الأسعار المتبقية
-    CONFIG.CURRENCIES.forEach(fromCurrency => {
-        const from = fromCurrency.code;
-        
+    uniqueCurrencies.forEach(from => {
         if (!rates[from]) rates[from] = {};
         
-        CONFIG.CURRENCIES.forEach(toCurrency => {
-            const to = toCurrency.code;
-            
+        uniqueCurrencies.forEach(to => {
             if (from === to) {
                 rates[from][to] = 1;
             } else if (!rates[from][to] && rates['USD'][from] && rates['USD'][to]) {
@@ -168,12 +199,13 @@ export async function getExchangeRate(from, to) {
     
     try {
         // محاولة جلب سعر جديد
-        const rate = await fetchSingleRate(from, to);
+        const rate = await fetchRealRate(from, to);
         
         if (rate) {
             // تحديث الكاش
             if (!ratesCache.data[from]) ratesCache.data[from] = {};
             ratesCache.data[from][to] = rate;
+            ratesCache.timestamp = Date.now();
             
             return rate;
         }
@@ -224,7 +256,7 @@ export function getCacheInfo() {
     return {
         hasCache: ratesCache.timestamp !== null,
         lastUpdate: ratesCache.timestamp ? new Date(ratesCache.timestamp).toLocaleString('ar-SA') : null,
-        isValid: true, // مع نظام التخزين الجديد، البيانات دائماً صالحة
+        isValid: true,
         data: ratesCache.data
     };
 }
