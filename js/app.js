@@ -7,13 +7,23 @@ let selectingFor = null; // 'from' or 'to' for currency selector
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🎯 Currency Exchange App Starting...');
+    
     // Load saved theme
     loadSavedTheme();
     
     // Show loading screen for 2 seconds
     setTimeout(async () => {
+        console.log('⏳ Loading screen timeout - initializing app...');
+        
         // Initialize API
-        await initializeAPI();
+        const apiSuccess = await initializeAPI();
+        
+        if (apiSuccess) {
+            console.log('✅ API initialization successful');
+        } else {
+            console.warn('⚠️ API initialization had issues, using fallback data');
+        }
         
         // Hide loading screen
         document.getElementById('loading-screen').classList.add('hidden');
@@ -21,9 +31,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Initialize UI
         initializeUI();
-        loadPopularRates();
+        
+        // Load data
+        console.log('📱 Loading UI data...');
+        await loadPopularRates();
         loadFavorites();
         updateConverter();
+        
+        console.log('🎉 App ready!');
     }, 2000);
 });
 
@@ -155,19 +170,33 @@ function switchTab(tab) {
 // Load popular rates
 async function loadPopularRates() {
     const container = document.getElementById('popular-list');
-    container.innerHTML = '';
+    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #b0b0b0;">Loading rates...</div>';
     
     const rates = await fetchAllExchangeRates();
     
+    console.log('📊 Loading popular rates. Available rates:', Object.keys(rates).length);
+    
+    container.innerHTML = '';
+    
+    let displayedCount = 0;
+    
     POPULAR_PAIRS.forEach(pair => {
-        const symbol = `${pair.from}/${pair.to}`;
-        const rateData = rates[symbol];
+        const rate = getExchangeRate(pair.from, pair.to);
         
-        if (rateData) {
-            const item = createCurrencyItem(pair.from, pair.to, rateData.price);
+        if (rate && rate > 0) {
+            const item = createCurrencyItem(pair.from, pair.to, rate);
             container.appendChild(item);
+            displayedCount++;
+        } else {
+            console.warn(`⚠️ No rate for ${pair.from}/${pair.to}`);
         }
     });
+    
+    if (displayedCount === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #b0b0b0;">No rates available. Please wait...</div>';
+    } else {
+        console.log(`✅ Displayed ${displayedCount} popular currency pairs`);
+    }
 }
 
 // Load favorites
@@ -187,15 +216,27 @@ function loadFavorites() {
     
     container.innerHTML = '';
     
+    let displayedCount = 0;
+    
     favorites.forEach(pairStr => {
         const [from, to] = pairStr.split('/');
         const rate = getExchangeRate(from, to);
         
-        if (rate) {
+        if (rate && rate > 0) {
             const item = createCurrencyItem(from, to, rate);
             container.appendChild(item);
+            displayedCount++;
         }
     });
+    
+    if (displayedCount === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <span>⚠️</span>
+                <p>Unable to load favorite rates. Please refresh.</p>
+            </div>
+        `;
+    }
 }
 
 // Create currency item element
@@ -337,11 +378,18 @@ function updateConverter() {
     const fromAmount = parseFloat(document.getElementById('from-amount').value) || 0;
     const rate = getExchangeRate(currentFromCurrency, currentToCurrency);
     
-    if (rate) {
+    console.log(`🔄 Converting ${fromAmount} ${currentFromCurrency} to ${currentToCurrency}`);
+    console.log(`📊 Exchange rate: ${rate}`);
+    
+    if (rate && rate > 0) {
         const toAmount = fromAmount * rate;
         document.getElementById('to-amount').value = formatCurrency(toAmount, 2);
         document.getElementById('exchange-rate-text').textContent = 
             `1 ${currentFromCurrency} = ${formatCurrency(rate)} ${currentToCurrency} at the mid-market rate`;
+    } else {
+        document.getElementById('to-amount').value = '0.00';
+        document.getElementById('exchange-rate-text').textContent = 'Loading exchange rate...';
+        console.warn(`⚠️ No rate available for ${currentFromCurrency}/${currentToCurrency}`);
     }
     
     // Update currency icons
