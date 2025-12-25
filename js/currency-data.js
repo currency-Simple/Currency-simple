@@ -305,7 +305,7 @@ const POPULAR_PAIRS = [
 ];
 
 // Suggested currencies for selection
-const SUGGESTED_CURRENCIES = ['EUR', 'GBP', 'USD', 'INR', 'AUD'];
+const SUGGESTED_CURRENCIES = ['EUR', 'GBP', 'USD', 'CAD', 'CHF'];
 
 // Get currency icon
 function getCurrencyIcon(code) {
