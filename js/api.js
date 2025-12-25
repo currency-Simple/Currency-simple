@@ -13,10 +13,13 @@ async function fetchAllExchangeRates() {
     
     // Return cached data if still valid
     if (lastFetchTime && (now - lastFetchTime < CACHE_DURATION) && Object.keys(exchangeRatesCache).length > 0) {
+        console.log('Using cached exchange rates');
         return exchangeRatesCache;
     }
 
     try {
+        console.log('Fetching new exchange rates from API...');
+        
         // Build symbol pairs for all popular currencies
         const symbols = POPULAR_PAIRS.map(pair => `${pair.from}/${pair.to}`).join(',');
         
@@ -28,6 +31,7 @@ async function fetchAllExchangeRates() {
         }
         
         const data = await response.json();
+        console.log('API Response:', data);
         
         // Process the response
         const rates = {};
@@ -54,17 +58,23 @@ async function fetchAllExchangeRates() {
         exchangeRatesCache = { ...exchangeRatesCache, ...rates };
         lastFetchTime = now;
         
+        console.log('Exchange rates cached:', Object.keys(exchangeRatesCache).length, 'pairs');
         return exchangeRatesCache;
     } catch (error) {
         console.error('Error fetching exchange rates:', error);
         
         // Return cached data if available, even if expired
         if (Object.keys(exchangeRatesCache).length > 0) {
+            console.log('Using expired cache due to error');
             return exchangeRatesCache;
         }
         
         // Return mock data as fallback
-        return generateMockData();
+        console.log('Using mock data as fallback');
+        const mockData = generateMockData();
+        exchangeRatesCache = mockData;
+        lastFetchTime = now;
+        return mockData;
     }
 }
 
