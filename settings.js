@@ -68,6 +68,7 @@ export function loadSettings() {
         const saved = localStorage.getItem('appSettings');
         if (saved) {
             appSettings = { ...appSettings, ...JSON.parse(saved) };
+            console.log('Settings loaded:', appSettings);
         }
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -81,6 +82,7 @@ export function saveSettings(settings) {
     try {
         appSettings = { ...appSettings, ...settings };
         localStorage.setItem('appSettings', JSON.stringify(appSettings));
+        console.log('Settings saved:', appSettings);
         applySettings();
         applyLanguage();
         showToast('Settings saved');
@@ -120,31 +122,56 @@ function applyLanguage() {
     
     if (!texts) return;
     
-    // تحديث عناصر الواجهة
-    const elements = {
-        'navConvert': texts.convert,
-        'navRates': texts.rates,
-        'navSettings': texts.settings,
-        '.section-title:nth-child(1)': texts.darkMode,
-        '.section-title:nth-child(2)': texts.generalSettings,
-        '.setting-item:nth-child(1) .setting-label': texts.rateApp,
-        '.setting-item:nth-child(2) .setting-label': texts.termsPrivacy,
-        '.version-info span': `${texts.version} 2.9.0`
-    };
+    console.log('Applying language:', lang);
     
-    Object.entries(elements).forEach(([selector, text]) => {
-        const element = document.querySelector(selector);
-        if (element) {
-            element.textContent = text;
+    // تحديث عناصر الواجهة
+    // 1. أزرار التنقل
+    const navConvert = document.querySelector('#navConvert span');
+    const navRates = document.querySelector('#navRates span');
+    const navSettings = document.querySelector('#navSettings span');
+    
+    if (navConvert) navConvert.textContent = texts.convert;
+    if (navRates) navRates.textContent = texts.rates;
+    if (navSettings) navSettings.textContent = texts.settings;
+    
+    // 2. عناوين الإعدادات
+    const sectionTitles = document.querySelectorAll('.section-title');
+    sectionTitles.forEach((title, index) => {
+        if (index === 0) {
+            // قسم اللغة
+            title.textContent = texts.language;
+        } else if (index === 1) {
+            // الوضع الداكن
+            title.textContent = texts.darkMode;
+        } else if (index === 2) {
+            // الإعدادات العامة
+            title.textContent = texts.generalSettings;
         }
     });
     
-    // تحديث أزرار الوضع الداكن
+    // 3. عناصر الإعدادات العامة
+    const settingLabels = document.querySelectorAll('.setting-label');
+    if (settingLabels[0]) settingLabels[0].textContent = texts.rateApp;
+    if (settingLabels[1]) settingLabels[1].textContent = texts.termsPrivacy;
+    
+    // 4. معلومات الإصدار
+    const versionInfo = document.querySelector('.version-info span');
+    if (versionInfo) versionInfo.textContent = `${texts.version} 2.0.0`;
+    
+    // 5. أزرار الوضع الداكن
     document.querySelectorAll('.dark-mode-btn').forEach(btn => {
         const mode = btn.dataset.mode;
         if (mode === 'off') btn.textContent = texts.off;
         if (mode === 'on') btn.textContent = texts.on;
         if (mode === 'auto') btn.textContent = texts.auto;
+    });
+    
+    // 6. أزرار اللغة
+    document.querySelectorAll('.language-btn').forEach(btn => {
+        const langCode = btn.dataset.lang;
+        if (langCode === 'en') btn.textContent = texts.english;
+        if (langCode === 'fr') btn.textContent = texts.french;
+        if (langCode === 'ar') btn.textContent = texts.arabic;
     });
 }
 
@@ -191,8 +218,7 @@ function showToast(message, type = 'success') {
 
 // Initialize settings page
 export function initSettingsPage() {
-    const lang = appSettings.language || 'en';
-    const texts = translations[lang];
+    console.log('Initializing settings page...');
     
     // تحديث أزرار الوضع الداكن
     const darkModeButtons = document.querySelectorAll('.dark-mode-btn');
@@ -203,66 +229,45 @@ export function initSettingsPage() {
             btn.classList.add('active');
         }
         
-        btn.onclick = () => {
-            saveSettings({ darkMode: btn.dataset.mode });
+        // إزالة الأحداث السابقة وإضافة جديدة
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.onclick = () => {
+            saveSettings({ darkMode: newBtn.dataset.mode });
             darkModeButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            newBtn.classList.add('active');
         };
     });
     
-    // تحديث أزرار اللغة (لا تنشئ قسم جديد - استخدم الموجود في HTML)
+    // تحديث أزرار اللغة
     const languageButtons = document.querySelectorAll('.language-btn');
+    
     languageButtons.forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.lang === appSettings.language) {
             btn.classList.add('active');
         }
         
-        btn.onclick = () => {
-            saveSettings({ language: btn.dataset.lang });
+        // إزالة الأحداث السابقة وإضافة جديدة
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.onclick = () => {
+            saveSettings({ language: newBtn.dataset.lang });
             languageButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // إعادة تحميل النصوص
-            applyLanguage();
+            newBtn.classList.add('active');
         };
     });
     
     // تحديث أزرار الإعدادات العامة
     const settingButtons = document.querySelectorAll('.setting-btn');
-    settingButtons.forEach((btn, index) => {
-        btn.onclick = () => {
-            if (index === 0) {
-                showToast('Thank you for rating!');
-            } else if (index === 1) {
-                showToast('Opening terms and privacy...');
-                window.open('#', '_blank');
-            }
-        };
-    });
-}
-
-// Get setting
-export function getSetting(key) {
-    return appSettings[key];
-}
-
-// Initialize settings on app start
-export function initSettings() {
-    loadSettings();
-    applySettings();
     
-    if (appSettings.darkMode === 'auto') {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-            if (appSettings.darkMode === 'auto') {
-                applyDarkMode('auto');
-            }
-        });
-    }
-}ث أزرار الإعدادات العامة
-    const settingButtons = document.querySelectorAll('.setting-btn');
     settingButtons.forEach((btn, index) => {
-        btn.onclick = () => {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.onclick = () => {
             if (index === 0) {
                 showToast('Thank you for rating!');
             } else if (index === 1) {
@@ -280,6 +285,7 @@ export function getSetting(key) {
 
 // Initialize settings on app start
 export function initSettings() {
+    console.log('Initializing settings...');
     loadSettings();
     applySettings();
     
