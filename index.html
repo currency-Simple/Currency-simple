@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Convert Page -->
+        <div id="convertPage" class="page active">
+            <h1 class="page-title">Convert</h1>
+            
+            <div class="converter-container">
+                <!-- From Currency -->
+                <div class="currency-input-group">
+                    <input type="number" id="amount1" class="amount-input" value="1000" placeholder="0" min="0" step="0.01">
+                    <div class="currency-selector">
+                        <select id="currency1" class="currency-select">
+                            <!-- Filled by JS -->
+                        </select>
+                        <div class="currency-icon" id="icon1">
+                            <img src="https://raw.githubusercontent.com/jamalkatabeuro-sketch/My-website/main/101-currency-usd.png" alt="USD">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Swap Button -->
+                <div class="swap-button-container">
+                    <button class="swap-btn" id="swapBtn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M7 10L12 15L17 10" stroke="white" stroke-width="2"/>
+                            <path d="M17 14L12 9L7 14" stroke="white" stroke-width="2"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- To Currency -->
+                <div class="currency-input-group">
+                    <input type="number" id="amount2" class="amount-input" value="0" readonly placeholder="0">
+                    <div class="currency-selector">
+                        <select id="currency2" class="currency-select">
+                            <!-- Filled by JS -->
+                        </select>
+                        <div class="currency-icon" id="icon2">
+                            <img src="https://raw.githubusercontent.com/jamalkatabeuro-sketch/My-website/main/121-currency-sar.png" alt="SAR">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Rate -->
+                <div class="current-rate" id="rateDisplay">
+                    <span>USD = 3.7500 SAR</span> at the mid-market 1 rate
+                </div>
+            </div>
+        </div>
+
+        <!-- Rates Page -->
+        <div id="ratesPage" class="page">
+            <div class="rates-header">
+                <h1 class="page-title">Rates</h1>
+                <div class="rates-actions">
+                    <button class="action-btn delete" id="deleteFavoriteBtn" title="Delete all currencies">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M6 6L18 18M6 18L18 6" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </button>
+                    <button class="add-rate-btn" id="addFavoriteBtn" title="Add currency">+</button>
+                </div>
+            </div>
+            
+            <div id="ratesContainer" class="rates-list">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settingsPage" class="page">
+            <h1 class="page-title">Settings</h1>
+            
+            <!-- Language Section -->
+            <div class="settings-section language-section">
+                <h3 class="section-title">Language</h3>
+                <div class="language-buttons">
+                    <button class="language-btn" data-lang="en">English</button>
+                    <button class="language-btn" data-lang="fr">French</button>
+                    <button class="language-btn" data-lang="ar">Arabic</button>
+                </div>
+            </div>
+
+            <!-- Dark Mode Section -->
+            <div class="settings-section">
+                <h3 class="section-title">Dark mode</h3>
+                <div class="dark-mode-buttons">
+                    <button class="dark-mode-btn" data-mode="off">Off</button>
+                    <button class="dark-mode-btn" data-mode="on">On</button>
+                    <button class="dark-mode-btn" data-mode="auto">Auto</button>
+                </div>
+            </div>
+
+            <!-- General Settings -->
+            <div class="settings-section">
+                <h3 class="section-title">General settings</h3>
+                
+                <div class="setting-item">
+                    <span class="setting-label">Terms and privacy</span>
+                    <button class="setting-btn">📄</button>
+                </div>
+            </div>
+
+            <div class="version-info">
+                <span>Version 2.0.0</span>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn" id="navRates" onclick="showPage('rates')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 3v18h18" stroke="currentColor" stroke-width="2"/>
+                    <path d="M6 15l4-4 3 3 5-7" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span>Rates</span>
+            </button>
+            
+            <button class="nav-btn active" id="navConvert" onclick="showPage('convert')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M17 14L12 9L7 14" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span>Convert</span>
+            </button>
+            
+            <button class="nav-btn" id="navSettings" onclick="showPage('settings')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 1v6m0 6v6M23 12h-6m-6 0H1" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span>Settings</span>
+            </button>
+        </nav>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>ipt>
+</body>
+</html>
