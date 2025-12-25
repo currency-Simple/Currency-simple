@@ -160,8 +160,8 @@ function createCurrencyItem(from, to, rate) {
     div.className = 'currency-item';
     div.onclick = () => openDetailModal(from, to);
     
-    const fromIcon = getCurrencyIcon(from, true);
-    const toIcon = getCurrencyIcon(to);
+    const fromIcon = getCurrencyIcon(from);
+    const toIcon = getCurrencyIcon('USD'); // Always show USD as second icon
     const change = (Math.random() - 0.5) * 5; // Mock change
     const isPositive = change >= 0;
     
@@ -169,7 +169,7 @@ function createCurrencyItem(from, to, rate) {
         <div class="currency-info">
             <div class="currency-icons">
                 <img src="${fromIcon}" alt="${from}" class="currency-icon">
-                <img src="${toIcon}" alt="${to}" class="currency-icon">
+                <img src="${toIcon}" alt="USD" class="currency-icon">
             </div>
             <div class="currency-details">
                 <div class="currency-pair">${from} to ${to}</div>
@@ -197,17 +197,20 @@ function createCurrencyItem(from, to, rate) {
     return div;
 }
 
-// Open detail modal
+    // Open detail modal
 async function openDetailModal(from, to) {
     currentDetailPair = { from, to };
     
     const modal = document.getElementById('currency-detail-modal');
     const rate = getExchangeRate(from, to);
     
-    if (!rate) return;
+    if (!rate) {
+        console.error('No rate found for', from, to);
+        return;
+    }
     
     // Update icons
-    modal.querySelector('.from-icon').src = getCurrencyIcon(from, true);
+    modal.querySelector('.from-icon').src = getCurrencyIcon(from);
     modal.querySelector('.to-icon').src = getCurrencyIcon(to);
     
     // Update title
