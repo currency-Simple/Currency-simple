@@ -152,10 +152,14 @@ body {
 .currency-icon {
     width: 36px;
     height: 36px;
+    min-width: 36px;
+    min-height: 36px;
     border-radius: 50%;
     position: absolute;
     border: 2px solid var(--bg-primary);
     object-fit: cover;
+    background-color: var(--bg-tertiary);
+    display: block;
 }
 
 .currency-icon:first-child {
@@ -249,8 +253,13 @@ body {
 .currency-selector .currency-icon {
     width: 32px;
     height: 32px;
+    min-width: 32px;
+    min-height: 32px;
     position: static;
     border: none;
+    object-fit: cover;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
 }
 
 .currency-code {
@@ -489,8 +498,12 @@ body {
 .currency-icon-large {
     width: 48px;
     height: 48px;
+    min-width: 48px;
+    min-height: 48px;
     border-radius: 50%;
     object-fit: cover;
+    background-color: var(--bg-tertiary);
+    display: block;
 }
 
 .modal-header h2 {
@@ -650,8 +663,12 @@ body {
 .currency-option img {
     width: 32px;
     height: 32px;
+    min-width: 32px;
+    min-height: 32px;
     border-radius: 50%;
     object-fit: cover;
+    background-color: var(--bg-tertiary);
+    flex-shrink: 0;
 }
 
 .currency-option-info {
