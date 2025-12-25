@@ -121,49 +121,74 @@ async function updateCurrencyIcons() {
 // تهيئة الأحداث
 function initEvents() {
     // تحويل عند الكتابة
-    amountInput1.addEventListener('input', async () => {
-        if (amountInput1.value) {
-            await performConversion();
-        } else {
-            amountInput2.value = '';
-        }
-    });
-    
-    // تحويل عند Enter
-    amountInput1.addEventListener('keypress', async (e) => {
-        if (e.key === 'Enter') {
-            await performConversion();
-        }
-    });
+    if (amountInput1) {
+        amountInput1.addEventListener('input', async () => {
+            if (amountInput1.value) {
+                await performConversion();
+            } else {
+                amountInput2.value = '';
+            }
+        });
+        
+        // تحويل عند Enter
+        amountInput1.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                await performConversion();
+            }
+        });
+    }
     
     // تبديل العملات
-    swapBtn.addEventListener('click', swapCurrencies);
+    if (swapBtn) {
+        swapBtn.addEventListener('click', swapCurrencies);
+    }
     
     // تحديث عند تغيير العملة
-    currency1Select.addEventListener('change', async () => {
-        await updateCurrencyIcons();
-        await updateRateDisplay();
-        if (amountInput1.value) {
-            await performConversion();
-        }
-    });
+    if (currency1Select) {
+        currency1Select.addEventListener('change', async () => {
+            await updateCurrencyIcons();
+            await updateRateDisplay();
+            if (amountInput1.value) {
+                await performConversion();
+            }
+        });
+    }
     
-    currency2Select.addEventListener('change', async () => {
-        await updateCurrencyIcons();
-        await updateRateDisplay();
-        if (amountInput1.value) {
-            await performConversion();
-        }
-    });
+    if (currency2Select) {
+        currency2Select.addEventListener('change', async () => {
+            await updateCurrencyIcons();
+            await updateRateDisplay();
+            if (amountInput1.value) {
+                await performConversion();
+            }
+        });
+    }
     
-    // أزرار التنقل
-    document.getElementById('navSettings')?.addEventListener('click', () => showPage('settings'));
-    document.getElementById('navConvert')?.addEventListener('click', () => showPage('convert'));
-    document.getElementById('navRates')?.addEventListener('click', () => showPage('rates'));
+    // أزرار التنقل - إصلاح هنا
+    const navRates = document.getElementById('navRates');
+    const navConvert = document.getElementById('navConvert');
+    const navSettings = document.getElementById('navSettings');
+    
+    if (navRates) {
+        navRates.addEventListener('click', () => showPage('rates'));
+    }
+    if (navConvert) {
+        navConvert.addEventListener('click', () => showPage('convert'));
+    }
+    if (navSettings) {
+        navSettings.addEventListener('click', () => showPage('settings'));
+    }
     
     // أزرار المفضلة
-    document.getElementById('addFavoriteBtn')?.addEventListener('click', showAddCurrencyDialog);
-    document.getElementById('deleteFavoriteBtn')?.addEventListener('click', showDeleteCurrencyDialog);
+    const addFavoriteBtn = document.getElementById('addFavoriteBtn');
+    const deleteFavoriteBtn = document.getElementById('deleteFavoriteBtn');
+    
+    if (addFavoriteBtn) {
+        addFavoriteBtn.addEventListener('click', showAddCurrencyDialog);
+    }
+    if (deleteFavoriteBtn) {
+        deleteFavoriteBtn.addEventListener('click', showDeleteCurrencyDialog);
+    }
 }
 
 // تنفيذ التحويل
@@ -171,7 +196,7 @@ async function performConversion() {
     const amount = parseFloat(amountInput1.value);
     
     if (isNaN(amount) || amount <= 0) {
-        amountInput2.value = '';
+        if (amountInput2) amountInput2.value = '';
         return;
     }
     
@@ -179,20 +204,20 @@ async function performConversion() {
     const to = currency2Select.value;
     
     // إظهار تحميل
-    amountInput2.value = '...';
+    if (amountInput2) amountInput2.value = '...';
     
     try {
         const result = await convertCurrency(amount, from, to);
         
-        if (result.success) {
+        if (result.success && amountInput2) {
             amountInput2.value = result.convertedAmount.toFixed(2);
             await updateRateDisplay();
-        } else {
+        } else if (amountInput2) {
             amountInput2.value = 'Error';
             console.error('Conversion failed:', result.error);
         }
     } catch (error) {
-        amountInput2.value = 'Error';
+        if (amountInput2) amountInput2.value = 'Error';
         console.error('Conversion error:', error);
     }
 }
@@ -213,9 +238,11 @@ async function updateRateDisplay() {
         }
     } catch (error) {
         console.error('Error updating rate:', error);
-        rateDisplay.innerHTML = `
-            <span>${from} = --- ${to}</span> at the mid-market 1 rate
-        `;
+        if (rateDisplay) {
+            rateDisplay.innerHTML = `
+                <span>${from} = --- ${to}</span> at the mid-market 1 rate
+            `;
+        }
     }
 }
 
@@ -230,8 +257,10 @@ async function swapCurrencies() {
     currency2Select.value = tempCurrency;
     
     // تبديل المبالغ
-    amountInput1.value = amountInput2.value;
-    amountInput2.value = tempAmount;
+    if (amountInput1 && amountInput2) {
+        amountInput1.value = amountInput2.value;
+        amountInput2.value = tempAmount;
+    }
     
     // تحديث الأيقونات
     await updateCurrencyIcons();
@@ -240,15 +269,17 @@ async function swapCurrencies() {
     await updateRateDisplay();
     
     // إعادة التحويل
-    if (amountInput1.value) {
+    if (amountInput1 && amountInput1.value) {
         await performConversion();
     }
     
     // تأثير الزر
-    swapBtn.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        swapBtn.style.transform = 'scale(1)';
-    }, 150);
+    if (swapBtn) {
+        swapBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            swapBtn.style.transform = 'scale(1)';
+        }, 150);
+    }
 }
 
 // تحديث جميع العروض
@@ -260,7 +291,8 @@ async function updateDisplay() {
 }
 
 // عرض صفحة
-window.showPage = function(page) {
+function showPage(page) {
+    console.log('Showing page:', page);
     window.currentPage = page;
     
     // إخفاء جميع الصفحات
@@ -293,8 +325,9 @@ window.showPage = function(page) {
     } else if (page === 'convert') {
         updateRateDisplay();
     }
-};
+}
 
 // جعل الدوال متاحة عالمياً
+window.showPage = showPage;
 window.performConversion = performConversion;
 window.swapCurrencies = swapCurrencies;
