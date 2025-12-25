@@ -7,6 +7,9 @@ let selectingFor = null; // 'from' or 'to' for currency selector
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', async function() {
+    // Load saved theme
+    loadSavedTheme();
+    
     // Show loading screen for 2 seconds
     setTimeout(async () => {
         // Initialize API
@@ -71,8 +74,49 @@ function initializeUI() {
     // Dark mode toggle
     document.querySelectorAll('.toggle-btn').forEach(btn => {
         btn.addEventListener('click', function() {
+            const mode = this.dataset.mode;
             document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
+            
+            // Apply theme
+            if (mode === 'off') {
+                // Light mode
+                document.documentElement.style.setProperty('--bg-primary', '#ffffff');
+                document.documentElement.style.setProperty('--bg-secondary', '#f5f5f5');
+                document.documentElement.style.setProperty('--bg-tertiary', '#e0e0e0');
+                document.documentElement.style.setProperty('--text-primary', '#000000');
+                document.documentElement.style.setProperty('--text-secondary', '#666666');
+                document.documentElement.style.setProperty('--border', '#d0d0d0');
+                Storage.set('theme', 'light');
+            } else if (mode === 'on') {
+                // Dark mode
+                document.documentElement.style.setProperty('--bg-primary', '#000000');
+                document.documentElement.style.setProperty('--bg-secondary', '#1a1a1a');
+                document.documentElement.style.setProperty('--bg-tertiary', '#2a2a2a');
+                document.documentElement.style.setProperty('--text-primary', '#ffffff');
+                document.documentElement.style.setProperty('--text-secondary', '#b0b0b0');
+                document.documentElement.style.setProperty('--border', '#3a3a3a');
+                Storage.set('theme', 'dark');
+            } else {
+                // Auto mode - detect system preference
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (prefersDark) {
+                    document.documentElement.style.setProperty('--bg-primary', '#000000');
+                    document.documentElement.style.setProperty('--bg-secondary', '#1a1a1a');
+                    document.documentElement.style.setProperty('--bg-tertiary', '#2a2a2a');
+                    document.documentElement.style.setProperty('--text-primary', '#ffffff');
+                    document.documentElement.style.setProperty('--text-secondary', '#b0b0b0');
+                    document.documentElement.style.setProperty('--border', '#3a3a3a');
+                } else {
+                    document.documentElement.style.setProperty('--bg-primary', '#ffffff');
+                    document.documentElement.style.setProperty('--bg-secondary', '#f5f5f5');
+                    document.documentElement.style.setProperty('--bg-tertiary', '#e0e0e0');
+                    document.documentElement.style.setProperty('--text-primary', '#000000');
+                    document.documentElement.style.setProperty('--text-secondary', '#666666');
+                    document.documentElement.style.setProperty('--border', '#d0d0d0');
+                }
+                Storage.set('theme', 'auto');
+            }
         });
     });
     
@@ -464,4 +508,52 @@ function openTermsModal() {
 // Close terms modal
 function closeTermsModal() {
     document.getElementById('terms-modal').classList.add('hidden');
+}
+
+// Load saved theme
+function loadSavedTheme() {
+    const savedTheme = Storage.get('theme') || 'auto';
+    
+    // Find and activate the correct button
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.mode === savedTheme) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Apply the theme
+    if (savedTheme === 'light') {
+        document.documentElement.style.setProperty('--bg-primary', '#ffffff');
+        document.documentElement.style.setProperty('--bg-secondary', '#f5f5f5');
+        document.documentElement.style.setProperty('--bg-tertiary', '#e0e0e0');
+        document.documentElement.style.setProperty('--text-primary', '#000000');
+        document.documentElement.style.setProperty('--text-secondary', '#666666');
+        document.documentElement.style.setProperty('--border', '#d0d0d0');
+    } else if (savedTheme === 'dark') {
+        document.documentElement.style.setProperty('--bg-primary', '#000000');
+        document.documentElement.style.setProperty('--bg-secondary', '#1a1a1a');
+        document.documentElement.style.setProperty('--bg-tertiary', '#2a2a2a');
+        document.documentElement.style.setProperty('--text-primary', '#ffffff');
+        document.documentElement.style.setProperty('--text-secondary', '#b0b0b0');
+        document.documentElement.style.setProperty('--border', '#3a3a3a');
+    } else {
+        // Auto - use system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+            document.documentElement.style.setProperty('--bg-primary', '#000000');
+            document.documentElement.style.setProperty('--bg-secondary', '#1a1a1a');
+            document.documentElement.style.setProperty('--bg-tertiary', '#2a2a2a');
+            document.documentElement.style.setProperty('--text-primary', '#ffffff');
+            document.documentElement.style.setProperty('--text-secondary', '#b0b0b0');
+            document.documentElement.style.setProperty('--border', '#3a3a3a');
+        } else {
+            document.documentElement.style.setProperty('--bg-primary', '#ffffff');
+            document.documentElement.style.setProperty('--bg-secondary', '#f5f5f5');
+            document.documentElement.style.setProperty('--bg-tertiary', '#e0e0e0');
+            document.documentElement.style.setProperty('--text-primary', '#000000');
+            document.documentElement.style.setProperty('--text-secondary', '#666666');
+            document.documentElement.style.setProperty('--border', '#d0d0d0');
+        }
+    }
 }
