@@ -6,17 +6,17 @@ export const CONFIG = {
     
     // العملات المدعومة لصفحة المحول (بدون x)
     CURRENCIES_CONVERT: [
-        { code: 'USD', name: 'US Dollar', symbol: '$', icon: '101-currency-usd.png' },
-        { code: 'EUR', name: 'Euro', symbol: '€', icon: '100-currency-eur.png' },
-        { code: 'GBP', name: 'British Pound', symbol: '£', icon: '102-currency-gbp.png' },
+        { code: 'USD', name: 'US Dollar', symbol: '$', icon: '101-currency-usdx.png' },
+        { code: 'EUR', name: 'Euro', symbol: '€', icon: '100-currency-eurx.png' },
+        { code: 'GBP', name: 'British Pound', symbol: '£', icon: '102-currency-gbpx.png' },
         { code: 'JPY', name: 'Japanese Yen', symbol: '¥', icon: '113-currency-jpy.png' },
         { code: 'SAR', name: 'Saudi Riyal', symbol: 'ر.س', icon: '121-currency-sar.png' },
         { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ', icon: '123-currency-aed.png' },
         { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$', icon: '104-currency-cad.png' },
         { code: 'AUD', name: 'Australian Dollar', symbol: 'A$', icon: '105-currency-aud.png' },
-        { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF', icon: '103-currency-chf.png' },
+        { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF', icon: '103-currency-chfx.png' },
         { code: 'CNY', name: 'Chinese Yuan', symbol: '¥', icon: '107-currency-cny.png' },
-        { code: 'INR', name: 'Indian Rupee', symbol: '₹', icon: '115-currency-inr.png' }
+        { code: 'INR', name: 'Indian Rupee', symbol: '₹', icon: '115-currency-inrx.png' }
     ],
     
     // العملات المدعومة لصفحة الأسعار (بـ x)
