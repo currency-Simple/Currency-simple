@@ -9,6 +9,7 @@ class StorageManager {
     init() {
         // تحميل ذاكرة الصور من localStorage
         this.loadImageCache();
+        console.log('تم تهيئة مدير التخزين');
     }
 
     // تخزين الأسعار
@@ -120,13 +121,13 @@ class StorageManager {
         });
     }
 
-    // الحصول على صورة العملة (مع التخزين المؤقت)
+    // الحصول على صورة العملة
     getCurrencyImage(code) {
         if (this.imageCache.has(code)) {
             return this.imageCache.get(code);
         }
         
-        // إذا لم تكن موجودة في الذاكرة، جلبها من config
+        // إذا لم تكن موجودة في الذاكرة
         const fallbackUrl = 'https://raw.githubusercontent.com/jamalkatabeuro-sketch/My-website/main/101-currency-usd.png';
         return fallbackUrl;
     }
