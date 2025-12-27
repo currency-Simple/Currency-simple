@@ -176,35 +176,32 @@ function createCurrencyItem(from, to, rate) {
     div.onclick = () => openDetailModal(from, to);
     
     const fromIcon = getCurrencyIcon(from);
-    const usdIcon = getCurrencyIcon('USD');
-    const change = (Math.random() - 0.5) * 4;
-    const isPositive = change >= 0;
+    const toIcon = getCurrencyIcon(to);
     
     div.innerHTML = `
         <div class="currency-info">
             <div class="currency-icons">
                 <img src="${fromIcon}" alt="${from}" class="currency-icon" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23ddd%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2216%22 fill=%22%23666%22%3E${from}%3C/text%3E%3C/svg%3E'">
-                <img src="${usdIcon}" alt="USD" class="currency-icon" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23ddd%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2216%22 fill=%22%23666%22%3EUSD%3C/text%3E%3C/svg%3E'">
+                <img src="${toIcon}" alt="${to}" class="currency-icon" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23ddd%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2216%22 fill=%22%23666%22%3E${to}%3C/text%3E%3C/svg%3E'">
             </div>
             <div class="currency-details">
                 <div class="currency-pair">${from} to ${to}</div>
-                <div class="currency-rate">1 ${from} = ${formatCurrency(rate)} ${to}</div>
+                <div class="currency-rate">${from} = ${formatCurrency(rate)} ${to}</div>
             </div>
         </div>
         <canvas class="currency-chart" width="80" height="40"></canvas>
         <div class="rate-change">
             <div class="rate-value">${formatCurrency(rate)}</div>
-            <div class="rate-percent ${isPositive ? 'positive' : 'negative'}">
-                ${isPositive ? '↗' : '↘'} ${formatPercentage(Math.abs(change))}%
-            </div>
         </div>
     `;
     
     setTimeout(() => {
         const canvas = div.querySelector('.currency-chart');
         if (canvas) {
-            const chartData = generateChartData(7);
-            drawMiniChart(canvas, chartData, isPositive);
+            const isPositive = Math.random() > 0.5;
+            getTimeSeriesData(from, to, '1W').then(chartData => {
+                drawMiniChart(canvas, chartData, isPositive);
+            });
         }
     }, 100);
     
@@ -229,8 +226,13 @@ async function openDetailModal(from, to) {
     document.getElementById('modal-subtitle').textContent = `${getCurrencyName(from)} to ${getCurrencyName(to)}`;
     document.getElementById('modal-rate').textContent = `1 ${from} = ${formatCurrency(rate)} ${to}`;
     
-    const change = (Math.random() - 0.5) * 4;
+    // Calculate real change from chart data
+    const chartData = await getTimeSeriesData(from, to, currentTimeRange);
+    const firstValue = chartData[0]?.value || rate;
+    const lastValue = chartData[chartData.length - 1]?.value || rate;
+    const change = calculateChange(lastValue, firstValue);
     const isPositive = change >= 0;
+    
     const changeEl = document.getElementById('modal-change');
     changeEl.className = isPositive ? 'positive' : 'negative';
     changeEl.textContent = `${isPositive ? '↗' : '↘'} ${isPositive ? 'Up' : 'Down'} by ${formatPercentage(Math.abs(change))}% (${formatCurrency(Math.abs(change * rate / 100))} ${to})`;
@@ -238,7 +240,6 @@ async function openDetailModal(from, to) {
     document.getElementById('detail-favorite').textContent = Favorites.isFavorite(from, to) ? '⭐' : '☆';
     document.getElementById('modal-convert-btn').textContent = `Convert ${from} to ${to}`;
     
-    const chartData = await getTimeSeriesData(from, to, currentTimeRange);
     const canvas = document.getElementById('detail-chart');
     drawDetailChart(canvas, chartData, isPositive);
     
@@ -279,8 +280,14 @@ async function selectTimeRange(range) {
     if (currentDetailPair) {
         const { from, to } = currentDetailPair;
         const chartData = await getTimeSeriesData(from, to, range);
+        
+        // Calculate change from chart data
+        const firstValue = chartData[0]?.value || 1;
+        const lastValue = chartData[chartData.length - 1]?.value || 1;
+        const change = calculateChange(lastValue, firstValue);
+        const isPositive = change >= 0;
+        
         const canvas = document.getElementById('detail-chart');
-        const isPositive = Math.random() > 0.5;
         drawDetailChart(canvas, chartData, isPositive);
     }
 }
