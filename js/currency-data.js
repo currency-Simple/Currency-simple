@@ -282,30 +282,16 @@ const CURRENCY_DATA = {
     }
 };
 
-// Popular currency pairs (against USD)
+// Popular currency pairs (now USD based)
 const POPULAR_PAIRS = [
-    { from: 'EUR', to: 'USD' },
-    { from: 'GBP', to: 'USD' },
-    { from: 'JPY', to: 'USD' },
-    { from: 'CAD', to: 'USD' },
-    { from: 'AUD', to: 'USD' },
-    { from: 'CHF', to: 'USD' },
-    { from: 'CNY', to: 'USD' },
-    { from: 'INR', to: 'USD' },
-    { from: 'BRL', to: 'USD' },
-    { from: 'TRY', to: 'USD' },
-    { from: 'MXN', to: 'USD' },
-    { from: 'RUB', to: 'USD' },
-    { from: 'MAD', to: 'USD' },
-    { from: 'EGP', to: 'USD' },
-    { from: 'SAR', to: 'USD' },
-    { from: 'QAR', to: 'USD' },
-    { from: 'AED', to: 'USD' },
-    { from: 'KRW', to: 'USD' }
+    { from: 'USD', to: 'EUR' },
+    { from: 'USD', to: 'GBP' },
+    { from: 'USD', to: 'CAD' },
+    { from: 'USD', to: 'CHF' }
 ];
 
 // Suggested currencies for selection
-const SUGGESTED_CURRENCIES = ['EUR', 'GBP', 'USD', 'CAD', 'CHF'];
+const SUGGESTED_CURRENCIES = ['EUR', 'GBP', 'USD', 'INR', 'AUD'];
 
 // Get currency icon
 function getCurrencyIcon(code) {
