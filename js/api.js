@@ -1,16 +1,21 @@
 // API Configuration
-const API_KEY = 'b83fce53976843bbb59336c03f9a6a30';
-const API_BASE_URL = 'https://api.twelvedata.com';
+const FALLBACK_API_URL = 'https://api.exchangerate-api.com/v4/latest/USD';
 
 // Cache for exchange rates
 let exchangeRatesCache = {};
 let lastFetchTime = null;
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
-// All currency codes
-const ALL_CURRENCIES = Object.keys(CURRENCY_DATA);
+// Currency groups for 5 separate requests
+const CURRENCY_GROUPS = [
+    ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'BRL', 'MXN'],
+    ['TRY', 'RUB', 'ZAR', 'KRW', 'MYR', 'HKD', 'DKK', 'NOK', 'SEK', 'PLN'],
+    ['THB', 'SGD', 'NZD', 'MAD', 'EGP', 'SAR', 'AED', 'QAR', 'IDR', 'PHP'],
+    ['VND', 'PKR', 'ARS', 'CLP', 'COP', 'KWD', 'BHD', 'OMR', 'DZD', 'BWP'],
+    ['CZK', 'DOP', 'ETB', 'HNL', 'HUF', 'ISK', 'KMF', 'LBP', 'MDL', 'RON', 'RSD', 'UAH', 'KZT', 'AZN', 'BDT']
+];
 
-// Fetch all exchange rates with improved error handling
+// Fetch exchange rates in 5 separate requests
 async function fetchAllExchangeRates() {
     const now = Date.now();
     
@@ -20,58 +25,64 @@ async function fetchAllExchangeRates() {
         return exchangeRatesCache;
     }
 
-    console.log('🔄 Fetching exchange rates...');
+    console.log('🔄 Fetching exchange rates in 5 requests...');
 
     try {
-        // Use a reliable free API for real-time rates
-        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const allRates = {};
         
-        if (!response.ok) {
-            throw new Error('API request failed');
-        }
-        
-        const data = await response.json();
-        
-        if (data && data.rates) {
-            console.log('✅ Received rates from API');
-            
-            // Convert to our format
-            const rates = {};
-            
-            // For each currency, calculate rate to USD
-            Object.keys(data.rates).forEach(currency => {
-                if (CURRENCY_DATA[currency]) {
-                    const rate = data.rates[currency];
-                    // Store as currency/USD
-                    rates[`${currency}/USD`] = {
-                        price: 1 / rate, // Inverse because API gives USD to currency
-                        timestamp: now
-                    };
+        // Make 5 parallel requests
+        const promises = CURRENCY_GROUPS.map(async (group, index) => {
+            try {
+                const response = await fetch(FALLBACK_API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`Request ${index + 1} failed`);
                 }
-            });
-            
-            // Add USD/USD
-            rates['USD/USD'] = { price: 1, timestamp: now };
-            
-            exchangeRatesCache = rates;
+                
+                const data = await response.json();
+                
+                if (data && data.rates) {
+                    console.log(`✅ Request ${index + 1}/5 successful`);
+                    
+                    // Filter only currencies in this group
+                    group.forEach(currency => {
+                        if (data.rates[currency]) {
+                            const rate = data.rates[currency];
+                            allRates[`USD/${currency}`] = {
+                                price: rate,
+                                timestamp: now
+                            };
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(`❌ Request ${index + 1} failed:`, error.message);
+            }
+        });
+        
+        // Wait for all requests
+        await Promise.all(promises);
+        
+        // Add USD/USD
+        allRates['USD/USD'] = { price: 1, timestamp: now };
+        
+        if (Object.keys(allRates).length > 0) {
+            exchangeRatesCache = allRates;
             lastFetchTime = now;
-            
-            console.log(`✅ Cached ${Object.keys(rates).length} exchange rates`);
+            console.log(`✅ Cached ${Object.keys(allRates).length} exchange rates from 5 requests`);
             return exchangeRatesCache;
         }
         
-        throw new Error('Invalid API response');
+        throw new Error('No rates received');
         
     } catch (error) {
         console.error('❌ API Error:', error.message);
         
-        // If we have old cache, use it
         if (Object.keys(exchangeRatesCache).length > 0) {
             console.log('⚠️ Using old cache');
             return exchangeRatesCache;
         }
         
-        // Generate mock data as last resort
         console.log('⚠️ Using mock data');
         const mockData = generateMockData();
         exchangeRatesCache = mockData;
@@ -86,31 +97,28 @@ function generateMockData() {
     const mockRates = {};
     
     const baseRates = {
-        'EUR': 1.08, 'GBP': 1.27, 'JPY': 0.0067, 'CAD': 0.73, 'AUD': 0.65,
-        'CHF': 1.13, 'CNY': 0.14, 'INR': 0.012, 'BRL': 0.20, 'MXN': 0.058,
-        'TRY': 0.032, 'RUB': 0.011, 'ZAR': 0.055, 'KRW': 0.00075, 'MYR': 0.22,
-        'HKD': 0.13, 'DKK': 0.14, 'NOK': 0.093, 'SEK': 0.096, 'PLN': 0.25,
-        'THB': 0.029, 'SGD': 0.75, 'NZD': 0.60, 'MAD': 0.10, 'EGP': 0.020,
-        'SAR': 0.27, 'AED': 0.27, 'QAR': 0.27, 'IDR': 0.000064, 'PHP': 0.018,
-        'VND': 0.000040, 'PKR': 0.0036, 'ARS': 0.0010, 'CLP': 0.0010,
-        'COP': 0.00025, 'KWD': 3.25, 'BHD': 2.65, 'OMR': 2.60, 'DZD': 0.0074,
-        'BWP': 0.073, 'CZK': 0.044, 'DOP': 0.017, 'ETB': 0.0092, 'HNL': 0.040,
-        'HUF': 0.0028, 'ISK': 0.0072, 'KMF': 0.0022, 'LBP': 0.000011,
-        'MDL': 0.055, 'RON': 0.22, 'RSD': 0.0093, 'UAH': 0.026, 'KZT': 0.0021,
-        'AZN': 0.59, 'BDT': 0.0091
+        'EUR': 0.92, 'GBP': 0.79, 'JPY': 149.50, 'CAD': 1.37, 'AUD': 1.54,
+        'CHF': 0.88, 'CNY': 7.24, 'INR': 83.20, 'BRL': 5.01, 'MXN': 17.25,
+        'TRY': 31.50, 'RUB': 92.50, 'ZAR': 18.20, 'KRW': 1330.50, 'MYR': 4.52,
+        'HKD': 7.82, 'DKK': 6.87, 'NOK': 10.75, 'SEK': 10.42, 'PLN': 4.01,
+        'THB': 34.50, 'SGD': 1.33, 'NZD': 1.67, 'MAD': 10.05, 'EGP': 49.80,
+        'SAR': 3.75, 'AED': 3.67, 'QAR': 3.64, 'IDR': 15650, 'PHP': 56.80,
+        'VND': 25100, 'PKR': 278.50, 'ARS': 1000, 'CLP': 950, 'COP': 4000,
+        'KWD': 0.31, 'BHD': 0.38, 'OMR': 0.38, 'DZD': 135, 'BWP': 13.70,
+        'CZK': 22.80, 'DOP': 59.50, 'ETB': 108, 'HNL': 25, 'HUF': 355,
+        'ISK': 139, 'KMF': 453, 'LBP': 89500, 'MDL': 18.20, 'RON': 4.55,
+        'RSD': 107, 'UAH': 38.50, 'KZT': 475, 'AZN': 1.70, 'BDT': 110
     };
     
-    ALL_CURRENCIES.forEach(currency => {
-        if (currency !== 'USD') {
-            const symbol = `${currency}/USD`;
-            let rate = baseRates[currency] || (Math.random() * 2 + 0.1);
-            rate = rate * (1 + (Math.random() - 0.5) * 0.02); // ±1% variation
-            
-            mockRates[symbol] = {
-                price: rate,
-                timestamp: Date.now()
-            };
-        }
+    Object.keys(baseRates).forEach(currency => {
+        const symbol = `USD/${currency}`;
+        let rate = baseRates[currency];
+        rate = rate * (1 + (Math.random() - 0.5) * 0.02);
+        
+        mockRates[symbol] = {
+            price: rate,
+            timestamp: Date.now()
+        };
     });
     
     mockRates['USD/USD'] = { price: 1, timestamp: Date.now() };
@@ -121,61 +129,34 @@ function generateMockData() {
 
 // Get exchange rate for any pair
 function getExchangeRate(from, to) {
-    // Same currency
     if (from === to) return 1;
     
-    // Direct pair to USD
-    const directSymbol = `${from}/USD`;
+    // Direct pair USD/XXX
+    const directSymbol = `${from}/${to}`;
     const directRate = exchangeRatesCache[directSymbol];
     
-    // Target to USD
-    const targetSymbol = `${to}/USD`;
-    const targetRate = exchangeRatesCache[targetSymbol];
+    if (directRate) {
+        return directRate.price;
+    }
     
-    // Calculate cross rate: from/to = (from/USD) / (to/USD)
-    if (directRate && targetRate && targetRate.price !== 0) {
-        return directRate.price / targetRate.price;
+    // Reverse pair XXX/USD
+    const reverseSymbol = `${to}/${from}`;
+    const reverseRate = exchangeRatesCache[reverseSymbol];
+    
+    if (reverseRate && reverseRate.price !== 0) {
+        return 1 / reverseRate.price;
+    }
+    
+    // Cross rate through USD
+    const fromUSD = exchangeRatesCache[`USD/${from}`];
+    const toUSD = exchangeRatesCache[`USD/${to}`];
+    
+    if (fromUSD && toUSD && fromUSD.price !== 0) {
+        return toUSD.price / fromUSD.price;
     }
     
     console.warn(`⚠️ No rate for ${from}/${to}`);
     return null;
-}
-
-// Generate chart data
-function generateChartData(days = 30) {
-    const data = [];
-    const now = Date.now();
-    const baseValue = Math.random() * 0.5 + 0.8;
-    
-    for (let i = days; i >= 0; i--) {
-        const date = new Date(now - (i * 24 * 60 * 60 * 1000));
-        const variance = (Math.random() - 0.5) * 0.05;
-        const trend = (days - i) * 0.001;
-        const value = Math.max(0.1, baseValue + variance + trend);
-        
-        data.push({
-            date: date.toISOString().split('T')[0],
-            value: value
-        });
-    }
-    
-    return data;
-}
-
-// Get time series data
-async function getTimeSeriesData(from, to, range = '1M') {
-    const rangeToDays = {
-        '1D': 1, '1W': 7, '1M': 30, '6M': 180, '1Y': 365, '5Y': 1825
-    };
-    
-    const days = rangeToDays[range] || 30;
-    return generateChartData(days);
-}
-
-// Calculate percentage change
-function calculateChange(current, previous) {
-    if (!previous || previous === 0) return 0;
-    return ((current - previous) / previous) * 100;
 }
 
 // Initialize API
