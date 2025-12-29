@@ -1,5 +1,5 @@
 // ============================================
-// RUSH 3D - PROFESSIONAL GAME ENGINE
+// RUSH 3D - PROFESSIONAL GAME ENGINE (IMPROVED)
 // ============================================
 
 // Game State Management
@@ -8,9 +8,11 @@ const gameState = {
     isPaused: false,
     score: 0,
     highScore: 0,
-    speed: 0.2,
+    speed: 0.25,
+    baseSpeed: 0.25,
     difficulty: 1,
-    soundEnabled: true
+    soundEnabled: true,
+    obstaclesPassed: 0
 };
 
 // Three.js Core Objects
@@ -23,31 +25,37 @@ let stars = [];
 
 // Game Mechanics
 let roadCurve = 0;
-let roadCurveSpeed = 0.015;
-let roadCurveAmount = 3;
+let roadCurveSpeed = 0.02;
+let roadCurveAmount = 4;
+let roadVerticalCurve = 0;
+let roadVerticalSpeed = 0.015;
+let roadVerticalAmount = 3;
 let targetLane = 0;
 let currentLane = 0;
 let obstacleSpawnTimer = 0;
-let obstacleSpawnInterval = 100;
+let obstacleSpawnInterval = 80;
 let lastObstacleNumber = 1;
 
 // Camera Settings
 const cameraSettings = {
-    distance: 12,
-    height: 6,
-    followSpeed: 0.12,
-    lookAheadDistance: 8
+    distance: 15,
+    height: 8,
+    followSpeed: 0.15,
+    lookAheadDistance: 10
 };
 
 // Input Handling
 let touchStartX = 0;
 let touchStartY = 0;
 let isDragging = false;
-const swipeThreshold = 40;
+const swipeThreshold = 50;
 
 // Lane Positions
-const lanePositions = [-3.5, 0, 3.5];
-const laneWidth = 3;
+const lanePositions = [-4, 0, 4];
+const laneWidth = 4;
+
+// Road dimensions
+const ROAD_WIDTH = 13;
 
 // ============================================
 // INITIALIZATION
@@ -56,21 +64,18 @@ const laneWidth = 3;
 function init() {
     console.log('🎮 Initializing Rush 3D...');
     
-    // Create Scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0a0a);
-    scene.fog = new THREE.FogExp2(0x0a0a0a, 0.015);
+    scene.fog = new THREE.FogExp2(0x0a0a0a, 0.012);
 
-    // Create Camera
     camera = new THREE.PerspectiveCamera(
-        70,
+        75,
         window.innerWidth / window.innerHeight,
         0.1,
         1000
     );
     camera.position.set(0, cameraSettings.height, cameraSettings.distance);
 
-    // Create Renderer
     renderer = new THREE.WebGLRenderer({ 
         antialias: true,
         alpha: false,
@@ -83,27 +88,16 @@ function init() {
     
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    // Setup Lighting
     setupLighting();
-
-    // Create Game Objects
     createBall();
     createRoad();
     createStarfield();
-
-    // Setup Input
     setupInput();
-
-    // Load Save Data
     loadHighScore();
-
-    // Setup UI Events
     setupUIEvents();
 
-    // Window Resize Handler
     window.addEventListener('resize', onWindowResize);
 
-    // Hide Loading Screen
     setTimeout(() => {
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
@@ -111,7 +105,6 @@ function init() {
         }
     }, 500);
 
-    // Start Animation Loop
     animate();
     
     console.log('✅ Game initialized successfully!');
@@ -122,71 +115,73 @@ function init() {
 // ============================================
 
 function setupLighting() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    mainLight.position.set(5, 15, 5);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    mainLight.position.set(5, 20, 5);
     mainLight.castShadow = true;
-    mainLight.shadow.camera.left = -20;
-    mainLight.shadow.camera.right = 20;
-    mainLight.shadow.camera.top = 20;
-    mainLight.shadow.camera.bottom = -20;
+    mainLight.shadow.camera.left = -30;
+    mainLight.shadow.camera.right = 30;
+    mainLight.shadow.camera.top = 30;
+    mainLight.shadow.camera.bottom = -30;
     mainLight.shadow.mapSize.width = 2048;
     mainLight.shadow.mapSize.height = 2048;
     scene.add(mainLight);
 
-    const pointLight1 = new THREE.PointLight(0x00ff88, 1.5, 40);
-    pointLight1.position.set(-8, 4, -10);
+    const pointLight1 = new THREE.PointLight(0x00ff88, 2, 50);
+    pointLight1.position.set(-10, 5, -10);
     scene.add(pointLight1);
 
-    const pointLight2 = new THREE.PointLight(0xff0088, 1.5, 40);
-    pointLight2.position.set(8, 4, -10);
+    const pointLight2 = new THREE.PointLight(0xff0088, 2, 50);
+    pointLight2.position.set(10, 5, -10);
     scene.add(pointLight2);
 
-    const pointLight3 = new THREE.PointLight(0x00ddff, 1.5, 40);
-    pointLight3.position.set(0, 4, -25);
+    const pointLight3 = new THREE.PointLight(0x00ddff, 2, 50);
+    pointLight3.position.set(0, 5, -30);
     scene.add(pointLight3);
 
-    const hemiLight = new THREE.HemisphereLight(0x00ddff, 0x1a1a2e, 0.5);
+    const hemiLight = new THREE.HemisphereLight(0x00ddff, 0x1a1a2e, 0.6);
     scene.add(hemiLight);
 }
 
 // ============================================
-// CREATE BALL
+// CREATE BALL (حجم نصف الطريق)
 // ============================================
 
 function createBall() {
-    const geometry = new THREE.SphereGeometry(1, 32, 32);
+    const ballRadius = ROAD_WIDTH / 6; // حجم كبير - نصف عرض المسار
+    
+    const geometry = new THREE.SphereGeometry(ballRadius, 32, 32);
     const material = new THREE.MeshPhongMaterial({
         color: 0x00ff88,
         emissive: 0x00ff88,
-        emissiveIntensity: 0.6,
-        shininess: 100,
+        emissiveIntensity: 0.7,
+        shininess: 120,
         specular: 0xffffff
     });
     
     ball = new THREE.Mesh(geometry, material);
-    ball.position.set(lanePositions[1], 1.5, 0);
+    ball.position.set(lanePositions[1], 2, 0);
     ball.castShadow = true;
     ball.receiveShadow = true;
     scene.add(ball);
 
-    const glowGeometry = new THREE.SphereGeometry(1.4, 32, 32);
+    const glowGeometry = new THREE.SphereGeometry(ballRadius * 1.5, 32, 32);
     const glowMaterial = new THREE.MeshBasicMaterial({
         color: 0x00ff88,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.4,
         side: THREE.BackSide
     });
     ballGlow = new THREE.Mesh(glowGeometry, glowMaterial);
     ball.add(ballGlow);
 
-    const coreGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+    const coreGeometry = new THREE.SphereGeometry(ballRadius * 0.3, 16, 16);
     const coreMaterial = new THREE.MeshBasicMaterial({
         color: 0xffffff,
         transparent: true,
-        opacity: 0.8
+        opacity: 0.9
     });
     const core = new THREE.Mesh(coreGeometry, coreMaterial);
     ball.add(core);
@@ -195,22 +190,21 @@ function createBall() {
 }
 
 // ============================================
-// CREATE ROAD
+// CREATE ROAD (منحني في جميع الاتجاهات)
 // ============================================
 
 function createRoad() {
-    const roadLength = 200;
-    const segmentLength = 4;
-    const roadWidth = 12;
+    const roadLength = 250;
+    const segmentLength = 5;
     
     for (let i = 0; i < roadLength / segmentLength; i++) {
         const z = -i * segmentLength;
         
-        const segmentGeometry = new THREE.PlaneGeometry(roadWidth, segmentLength);
+        const segmentGeometry = new THREE.PlaneGeometry(ROAD_WIDTH, segmentLength);
         const segmentMaterial = new THREE.MeshStandardMaterial({
             color: 0x1a1a1a,
-            roughness: 0.9,
-            metalness: 0.1
+            roughness: 0.85,
+            metalness: 0.15
         });
         
         const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
@@ -220,22 +214,22 @@ function createRoad() {
         scene.add(segment);
         road.push(segment);
 
-        if (i % 2 === 0) {
-            createLaneDivider(-laneWidth / 2, z);
-            createLaneDivider(laneWidth / 2, z);
+        if (i % 3 === 0) {
+            createLaneDivider(-laneWidth / 1.5, z);
+            createLaneDivider(laneWidth / 1.5, z);
         }
 
-        createSideBarrier(-roadWidth / 2, z, 0xff0088);
-        createSideBarrier(roadWidth / 2, z, 0x00ddff);
+        createSideBarrier(-ROAD_WIDTH / 2, z, 0xff0088);
+        createSideBarrier(ROAD_WIDTH / 2, z, 0x00ddff);
     }
 }
 
 function createLaneDivider(x, z) {
-    const geometry = new THREE.BoxGeometry(0.15, 0.05, 2);
+    const geometry = new THREE.BoxGeometry(0.2, 0.05, 2.5);
     const material = new THREE.MeshBasicMaterial({
         color: 0x00ff88,
         transparent: true,
-        opacity: 0.4
+        opacity: 0.5
     });
     
     const divider = new THREE.Mesh(geometry, material);
@@ -245,17 +239,17 @@ function createLaneDivider(x, z) {
 }
 
 function createSideBarrier(x, z, color) {
-    const geometry = new THREE.BoxGeometry(0.3, 2, 4);
+    const geometry = new THREE.BoxGeometry(0.4, 2.5, 5);
     const material = new THREE.MeshPhongMaterial({
         color: color,
         emissive: color,
-        emissiveIntensity: 0.5,
+        emissiveIntensity: 0.6,
         transparent: true,
-        opacity: 0.6
+        opacity: 0.7
     });
     
     const barrier = new THREE.Mesh(geometry, material);
-    barrier.position.set(x, 1, z);
+    barrier.position.set(x, 1.25, z);
     scene.add(barrier);
     road.push(barrier);
 }
@@ -265,15 +259,15 @@ function createSideBarrier(x, z, color) {
 // ============================================
 
 function createStarfield() {
-    const starGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+    const starGeometry = new THREE.SphereGeometry(0.15, 8, 8);
     const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
     
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 300; i++) {
         const star = new THREE.Mesh(starGeometry, starMaterial);
         star.position.set(
-            (Math.random() - 0.5) * 100,
-            Math.random() * 50 + 10,
-            (Math.random() - 0.5) * 200 - 50
+            (Math.random() - 0.5) * 150,
+            Math.random() * 60 + 15,
+            (Math.random() - 0.5) * 300 - 50
         );
         scene.add(star);
         stars.push(star);
@@ -281,18 +275,20 @@ function createStarfield() {
 }
 
 // ============================================
-// CREATE OBSTACLE
+// CREATE OBSTACLE (حجم نصف الطريق)
 // ============================================
 
 function createObstacle(lane, number) {
     const group = new THREE.Group();
     
-    const geometry = new THREE.ConeGeometry(1, 2, 3);
+    const obstacleSize = ROAD_WIDTH / 3; // حجم كبير - نصف عرض المسار
+    
+    const geometry = new THREE.ConeGeometry(obstacleSize, obstacleSize * 2, 3);
     const material = new THREE.MeshPhongMaterial({
         color: 0xff3366,
         emissive: 0xff3366,
-        emissiveIntensity: 0.5,
-        shininess: 80,
+        emissiveIntensity: 0.6,
+        shininess: 100,
         flatShading: true
     });
     
@@ -302,11 +298,11 @@ function createObstacle(lane, number) {
     pyramid.receiveShadow = true;
     group.add(pyramid);
 
-    const glowGeometry = new THREE.ConeGeometry(1.3, 2.3, 3);
+    const glowGeometry = new THREE.ConeGeometry(obstacleSize * 1.3, obstacleSize * 2.3, 3);
     const glowMaterial = new THREE.MeshBasicMaterial({
         color: 0xff3366,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.4,
         side: THREE.BackSide
     });
     const glow = new THREE.Mesh(glowGeometry, glowMaterial);
@@ -318,13 +314,13 @@ function createObstacle(lane, number) {
     canvas.width = 256;
     canvas.height = 256;
     
-    context.shadowColor = 'rgba(0, 0, 0, 0.8)';
-    context.shadowBlur = 10;
-    context.shadowOffsetX = 3;
-    context.shadowOffsetY = 3;
+    context.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    context.shadowBlur = 15;
+    context.shadowOffsetX = 4;
+    context.shadowOffsetY = 4;
     
     context.fillStyle = '#ffffff';
-    context.font = 'bold 140px Arial';
+    context.font = 'bold 160px Arial';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(number.toString(), 128, 128);
@@ -335,14 +331,14 @@ function createObstacle(lane, number) {
         transparent: true
     });
     const sprite = new THREE.Sprite(spriteMaterial);
-    sprite.scale.set(2, 2, 1);
-    sprite.position.y = 1.8;
+    sprite.scale.set(2.5, 2.5, 1);
+    sprite.position.y = obstacleSize * 1.5;
     group.add(sprite);
 
-    group.position.set(lanePositions[lane], 1, -60);
+    group.position.set(lanePositions[lane], obstacleSize, -70);
     group.userData.lane = lane;
     group.userData.number = number;
-    group.userData.rotationSpeed = 0.03 + Math.random() * 0.02;
+    group.userData.rotationSpeed = 0.04 + Math.random() * 0.03;
 
     scene.add(group);
     obstacles.push(group);
@@ -352,9 +348,9 @@ function createObstacle(lane, number) {
 // PARTICLE SYSTEM
 // ============================================
 
-function createParticleExplosion(x, y, z, color, count = 30) {
+function createParticleExplosion(x, y, z, color, count = 40) {
     for (let i = 0; i < count; i++) {
-        const geometry = new THREE.SphereGeometry(0.15, 8, 8);
+        const geometry = new THREE.SphereGeometry(0.2, 8, 8);
         const material = new THREE.MeshBasicMaterial({ 
             color: color,
             transparent: true
@@ -363,12 +359,12 @@ function createParticleExplosion(x, y, z, color, count = 30) {
         
         particle.position.set(x, y, z);
         particle.userData.velocity = new THREE.Vector3(
-            (Math.random() - 0.5) * 0.4,
-            Math.random() * 0.4 + 0.2,
-            (Math.random() - 0.5) * 0.4
+            (Math.random() - 0.5) * 0.5,
+            Math.random() * 0.5 + 0.3,
+            (Math.random() - 0.5) * 0.5
         );
         particle.userData.life = 1.0;
-        particle.userData.decay = 0.02 + Math.random() * 0.02;
+        particle.userData.decay = 0.015 + Math.random() * 0.015;
         
         scene.add(particle);
         particles.push(particle);
@@ -376,11 +372,11 @@ function createParticleExplosion(x, y, z, color, count = 30) {
 }
 
 function createTrailParticle(x, y, z) {
-    const geometry = new THREE.SphereGeometry(0.3, 8, 8);
+    const geometry = new THREE.SphereGeometry(0.4, 8, 8);
     const material = new THREE.MeshBasicMaterial({
         color: 0x00ff88,
         transparent: true,
-        opacity: 0.6
+        opacity: 0.7
     });
     const particle = new THREE.Mesh(geometry, material);
     
@@ -393,20 +389,21 @@ function createTrailParticle(x, y, z) {
 }
 
 // ============================================
-// INPUT HANDLING
+// INPUT HANDLING (النقر في أي مكان)
 // ============================================
 
 function setupInput() {
     const canvas = renderer.domElement;
     
+    // Touch Events
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
     
+    // Mouse Events (النقر في أي مكان)
     canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
     
+    // Keyboard Events
     document.addEventListener('keydown', handleKeyDown);
 }
 
@@ -416,7 +413,6 @@ function handleTouchStart(e) {
     
     isDragging = true;
     touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
 }
 
 function handleTouchMove(e) {
@@ -442,27 +438,16 @@ function handleTouchEnd(e) {
 
 function handleMouseDown(e) {
     if (!gameState.isPlaying || gameState.isPaused) return;
-    isDragging = true;
-    touchStartX = e.clientX;
-}
-
-function handleMouseMove(e) {
-    if (!gameState.isPlaying || gameState.isPaused || !isDragging) return;
     
-    const deltaX = e.clientX - touchStartX;
+    // النقر في النصف الأيمن = تحرك يمين، النقر في النصف الأيسر = تحرك يسار
+    const screenWidth = window.innerWidth;
+    const clickX = e.clientX;
     
-    if (Math.abs(deltaX) > swipeThreshold) {
-        if (deltaX > 0 && targetLane < 1) {
-            changeLane(1);
-        } else if (deltaX < 0 && targetLane > -1) {
-            changeLane(-1);
-        }
-        touchStartX = e.clientX;
+    if (clickX > screenWidth / 2 && targetLane < 1) {
+        changeLane(1);
+    } else if (clickX < screenWidth / 2 && targetLane > -1) {
+        changeLane(-1);
     }
-}
-
-function handleMouseUp(e) {
-    isDragging = false;
 }
 
 function handleKeyDown(e) {
@@ -487,12 +472,12 @@ function changeLane(direction) {
 
 function checkCollision() {
     for (let obstacle of obstacles) {
-        if (obstacle.position.z > ball.position.z - 2 && 
-            obstacle.position.z < ball.position.z + 2) {
+        if (obstacle.position.z > ball.position.z - 3 && 
+            obstacle.position.z < ball.position.z + 3) {
             
             const distance = Math.abs(ball.position.x - obstacle.position.x);
             
-            if (distance < 1.5) {
+            if (distance < 2.5) {
                 return true;
             }
         }
@@ -510,15 +495,16 @@ function startGame() {
     gameState.isPlaying = true;
     gameState.isPaused = false;
     gameState.score = 0;
-    gameState.speed = 0.2;
+    gameState.speed = gameState.baseSpeed;
     gameState.difficulty = 1;
+    gameState.obstaclesPassed = 0;
     
     targetLane = 0;
     currentLane = 0;
     obstacleSpawnTimer = 0;
     lastObstacleNumber = 1;
     
-    ball.position.set(lanePositions[1], 1.5, 0);
+    ball.position.set(lanePositions[1], 2, 0);
     
     obstacles.forEach(obs => scene.remove(obs));
     obstacles = [];
@@ -531,9 +517,6 @@ function startGame() {
     document.getElementById('pause-screen').classList.remove('active');
     document.getElementById('score-display').classList.add('active');
     document.getElementById('game-controls').classList.add('active');
-    
-    const instructions = document.getElementById('instructions');
-    if (instructions) instructions.classList.add('active');
 }
 
 function gameOver() {
@@ -546,7 +529,7 @@ function gameOver() {
         saveHighScore();
     }
     
-    createParticleExplosion(ball.position.x, ball.position.y, ball.position.z, 0xff3366, 50);
+    createParticleExplosion(ball.position.x, ball.position.y, ball.position.z, 0xff3366, 60);
     
     document.getElementById('final-score-value').textContent = gameState.score;
     document.getElementById('best-score-value').textContent = gameState.highScore;
@@ -555,8 +538,6 @@ function gameOver() {
         document.getElementById('gameover-screen').classList.add('active');
         document.getElementById('score-display').classList.remove('active');
         document.getElementById('game-controls').classList.remove('active');
-        const instructions = document.getElementById('instructions');
-        if (instructions) instructions.classList.remove('active');
     }, 500);
 }
 
@@ -580,11 +561,17 @@ function updateScoreDisplay() {
 
 function addScore(points = 1) {
     gameState.score += points;
+    gameState.obstaclesPassed += points;
     updateScoreDisplay();
     
-    gameState.difficulty = 1 + gameState.score * 0.008;
-    gameState.speed = Math.min(0.4, 0.2 + gameState.score * 0.003);
-    obstacleSpawnInterval = Math.max(50, 100 - gameState.score * 0.5);
+    // زيادة السرعة كل 10 مثلثات
+    if (gameState.obstaclesPassed % 10 === 0) {
+        gameState.speed = Math.min(0.5, gameState.speed + 0.03);
+        console.log('⚡ Speed increased to:', gameState.speed);
+    }
+    
+    gameState.difficulty = 1 + gameState.score * 0.01;
+    obstacleSpawnInterval = Math.max(60, 80 - gameState.score * 0.4);
 }
 
 // ============================================
@@ -594,32 +581,40 @@ function addScore(points = 1) {
 function updateGame() {
     if (!gameState.isPlaying || gameState.isPaused) return;
     
+    // منحنيات أفقية (يمين/يسار)
     roadCurve += roadCurveSpeed * gameState.speed * 10;
-    const curveOffset = Math.sin(roadCurve) * roadCurveAmount;
+    const curveOffsetX = Math.sin(roadCurve) * roadCurveAmount;
+    
+    // منحنيات عمودية (أعلى/أسفل)
+    roadVerticalCurve += roadVerticalSpeed * gameState.speed * 10;
+    const curveOffsetY = Math.sin(roadVerticalCurve) * roadVerticalAmount;
     
     road.forEach((segment) => {
-        segment.position.z += gameState.speed * 2;
+        segment.position.z += gameState.speed * 2.5;
         
-        const distanceFromCamera = Math.abs(segment.position.z - ball.position.z);
-        const curveFactor = Math.min(1, distanceFromCamera / 30);
-        segment.position.x = curveOffset * curveFactor;
+        const distanceFromBall = segment.position.z - ball.position.z;
+        const curveFactor = Math.min(1, Math.abs(distanceFromBall) / 40);
         
-        if (segment.position.z > 10) {
-            segment.position.z -= 200;
+        segment.position.x = curveOffsetX * curveFactor;
+        segment.position.y = curveOffsetY * curveFactor;
+        
+        if (segment.position.z > 15) {
+            segment.position.z -= 250;
         }
     });
     
     const targetX = lanePositions[targetLane + 1];
-    ball.position.x += (targetX - ball.position.x) * 0.15;
+    ball.position.x += (targetX - ball.position.x) * 0.18;
     
-    ball.rotation.x += 0.08;
-    ball.rotation.z += 0.04;
+    ball.rotation.x += 0.1;
+    ball.rotation.z += 0.05;
     
     if (ballGlow) {
-        const pulse = Math.sin(Date.now() * 0.005) * 0.1 + 0.9;
+        const pulse = Math.sin(Date.now() * 0.006) * 0.15 + 0.9;
         ballGlow.scale.set(pulse, pulse, pulse);
     }
     
+    // إنشاء مثلثات لا نهائية
     obstacleSpawnTimer++;
     if (obstacleSpawnTimer > obstacleSpawnInterval) {
         const lane = Math.floor(Math.random() * 3);
@@ -629,16 +624,17 @@ function updateGame() {
     }
     
     obstacles.forEach((obstacle, index) => {
-        obstacle.position.z += gameState.speed * 2;
+        obstacle.position.z += gameState.speed * 2.5;
         
-        const distanceFromCamera = Math.abs(obstacle.position.z - ball.position.z);
-        const curveFactor = Math.min(1, distanceFromCamera / 30);
+        const distanceFromBall = obstacle.position.z - ball.position.z;
+        const curveFactor = Math.min(1, Math.abs(distanceFromBall) / 40);
         const baseLaneX = lanePositions[obstacle.userData.lane];
-        obstacle.position.x = baseLaneX + curveOffset * curveFactor;
+        obstacle.position.x = baseLaneX + curveOffsetX * curveFactor;
+        obstacle.position.y = curveOffsetY * curveFactor;
         
         obstacle.rotation.y += obstacle.userData.rotationSpeed;
         
-        if (obstacle.position.z > 5) {
+        if (obstacle.position.z > 8) {
             scene.remove(obstacle);
             obstacles.splice(index, 1);
             addScore(1);
@@ -648,14 +644,14 @@ function updateGame() {
     particles.forEach((particle, index) => {
         if (particle.userData.velocity) {
             particle.position.add(particle.userData.velocity);
-            particle.userData.velocity.y -= 0.015;
+            particle.userData.velocity.y -= 0.02;
         }
         
-        particle.userData.life -= particle.userData.decay || 0.03;
+        particle.userData.life -= particle.userData.decay || 0.025;
         particle.material.opacity = particle.userData.life;
         
         if (particle.userData.isTrail) {
-            particle.scale.multiplyScalar(0.95);
+            particle.scale.multiplyScalar(0.93);
         }
         
         if (particle.userData.life <= 0) {
@@ -665,27 +661,27 @@ function updateGame() {
     });
     
     stars.forEach(star => {
-        star.position.z += gameState.speed * 0.5;
-        if (star.position.z > 10) {
-            star.position.z -= 200;
+        star.position.z += gameState.speed * 0.6;
+        if (star.position.z > 15) {
+            star.position.z -= 300;
         }
     });
     
-    const cameraTargetX = ball.position.x * 0.3;
+    const cameraTargetX = ball.position.x * 0.35;
     const cameraTargetZ = ball.position.z + cameraSettings.distance;
     
     camera.position.x += (cameraTargetX - camera.position.x) * cameraSettings.followSpeed;
     camera.position.z += (cameraTargetZ - camera.position.z) * cameraSettings.followSpeed;
     
     const lookAtPoint = new THREE.Vector3(
-        ball.position.x * 0.5,
-        ball.position.y,
+        ball.position.x * 0.6,
+        ball.position.y + 1,
         ball.position.z - cameraSettings.lookAheadDistance
     );
     camera.lookAt(lookAtPoint);
     
-    if (gameState.speed > 0.3) {
-        camera.position.y = cameraSettings.height + Math.sin(Date.now() * 0.01) * 0.1;
+    if (gameState.speed > 0.35) {
+        camera.position.y = cameraSettings.height + Math.sin(Date.now() * 0.012) * 0.15;
     }
     
     if (checkCollision()) {
