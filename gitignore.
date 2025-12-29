@@ -1,0 +1,98 @@
+# ============================================
+# RUSH 3D - .gitignore
+# ============================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Build Output
+dist/
+build/
+out/
+*.min.js
+*.min.css
+
+# IDE & Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+*.swp
+*.swo
+*~
+
+# OS Files
+Thumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Cache
+.cache/
+.npm/
+.eslintcache
+.stylelintcache
+
+# Test Coverage
+coverage/
+.nyc_output/
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Documentation Build
+docs/_build/
+.docusaurus/
+
+# Optional
+.git/
+.svn/
+.hg/
+
+# Backup Files
+*.bak
+*.backup
+*~
+
+# Local Development
+local/
+.local/
+
+# Screenshots & Media (اختياري - احذف هذا السطر إذا أردت رفع الصور)
+# screenshots/
+# *.png
+# *.jpg
+# *.gif
+# *.mp4
+
+# User-specific
+.history/
+.vscode-upload.json
