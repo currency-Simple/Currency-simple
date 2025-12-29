@@ -453,36 +453,12 @@ body {
 }
 
 /* ============================================
-   INSTRUCTIONS
+   INSTRUCTIONS (مخفي)
    ============================================ */
 #instructions {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-#instructions.active {
-    opacity: 1;
-}
-
-.instruction-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 25px;
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: 50px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    font-size: 16px;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.instruction-icon {
-    font-size: 24px;
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
 }
 
 /* ============================================
