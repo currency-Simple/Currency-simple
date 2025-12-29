@@ -2,263 +2,114 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Currency Exchange Rates</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="Rush 3D - Professional 3D Game">
+    <title>Rush 3D - Professional Game</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="loading-screen">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">Seconds</p>
-    </div>
-
-    <!-- Main App Container -->
-    <div id="app-container" class="app-container hidden">
-        <!-- Navigation Tabs -->
-        <nav class="bottom-nav">
-            <button class="nav-btn active" data-tab="rates">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M3 3v18h18"></path>
-                    <path d="M18 17l-5-5-3 3-4-4"></path>
-                </svg>
-                <span>Rates</span>
-            </button>
-            <button class="nav-btn" data-tab="convert">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M7 16V4M7 4L3 8M7 4l4 4"></path>
-                    <path d="M17 8v12M17 20l4-4M17 20l-4-4"></path>
-                </svg>
-                <span>Convert</span>
-            </button>
-            <button class="nav-btn" data-tab="settings">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M12 1v6m0 6v6"></path>
-                    <path d="M1 12h6m6 0h6"></path>
-                </svg>
-                <span>Settings</span>
-            </button>
-        </nav>
-
-        <!-- Rates Tab -->
-        <div id="rates-tab" class="tab-content active">
-            <div class="header">
-                <h1>Rates</h1>
-                <button id="add-favorite-btn" class="add-btn">+</button>
-            </div>
-
-            <section class="section">
-                <h2>Favourites</h2>
-                <div id="favorites-list" class="currency-list">
-                    <div class="empty-state">
-                        <span>⭐</span>
-                        <p>You haven't added any favourite rates yet.</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="section">
-                <h2>Popular</h2>
-                <div id="popular-list" class="currency-list"></div>
-            </section>
+    <!-- UI Container -->
+    <div id="ui-container">
+        <!-- Score Display -->
+        <div id="score-display">
+            <div class="score-number">0</div>
+            <div class="score-label">SCORE</div>
         </div>
 
-        <!-- Convert Tab -->
-        <div id="convert-tab" class="tab-content">
-            <div class="header">
-                <h1>Convert</h1>
-            </div>
-            
-            <div class="convert-container">
-                <div class="currency-input-group">
-                    <div class="currency-selector" id="from-currency">
-                        <img src="" alt="" class="currency-icon">
-                        <span class="currency-code">EUR</span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M6 9l6 6 6-6"></path>
-                        </svg>
-                    </div>
-                    <input type="number" id="from-amount" class="amount-input" value="1000" placeholder="0">
+        <!-- Menu Screen -->
+        <div id="menu-screen" class="screen active">
+            <div class="menu-content">
+                <h1 class="game-title">
+                    <span class="title-gradient">RUSH</span>
+                    <span class="title-3d">3D</span>
+                </h1>
+                <div class="subtitle-box">
+                    <p class="subtitle">🎮 اسحب لليمين أو اليسار للتحكم</p>
+                    <p class="subtitle-small">تجنب المثلثات المرقمة</p>
                 </div>
-
-                <button id="swap-currencies" class="swap-btn">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M7 16V4M7 4L3 8M7 4l4 4"></path>
-                        <path d="M17 8v12M17 20l4-4M17 20l-4-4"></path>
-                    </svg>
+                <button id="start-btn" class="main-btn pulse">
+                    <span>▶ ابدأ اللعب</span>
                 </button>
-
-                <div class="currency-input-group">
-                    <div class="currency-selector" id="to-currency">
-                        <img src="" alt="" class="currency-icon">
-                        <span class="currency-code">GBP</span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M6 9l6 6 6-6"></path>
-                        </svg>
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <div class="stat-label">أعلى نقاط</div>
+                        <div class="stat-value" id="high-score-value">0</div>
                     </div>
-                    <input type="number" id="to-amount" class="amount-input" readonly>
-                </div>
-
-                <div class="exchange-rate-info">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M18 17l-5-5-3 3-4-4"></path>
-                    </svg>
-                    <span id="exchange-rate-text">Loading...</span>
                 </div>
             </div>
         </div>
 
-        <!-- Settings Tab -->
-        <div id="settings-tab" class="tab-content">
-            <div class="header">
-                <h1>Settings</h1>
-            </div>
-
-            <section class="section">
-                <h2>Dark mode</h2>
-                <div class="toggle-group">
-                    <button class="toggle-btn active" data-mode="auto">Auto</button>
-                    <button class="toggle-btn" data-mode="on">On</button>
-                    <button class="toggle-btn" data-mode="off">Off</button>
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen">
+            <div class="gameover-content">
+                <h2 class="gameover-title">💥 انتهت اللعبة!</h2>
+                <div class="final-score-box">
+                    <div class="score-label-small">نقاطك النهائية</div>
+                    <div id="final-score-value" class="score-big">0</div>
                 </div>
-            </section>
-
-            <section class="section">
-                <h2>General settings</h2>
-                <div class="settings-list">
-                    <a href="#" class="settings-item">
-                        <div class="settings-icon">😊</div>
-                        <span>Rate the app</span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M9 18l6-6-6-6"></path>
-                        </svg>
-                    </a>
-                    <a href="#terms" class="settings-item" id="terms-link">
-                        <div class="settings-icon">ℹ️</div>
-                        <span>Terms and privacy</span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M9 18l6-6-6-6"></path>
-                        </svg>
-                    </a>
-                </div>
-            </section>
-
-            <div class="version">Version 2.9.0</div>
-        </div>
-
-        <!-- Currency Detail Modal -->
-        <div id="currency-detail-modal" class="modal hidden">
-            <div class="modal-content">
-                <button class="close-btn" id="detail-close">×</button>
-                <button class="favorite-btn" id="detail-favorite">⭐</button>
-                
-                <div class="modal-header">
-                    <div class="currency-pair-icons">
-                        <img src="" class="currency-icon-large from-icon">
-                        <img src="" class="currency-icon-large to-icon">
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-icon">🏆</span>
+                        <span>أفضل: </span>
+                        <span id="best-score-value" class="highlight">0</span>
                     </div>
-                    <h2 id="modal-title">EUR to USD</h2>
-                    <p id="modal-subtitle">Euro to US Dollar</p>
                 </div>
-
-                <div class="rate-display">
-                    <h3 id="modal-rate">1 EUR = 1.178 USD</h3>
-                    <p id="modal-change" class="positive">↗ Up by 2.35% (0.027650 USD)</p>
-                </div>
-
-                <div class="chart-container">
-                    <canvas id="detail-chart" width="400" height="200"></canvas>
-                </div>
-
-                <div class="time-range-selector">
-                    <button class="time-btn" data-range="1D">D</button>
-                    <button class="time-btn" data-range="1W">W</button>
-                    <button class="time-btn" data-range="1M">M</button>
-                    <button class="time-btn" data-range="6M">6M</button>
-                    <button class="time-btn active" data-range="1Y">1Y</button>
-                    <button class="time-btn" data-range="5Y">5Y</button>
-                </div>
-
-                <button class="convert-btn-modal" id="modal-convert-btn">Convert EUR to USD</button>
+                <button id="retry-btn" class="main-btn">
+                    <span>🔄 إعادة المحاولة</span>
+                </button>
+                <button id="menu-btn" class="secondary-btn">
+                    <span>🏠 القائمة الرئيسية</span>
+                </button>
             </div>
         </div>
 
-        <!-- Currency Selector Modal -->
-        <div id="currency-selector-modal" class="modal hidden">
-            <div class="modal-content">
-                <button class="close-btn" id="selector-close">×</button>
-                <h2>Add a favourite</h2>
-                
-                <div class="currency-search">
-                    <input type="text" id="currency-search-input" placeholder="Search currency...">
-                </div>
-
-                <div class="currency-direction">
-                    <div class="direction-input">
-                        <label>From</label>
-                        <div class="selected-currency" id="selected-from" data-selecting="from">
-                            <span>Select currency</span>
-                        </div>
-                    </div>
-                    <button class="swap-direction-btn" id="swap-selection">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M7 16V4M7 4L3 8M7 4l4 4"></path>
-                            <path d="M17 8v12M17 20l4-4M17 20l-4-4"></path>
-                        </svg>
-                    </button>
-                    <div class="direction-input">
-                        <label>To</label>
-                        <div class="selected-currency" id="selected-to" data-selecting="to">
-                            <span>Select currency</span>
-                        </div>
-                    </div>
-                </div>
-
-                <h3>Suggested currencies</h3>
-                <div id="suggested-currencies" class="currency-selection-list"></div>
-
-                <h3>All currencies</h3>
-                <div id="all-currencies" class="currency-selection-list"></div>
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="screen">
+            <div class="pause-content">
+                <h2 class="pause-title">⏸ متوقف مؤقتاً</h2>
+                <button id="resume-btn" class="main-btn">
+                    <span>▶ متابعة</span>
+                </button>
+                <button id="quit-btn" class="secondary-btn">
+                    <span>🏠 الخروج</span>
+                </button>
             </div>
         </div>
 
-        <!-- Terms Modal -->
-        <div id="terms-modal" class="modal hidden">
-            <div class="modal-content terms-content">
-                <button class="close-btn" id="terms-close">×</button>
-                <h2>Terms and Privacy</h2>
-                
-                <div class="terms-section">
-                    <h3>Privacy Policy</h3>
-                    <p>This application respects your privacy. We do not collect, store, or share any personal information.</p>
-                    
-                    <h3>Financial Disclaimer</h3>
-                    <p>المعلومات المقدمة في هذا التطبيق هي لأغراض إعلامية فقط ولا تشكل نصيحة مالية. أسعار الصرف معرضة للتغيير ويمكن أن تختلف عن الأسعار الفعلية. يجب عليك استشارة مستشار مالي مؤهل قبل اتخاذ أي قرارات مالية. نحن لا نتحمل أي مسؤولية عن أي خسائر أو أضرار ناتجة عن استخدام هذا التطبيق.</p>
+        <!-- Control Buttons -->
+        <div id="game-controls">
+            <button id="pause-btn" class="control-btn">
+                <span class="btn-icon">⏸</span>
+            </button>
+            <button id="sound-btn" class="control-btn">
+                <span class="btn-icon">🔊</span>
+            </button>
+        </div>
 
-                    <h3>Data Source</h3>
-                    <p>Currency exchange rates are provided by Twelve Data API. Data is updated every 10 minutes.</p>
-
-                    <h3>Terms of Use</h3>
-                    <p>باستخدام هذا التطبيق، فإنك توافق على الشروط التالية:</p>
-                    <ul>
-                        <li>استخدام التطبيق لأغراض قانونية فقط</li>
-                        <li>عدم محاولة اختراق أو إساءة استخدام التطبيق</li>
-                        <li>قبول أن المعلومات المقدمة قد لا تكون دقيقة بنسبة 100%</li>
-                        <li>تحمل المسؤولية الكاملة عن أي قرارات مالية تتخذها</li>
-                    </ul>
-
-                    <h3>Contact Us</h3>
-                    <p>For questions or concerns, please contact us at:</p>
-                    <p><a href="mailto:jamalkatabeuro@gmail.com">jamalkatabeuro@gmail.com</a></p>
-                </div>
+        <!-- Instructions -->
+        <div id="instructions" class="instructions">
+            <div class="instruction-item">
+                <span class="instruction-icon">👆</span>
+                <span>اسحب لليمين/اليسار</span>
             </div>
         </div>
     </div>
 
-    <script src="js/currency-data.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/app.js"></script>
+    <!-- Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="loader"></div>
+            <p class="loading-text">جاري التحميل...</p>
+        </div>
+    </div>
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Game Script -->
+    <script src="game.js"></script>
 </body>
-                                </html>
+</html>
