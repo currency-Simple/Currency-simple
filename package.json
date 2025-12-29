@@ -1,0 +1,54 @@
+{
+  "name": "rush-3d-game",
+  "version": "1.0.0",
+  "description": "Professional 3D endless runner game inspired by Rush - Built with Three.js",
+  "main": "game.js",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "live-server --port=8080",
+    "dev": "live-server --port=3000 --open=index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/rush-3d-game.git"
+  },
+  "keywords": [
+    "game",
+    "3d",
+    "threejs",
+    "webgl",
+    "rush",
+    "endless-runner",
+    "javascript",
+    "html5",
+    "browser-game",
+    "mobile-game",
+    "casual-game",
+    "ketchapp",
+    "three.js",
+    "webgame"
+  ],
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com",
+    "url": "https://yourwebsite.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/rush-3d-game/issues"
+  },
+  "homepage": "https://github.com/yourusername/rush-3d-game#readme",
+  "engines": {
+    "node": ">=12.0.0",
+    "npm": ">=6.0.0"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.1"
+  },
+  "dependencies": {},
+  "browserslist": [
+    "last 2 versions",
+    "> 1%",
+    "not dead"
+  ]
+}
