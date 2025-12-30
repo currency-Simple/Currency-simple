@@ -1,8 +1,7 @@
 /* ============================================
-   RUSH 3D - PROFESSIONAL STYLES
+   RUSH 3D - PROFESSIONAL STYLES (UPDATED)
    ============================================ */
 
-/* Reset & Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -20,7 +19,6 @@ body {
     -webkit-user-select: none;
 }
 
-/* Canvas Container */
 #canvas-container {
     position: fixed;
     top: 0;
@@ -60,10 +58,6 @@ body {
 #loading-screen.hidden {
     opacity: 0;
     pointer-events: none;
-}
-
-.loading-content {
-    text-align: center;
 }
 
 .loader {
@@ -106,14 +100,13 @@ body {
 }
 
 .score-number {
-    font-size: 64px;
+    font-size: 56px;
     font-weight: bold;
     background: linear-gradient(135deg, #00ff88, #00ddff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     animation: scoreGlow 2s ease-in-out infinite;
 }
 
@@ -123,11 +116,25 @@ body {
 }
 
 .score-label {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
-    letter-spacing: 4px;
-    margin-top: -8px;
-    font-weight: 600;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 3px;
+    margin-top: -5px;
+}
+
+.speed-indicator {
+    margin-top: 8px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 15px;
+    border-radius: 15px;
+    display: inline-block;
+}
+
+#speed-value {
+    color: #00ff88;
+    font-weight: bold;
 }
 
 /* ============================================
@@ -156,9 +163,6 @@ body {
     pointer-events: all;
 }
 
-/* ============================================
-   MENU SCREEN
-   ============================================ */
 .menu-content, .gameover-content, .pause-content {
     text-align: center;
     animation: slideUp 0.6s ease;
@@ -178,7 +182,7 @@ body {
 }
 
 .game-title {
-    font-size: 90px;
+    font-size: 80px;
     font-weight: 900;
     margin-bottom: 10px;
     line-height: 1;
@@ -202,210 +206,121 @@ body {
 
 .title-3d {
     display: block;
-    font-size: 36px;
+    font-size: 32px;
     color: rgba(255, 255, 255, 0.9);
-    letter-spacing: 12px;
+    letter-spacing: 10px;
     margin-top: 5px;
     font-weight: 700;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 .subtitle-box {
-    margin: 30px 0;
-    padding: 20px;
+    margin: 25px 0;
+    padding: 18px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 15px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .subtitle {
-    font-size: 20px;
+    font-size: 18px;
     color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-weight: 600;
 }
 
 .subtitle-small {
-    font-size: 14px;
+    font-size: 13px;
     color: rgba(255, 255, 255, 0.5);
 }
 
-/* ============================================
-   BUTTONS
-   ============================================ */
-.main-btn {
-    padding: 20px 60px;
-    font-size: 24px;
-    font-weight: bold;
-    color: white;
-    background: linear-gradient(135deg, #00ff88, #00ddff);
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    pointer-events: all;
-    box-shadow: 0 10px 40px rgba(0, 255, 136, 0.4);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    margin: 15px 0;
-    font-family: inherit;
-}
-
-.main-btn:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 15px 50px rgba(0, 255, 136, 0.6);
-}
-
-.main-btn:active {
-    transform: translateY(-1px) scale(1.02);
-}
-
-.main-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.5s;
-}
-
-.main-btn:hover::before {
-    left: 100%;
-}
-
-.secondary-btn {
-    padding: 15px 50px;
-    font-size: 18px;
-    font-weight: 600;
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50px;
-    cursor: pointer;
-    pointer-events: all;
-    transition: all 0.3s ease;
-    margin: 10px 0;
-    font-family: inherit;
-}
-
-.secondary-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-    transform: translateY(-2px);
-}
-
-/* ============================================
-   STATS
-   ============================================ */
 .stats-container {
-    margin-top: 40px;
+    margin-top: 30px;
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 15px;
 }
 
 .stat-box {
-    padding: 15px 30px;
+    padding: 12px 25px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 15px;
+    border-radius: 12px;
     border: 1px solid rgba(0, 255, 136, 0.3);
 }
 
 .stat-label {
-    font-size: 14px;
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .stat-value {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: bold;
     color: #00ff88;
-    text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+    text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
 }
 
 /* ============================================
-   GAME OVER SCREEN
+   GAME OVER
    ============================================ */
 .gameover-title {
-    font-size: 52px;
+    font-size: 48px;
     color: #ff3366;
     margin-bottom: 20px;
-    text-shadow: 0 0 30px rgba(255, 51, 102, 0.6);
+    text-shadow: 0 0 25px rgba(255, 51, 102, 0.6);
     font-weight: 900;
-    animation: shake 0.5s ease;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-10px); }
-    75% { transform: translateX(10px); }
 }
 
 .final-score-box {
-    margin: 30px 0;
-    padding: 30px;
+    margin: 25px 0;
+    padding: 25px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
+    border-radius: 18px;
     border: 2px solid rgba(255, 51, 102, 0.3);
 }
 
 .score-label-small {
-    font-size: 14px;
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 2px;
 }
 
 .score-big {
-    font-size: 80px;
+    font-size: 70px;
     font-weight: bold;
     background: linear-gradient(135deg, #ff0080, #ff8c00);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 0 40px rgba(255, 0, 128, 0.5);
 }
 
 .stats-row {
-    margin: 20px 0;
-    display: flex;
-    justify-content: center;
-    gap: 30px;
+    margin: 18px 0;
 }
 
 .stat-item {
-    font-size: 20px;
+    font-size: 18px;
     color: rgba(255, 255, 255, 0.8);
-}
-
-.stat-icon {
-    font-size: 24px;
-    margin-left: 8px;
 }
 
 .highlight {
     color: #00ff88;
     font-weight: bold;
-    font-size: 24px;
+    font-size: 22px;
 }
 
-/* ============================================
-   PAUSE SCREEN
-   ============================================ */
 .pause-title {
-    font-size: 48px;
+    font-size: 44px;
     color: #00ddff;
-    margin-bottom: 40px;
-    text-shadow: 0 0 30px rgba(0, 221, 255, 0.6);
+    margin-bottom: 30px;
+    text-shadow: 0 0 25px rgba(0, 221, 255, 0.6);
     font-weight: 900;
 }
 
 /* ============================================
-   CONTROL BUTTONS
+   CONTROL BUTTONS (TOP)
    ============================================ */
 #game-controls {
     position: absolute;
@@ -422,13 +337,12 @@ body {
 }
 
 .control-btn {
-    width: 50px;
-    height: 50px;
+    width: 45px;
+    height: 45px;
     background: rgba(0, 0, 0, 0.7);
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     color: white;
-    font-size: 20px;
     cursor: pointer;
     pointer-events: all;
     backdrop-filter: blur(10px);
@@ -444,97 +358,273 @@ body {
     transform: scale(1.1);
 }
 
-.control-btn:active {
-    transform: scale(0.95);
-}
-
 .btn-icon {
+    font-size: 18px;
+}
+
+/* ============================================
+   BOTTOM NAVIGATION BAR (5 BUTTONS)
+   ============================================ */
+#bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.8));
+    backdrop-filter: blur(15px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px;
+    z-index: 1000;
+    pointer-events: all;
+}
+
+.nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    padding: 8px 15px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    min-width: 70px;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #00ff88;
+}
+
+.nav-btn-play {
+    width: 65px;
+    height: 65px;
+    background: linear-gradient(135deg, #00ff88, #00ddff);
+    border-radius: 50%;
+    box-shadow: 0 5px 25px rgba(0, 255, 136, 0.4);
+    transform: translateY(-10px);
+}
+
+.nav-btn-play:hover {
+    transform: translateY(-12px) scale(1.05);
+    box-shadow: 0 8px 30px rgba(0, 255, 136, 0.6);
+}
+
+.nav-icon {
+    font-size: 26px;
+    margin-bottom: 4px;
+}
+
+.play-icon {
+    font-size: 28px;
+    margin: 0;
+}
+
+.nav-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================
+   SIDE PANELS
+   ============================================ */
+.side-panel {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 85%;
+    max-width: 400px;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(10, 10, 10, 0.98), rgba(26, 26, 46, 0.98));
+    backdrop-filter: blur(20px);
+    box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+    transition: right 0.4s ease;
+    z-index: 2000;
+    pointer-events: all;
+    overflow-y: auto;
+}
+
+.side-panel.active {
+    right: 0;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.panel-header h3 {
+    font-size: 22px;
+    color: #00ff88;
+    font-weight: 700;
+}
+
+.close-panel {
+    width: 35px;
+    height: 35px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    color: white;
     font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.close-panel:hover {
+    background: rgba(255, 51, 102, 0.3);
+    transform: rotate(90deg);
+}
+
+.panel-content {
+    padding: 20px;
 }
 
 /* ============================================
-   INSTRUCTIONS (مخفي)
+   SETTINGS
    ============================================ */
-#instructions {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px;
+    margin-bottom: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.setting-item label {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.toggle-btn {
+    padding: 8px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn.active {
+    background: linear-gradient(135deg, #00ff88, #00ddff);
+    border-color: transparent;
+    color: white;
 }
 
 /* ============================================
-   ANIMATIONS
+   ITEMS GRID (BALLS & ROADS)
    ============================================ */
-.pulse {
-    animation: pulse 2s ease-in-out infinite;
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
 }
 
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.9;
-        transform: scale(1.05);
-    }
+.item-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.item-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(0, 255, 136, 0.5);
+    transform: translateY(-3px);
+}
+
+.item-card.selected {
+    background: rgba(0, 255, 136, 0.2);
+    border-color: #00ff88;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.item-card.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.item-icon {
+    font-size: 50px;
+    margin-bottom: 10px;
+}
+
+.item-name {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.item-price {
+    font-size: 12px;
+    color: #ffd700;
+    font-weight: 500;
+}
+
+.selected-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #00ff88;
+    color: white;
+    font-size: 18px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lock-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* ============================================
    MOBILE RESPONSIVE
    ============================================ */
 @media (max-width: 768px) {
-    .game-title {
-        font-size: 70px;
-    }
-    
-    .title-3d {
-        font-size: 28px;
-        letter-spacing: 8px;
-    }
-    
-    .score-number {
-        font-size: 48px;
-    }
-    
-    .main-btn {
-        padding: 18px 50px;
-        font-size: 20px;
-    }
-    
-    .score-big {
-        font-size: 60px;
-    }
-    
-    .gameover-title {
-        font-size: 42px;
-    }
+    .game-title { font-size: 65px; }
+    .title-3d { font-size: 26px; }
+    .score-number { font-size: 44px; }
+    .score-big { font-size: 56px; }
+    .gameover-title { font-size: 38px; }
+    #bottom-nav { height: 75px; }
+    .nav-btn-play { width: 60px; height: 60px; }
 }
 
 @media (max-width: 480px) {
-    .game-title {
-        font-size: 56px;
-    }
-    
-    .title-3d {
-        font-size: 22px;
-    }
-    
-    .subtitle {
-        font-size: 16px;
-    }
-    
-    .main-btn {
-        padding: 15px 40px;
-        font-size: 18px;
-    }
-}
-
-/* ============================================
-   ACCESSIBILITY
-   ============================================ */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation: none !important;
-        transition: none !important;
-    }
+    .game-title { font-size: 52px; }
+    .title-3d { font-size: 20px; }
+    .items-grid { grid-template-columns: 1fr; }
+    #bottom-nav { height: 70px; padding: 0 5px; }
+    .nav-btn { min-width: 60px; padding: 6px 10px; }
+    .nav-icon { font-size: 22px; }
+    .nav-label { font-size: 10px; }
 }
