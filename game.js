@@ -1,21 +1,23 @@
 // ============================================
-// RUSH 3D - PROFESSIONAL GAME ENGINE (IMPROVED)
+// RUSH 3D - COMPLETE GAME ENGINE
 // ============================================
 
-// Game State Management
+// Game State
 const gameState = {
     isPlaying: false,
     isPaused: false,
     score: 0,
     highScore: 0,
-    speed: 0.25,
-    baseSpeed: 0.25,
-    difficulty: 1,
+    speed: 1.0,
+    baseSpeed: 1.0,
+    speedMultiplier: 1.0,
+    obstaclesPassed: 0,
     soundEnabled: true,
-    obstaclesPassed: 0
+    effectsEnabled: true,
+    speedDisplayEnabled: true
 };
 
-// Three.js Core Objects
+// Three.js Objects
 let scene, camera, renderer;
 let ball, ballGlow;
 let road = [];
@@ -23,39 +25,37 @@ let obstacles = [];
 let particles = [];
 let stars = [];
 
-// Game Mechanics
-let roadCurve = 0;
-let roadCurveSpeed = 0.02;
-let roadCurveAmount = 4;
-let roadVerticalCurve = 0;
-let roadVerticalSpeed = 0.015;
-let roadVerticalAmount = 3;
+// Road Pattern System
+let roadSegmentIndex = 0;
+const roadPatterns = [
+    { type: 'up', angle: 30, length: 20 },
+    { type: 'down', angle: -30, length: 20 },
+    { type: 'left', angle: 0, curve: -2, length: 25 },
+    { type: 'right', angle: 0, curve: 2, length: 25 },
+    { type: 'straight', angle: 0, length: 30 }
+];
+let currentPatternIndex = 0;
+let patternProgress = 0;
+
+// Game Settings
 let targetLane = 0;
-let currentLane = 0;
 let obstacleSpawnTimer = 0;
-let obstacleSpawnInterval = 80;
+let obstacleSpawnInterval = 70;
 let lastObstacleNumber = 1;
 
-// Camera Settings
 const cameraSettings = {
-    distance: 15,
-    height: 8,
-    followSpeed: 0.15,
-    lookAheadDistance: 10
+    distance: 14,
+    height: 7,
+    followSpeed: 0.13,
+    lookAhead: 9
 };
 
-// Input Handling
+// Input
 let touchStartX = 0;
-let touchStartY = 0;
 let isDragging = false;
-const swipeThreshold = 50;
-
-// Lane Positions
+const swipeThreshold = 45;
 const lanePositions = [-4, 0, 4];
-const laneWidth = 4;
-
-// Road dimensions
-const ROAD_WIDTH = 13;
+const ROAD_WIDTH = 12;
 
 // ============================================
 // INITIALIZATION
@@ -64,23 +64,16 @@ const ROAD_WIDTH = 13;
 function init() {
     console.log('🎮 Initializing Rush 3D...');
     
+    loadGameData();
+    
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0a0a);
-    scene.fog = new THREE.FogExp2(0x0a0a0a, 0.012);
+    scene.fog = new THREE.FogExp2(0x0a0a0a, 0.013);
 
-    camera = new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-    );
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, cameraSettings.height, cameraSettings.distance);
 
-    renderer = new THREE.WebGLRenderer({ 
-        antialias: true,
-        alpha: false,
-        powerPreference: "high-performance"
-    });
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
@@ -93,69 +86,57 @@ function init() {
     createRoad();
     createStarfield();
     setupInput();
+    setupUI();
     loadHighScore();
-    setupUIEvents();
 
     window.addEventListener('resize', onWindowResize);
 
     setTimeout(() => {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
-        }
+        document.getElementById('loading-screen').classList.add('hidden');
     }, 500);
 
     animate();
-    
-    console.log('✅ Game initialized successfully!');
+    console.log('✅ Game ready!');
 }
 
 // ============================================
-// LIGHTING SETUP
+// LIGHTING
 // ============================================
 
 function setupLighting() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-    scene.add(ambientLight);
+    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambient);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    mainLight.position.set(5, 20, 5);
-    mainLight.castShadow = true;
-    mainLight.shadow.camera.left = -30;
-    mainLight.shadow.camera.right = 30;
-    mainLight.shadow.camera.top = 30;
-    mainLight.shadow.camera.bottom = -30;
-    mainLight.shadow.mapSize.width = 2048;
-    mainLight.shadow.mapSize.height = 2048;
-    scene.add(mainLight);
+    const main = new THREE.DirectionalLight(0xffffff, 0.9);
+    main.position.set(5, 20, 5);
+    main.castShadow = true;
+    main.shadow.mapSize.set(2048, 2048);
+    scene.add(main);
 
-    const pointLight1 = new THREE.PointLight(0x00ff88, 2, 50);
-    pointLight1.position.set(-10, 5, -10);
-    scene.add(pointLight1);
+    const p1 = new THREE.PointLight(0x00ff88, 2, 50);
+    p1.position.set(-10, 5, -10);
+    scene.add(p1);
 
-    const pointLight2 = new THREE.PointLight(0xff0088, 2, 50);
-    pointLight2.position.set(10, 5, -10);
-    scene.add(pointLight2);
+    const p2 = new THREE.PointLight(0xff0088, 2, 50);
+    p2.position.set(10, 5, -10);
+    scene.add(p2);
 
-    const pointLight3 = new THREE.PointLight(0x00ddff, 2, 50);
-    pointLight3.position.set(0, 5, -30);
-    scene.add(pointLight3);
-
-    const hemiLight = new THREE.HemisphereLight(0x00ddff, 0x1a1a2e, 0.6);
-    scene.add(hemiLight);
+    const hemi = new THREE.HemisphereLight(0x00ddff, 0x1a1a2e, 0.6);
+    scene.add(hemi);
 }
 
 // ============================================
-// CREATE BALL (حجم نصف الطريق)
+// CREATE BALL (مع نظام الكرات المختلفة)
 // ============================================
 
 function createBall() {
-    const ballRadius = ROAD_WIDTH / 6; // حجم كبير - نصف عرض المسار
+    const ballData = getBallData(selectedBall);
+    const ballRadius = ROAD_WIDTH / 6;
     
     const geometry = new THREE.SphereGeometry(ballRadius, 32, 32);
     const material = new THREE.MeshPhongMaterial({
-        color: 0x00ff88,
-        emissive: 0x00ff88,
+        color: ballData.color,
+        emissive: ballData.color,
         emissiveIntensity: 0.7,
         shininess: 120,
         specular: 0xffffff
@@ -164,12 +145,11 @@ function createBall() {
     ball = new THREE.Mesh(geometry, material);
     ball.position.set(lanePositions[1], 2, 0);
     ball.castShadow = true;
-    ball.receiveShadow = true;
     scene.add(ball);
 
     const glowGeometry = new THREE.SphereGeometry(ballRadius * 1.5, 32, 32);
     const glowMaterial = new THREE.MeshBasicMaterial({
-        color: 0x00ff88,
+        color: ballData.color,
         transparent: true,
         opacity: 0.4,
         side: THREE.BackSide
@@ -177,24 +157,28 @@ function createBall() {
     ballGlow = new THREE.Mesh(glowGeometry, glowMaterial);
     ball.add(ballGlow);
 
-    const coreGeometry = new THREE.SphereGeometry(ballRadius * 0.3, 16, 16);
-    const coreMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.9
-    });
-    const core = new THREE.Mesh(coreGeometry, coreMaterial);
+    const core = new THREE.Mesh(
+        new THREE.SphereGeometry(ballRadius * 0.3, 16, 16),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 })
+    );
     ball.add(core);
+}
 
-    ball.userData.trail = [];
+function updateBallColor() {
+    if (!ball) return;
+    const ballData = getBallData(selectedBall);
+    ball.material.color.setHex(ballData.color);
+    ball.material.emissive.setHex(ballData.color);
+    ballGlow.material.color.setHex(ballData.color);
 }
 
 // ============================================
-// CREATE ROAD (منحني في جميع الاتجاهات)
+// CREATE ROAD (مع نظام الطرقات + الزوايا الثابتة)
 // ============================================
 
 function createRoad() {
-    const roadLength = 250;
+    const roadData = getRoadData(selectedRoad);
+    const roadLength = 300;
     const segmentLength = 5;
     
     for (let i = 0; i < roadLength / segmentLength; i++) {
@@ -202,7 +186,7 @@ function createRoad() {
         
         const segmentGeometry = new THREE.PlaneGeometry(ROAD_WIDTH, segmentLength);
         const segmentMaterial = new THREE.MeshStandardMaterial({
-            color: 0x1a1a1a,
+            color: roadData.color,
             roughness: 0.85,
             metalness: 0.15
         });
@@ -215,8 +199,8 @@ function createRoad() {
         road.push(segment);
 
         if (i % 3 === 0) {
-            createLaneDivider(-laneWidth / 1.5, z);
-            createLaneDivider(laneWidth / 1.5, z);
+            createLaneDivider(-4, z);
+            createLaneDivider(4, z);
         }
 
         createSideBarrier(-ROAD_WIDTH / 2, z, 0xff0088);
@@ -225,33 +209,36 @@ function createRoad() {
 }
 
 function createLaneDivider(x, z) {
-    const geometry = new THREE.BoxGeometry(0.2, 0.05, 2.5);
-    const material = new THREE.MeshBasicMaterial({
-        color: 0x00ff88,
-        transparent: true,
-        opacity: 0.5
-    });
-    
-    const divider = new THREE.Mesh(geometry, material);
+    const geo = new THREE.BoxGeometry(0.2, 0.05, 2.5);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.5 });
+    const divider = new THREE.Mesh(geo, mat);
     divider.position.set(x, 0.05, z);
     scene.add(divider);
     road.push(divider);
 }
 
 function createSideBarrier(x, z, color) {
-    const geometry = new THREE.BoxGeometry(0.4, 2.5, 5);
-    const material = new THREE.MeshPhongMaterial({
+    const geo = new THREE.BoxGeometry(0.4, 2.5, 5);
+    const mat = new THREE.MeshPhongMaterial({
         color: color,
         emissive: color,
         emissiveIntensity: 0.6,
         transparent: true,
         opacity: 0.7
     });
-    
-    const barrier = new THREE.Mesh(geometry, material);
+    const barrier = new THREE.Mesh(geo, mat);
     barrier.position.set(x, 1.25, z);
     scene.add(barrier);
     road.push(barrier);
+}
+
+function updateRoadColors() {
+    const roadData = getRoadData(selectedRoad);
+    road.forEach(segment => {
+        if (segment.material.color) {
+            segment.material.color.setHex(roadData.color);
+        }
+    });
 }
 
 // ============================================
@@ -259,11 +246,11 @@ function createSideBarrier(x, z, color) {
 // ============================================
 
 function createStarfield() {
-    const starGeometry = new THREE.SphereGeometry(0.15, 8, 8);
-    const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const geo = new THREE.SphereGeometry(0.15, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     
     for (let i = 0; i < 300; i++) {
-        const star = new THREE.Mesh(starGeometry, starMaterial);
+        const star = new THREE.Mesh(geo, mat);
         star.position.set(
             (Math.random() - 0.5) * 150,
             Math.random() * 60 + 15,
@@ -275,14 +262,14 @@ function createStarfield() {
 }
 
 // ============================================
-// CREATE OBSTACLE (حجم نصف الطريق)
+// CREATE OBSTACLE (مثلثات ثابتة بأرقام حتى 1000)
 // ============================================
 
 function createObstacle(lane, number) {
     const group = new THREE.Group();
+    const obstacleSize = ROAD_WIDTH / 3;
     
-    const obstacleSize = ROAD_WIDTH / 3; // حجم كبير - نصف عرض المسار
-    
+    // مثلث ثابت (بدون دوران)
     const geometry = new THREE.ConeGeometry(obstacleSize, obstacleSize * 2, 3);
     const material = new THREE.MeshPhongMaterial({
         color: 0xff3366,
@@ -295,7 +282,6 @@ function createObstacle(lane, number) {
     const pyramid = new THREE.Mesh(geometry, material);
     pyramid.rotation.y = Math.PI / 6;
     pyramid.castShadow = true;
-    pyramid.receiveShadow = true;
     group.add(pyramid);
 
     const glowGeometry = new THREE.ConeGeometry(obstacleSize * 1.3, obstacleSize * 2.3, 3);
@@ -309,28 +295,20 @@ function createObstacle(lane, number) {
     glow.rotation.y = Math.PI / 6;
     group.add(glow);
 
+    // رقم على المثلث
     const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
     canvas.width = 256;
     canvas.height = 256;
     
-    context.shadowColor = 'rgba(0, 0, 0, 0.9)';
-    context.shadowBlur = 15;
-    context.shadowOffsetX = 4;
-    context.shadowOffsetY = 4;
-    
-    context.fillStyle = '#ffffff';
-    context.font = 'bold 160px Arial';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.fillText(number.toString(), 128, 128);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 140px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(number.toString(), 128, 128);
     
     const texture = new THREE.CanvasTexture(canvas);
-    const spriteMaterial = new THREE.SpriteMaterial({ 
-        map: texture,
-        transparent: true
-    });
-    const sprite = new THREE.Sprite(spriteMaterial);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true }));
     sprite.scale.set(2.5, 2.5, 1);
     sprite.position.y = obstacleSize * 1.5;
     group.add(sprite);
@@ -338,24 +316,22 @@ function createObstacle(lane, number) {
     group.position.set(lanePositions[lane], obstacleSize, -70);
     group.userData.lane = lane;
     group.userData.number = number;
-    group.userData.rotationSpeed = 0.04 + Math.random() * 0.03;
 
     scene.add(group);
     obstacles.push(group);
 }
 
 // ============================================
-// PARTICLE SYSTEM
+// PARTICLES
 // ============================================
 
 function createParticleExplosion(x, y, z, color, count = 40) {
+    if (!gameState.effectsEnabled) return;
+    
     for (let i = 0; i < count; i++) {
-        const geometry = new THREE.SphereGeometry(0.2, 8, 8);
-        const material = new THREE.MeshBasicMaterial({ 
-            color: color,
-            transparent: true
-        });
-        const particle = new THREE.Mesh(geometry, material);
+        const geo = new THREE.SphereGeometry(0.2, 8, 8);
+        const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true });
+        const particle = new THREE.Mesh(geo, mat);
         
         particle.position.set(x, y, z);
         particle.userData.velocity = new THREE.Vector3(
@@ -372,13 +348,11 @@ function createParticleExplosion(x, y, z, color, count = 40) {
 }
 
 function createTrailParticle(x, y, z) {
-    const geometry = new THREE.SphereGeometry(0.4, 8, 8);
-    const material = new THREE.MeshBasicMaterial({
-        color: 0x00ff88,
-        transparent: true,
-        opacity: 0.7
-    });
-    const particle = new THREE.Mesh(geometry, material);
+    if (!gameState.effectsEnabled) return;
+    
+    const geo = new THREE.SphereGeometry(0.4, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.7 });
+    const particle = new THREE.Mesh(geo, mat);
     
     particle.position.set(x, y, z);
     particle.userData.life = 1.0;
@@ -389,28 +363,23 @@ function createTrailParticle(x, y, z) {
 }
 
 // ============================================
-// INPUT HANDLING (النقر في أي مكان)
+// INPUT HANDLING
 // ============================================
 
 function setupInput() {
     const canvas = renderer.domElement;
     
-    // Touch Events
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    canvas.addEventListener('touchend', () => isDragging = false, { passive: false });
     
-    // Mouse Events (النقر في أي مكان)
     canvas.addEventListener('mousedown', handleMouseDown);
-    
-    // Keyboard Events
     document.addEventListener('keydown', handleKeyDown);
 }
 
 function handleTouchStart(e) {
     if (!gameState.isPlaying || gameState.isPaused) return;
     e.preventDefault();
-    
     isDragging = true;
     touchStartX = e.touches[0].clientX;
 }
@@ -419,45 +388,23 @@ function handleTouchMove(e) {
     if (!gameState.isPlaying || gameState.isPaused || !isDragging) return;
     e.preventDefault();
     
-    const touchX = e.touches[0].clientX;
-    const deltaX = touchX - touchStartX;
-    
+    const deltaX = e.touches[0].clientX - touchStartX;
     if (Math.abs(deltaX) > swipeThreshold) {
-        if (deltaX > 0 && targetLane < 1) {
-            changeLane(1);
-        } else if (deltaX < 0 && targetLane > -1) {
-            changeLane(-1);
-        }
-        touchStartX = touchX;
+        changeLane(deltaX > 0 ? 1 : -1);
+        touchStartX = e.touches[0].clientX;
     }
-}
-
-function handleTouchEnd(e) {
-    isDragging = false;
 }
 
 function handleMouseDown(e) {
     if (!gameState.isPlaying || gameState.isPaused) return;
-    
-    // النقر في النصف الأيمن = تحرك يمين، النقر في النصف الأيسر = تحرك يسار
-    const screenWidth = window.innerWidth;
-    const clickX = e.clientX;
-    
-    if (clickX > screenWidth / 2 && targetLane < 1) {
-        changeLane(1);
-    } else if (clickX < screenWidth / 2 && targetLane > -1) {
-        changeLane(-1);
-    }
+    const halfWidth = window.innerWidth / 2;
+    changeLane(e.clientX > halfWidth ? 1 : -1);
 }
 
 function handleKeyDown(e) {
     if (!gameState.isPlaying || gameState.isPaused) return;
-    
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        if (targetLane > -1) changeLane(-1);
-    } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        if (targetLane < 1) changeLane(1);
-    }
+    if ((e.key === 'ArrowLeft' || e.key === 'a') && targetLane > -1) changeLane(-1);
+    if ((e.key === 'ArrowRight' || e.key === 'd') && targetLane < 1) changeLane(1);
 }
 
 function changeLane(direction) {
@@ -474,19 +421,15 @@ function checkCollision() {
     for (let obstacle of obstacles) {
         if (obstacle.position.z > ball.position.z - 3 && 
             obstacle.position.z < ball.position.z + 3) {
-            
             const distance = Math.abs(ball.position.x - obstacle.position.x);
-            
-            if (distance < 2.5) {
-                return true;
-            }
+            if (distance < 2.5) return true;
         }
     }
     return false;
 }
 
 // ============================================
-// GAME STATE MANAGEMENT
+// GAME STATE
 // ============================================
 
 function startGame() {
@@ -496,13 +439,15 @@ function startGame() {
     gameState.isPaused = false;
     gameState.score = 0;
     gameState.speed = gameState.baseSpeed;
-    gameState.difficulty = 1;
+    gameState.speedMultiplier = 1.0;
     gameState.obstaclesPassed = 0;
     
     targetLane = 0;
-    currentLane = 0;
     obstacleSpawnTimer = 0;
     lastObstacleNumber = 1;
+    roadSegmentIndex = 0;
+    currentPatternIndex = 0;
+    patternProgress = 0;
     
     ball.position.set(lanePositions[1], 2, 0);
     
@@ -512,17 +457,23 @@ function startGame() {
     particles = [];
     
     updateScoreDisplay();
+    updateSpeedDisplay();
     document.getElementById('menu-screen').classList.remove('active');
     document.getElementById('gameover-screen').classList.remove('active');
     document.getElementById('pause-screen').classList.remove('active');
     document.getElementById('score-display').classList.add('active');
     document.getElementById('game-controls').classList.add('active');
+    document.getElementById('bottom-nav').style.display = 'none';
 }
 
 function gameOver() {
     console.log('💥 Game Over! Score:', gameState.score);
     
     gameState.isPlaying = false;
+    
+    // إضافة عملات بناءً على النقاط
+    const coinsEarned = Math.floor(gameState.score / 5);
+    addCoins(coinsEarned);
     
     if (gameState.score > gameState.highScore) {
         gameState.highScore = gameState.score;
@@ -538,6 +489,7 @@ function gameOver() {
         document.getElementById('gameover-screen').classList.add('active');
         document.getElementById('score-display').classList.remove('active');
         document.getElementById('game-controls').classList.remove('active');
+        document.getElementById('bottom-nav').style.display = 'flex';
     }, 500);
 }
 
@@ -559,50 +511,69 @@ function updateScoreDisplay() {
     document.querySelector('.score-number').textContent = gameState.score;
 }
 
+function updateSpeedDisplay() {
+    if (gameState.speedDisplayEnabled) {
+        const speedPercent = Math.round(gameState.speedMultiplier * 100);
+        document.getElementById('speed-value').textContent = speedPercent + '%';
+    }
+}
+
 function addScore(points = 1) {
     gameState.score += points;
     gameState.obstaclesPassed += points;
     updateScoreDisplay();
     
-    // زيادة السرعة كل 10 مثلثات
-    if (gameState.obstaclesPassed % 10 === 0) {
-        gameState.speed = Math.min(0.5, gameState.speed + 0.03);
-        console.log('⚡ Speed increased to:', gameState.speed);
+    // زيادة السرعة كل 15 مثلث بنسبة 0.5%
+    if (gameState.obstaclesPassed % 15 === 0) {
+        gameState.speedMultiplier += 0.005;
+        gameState.speed = gameState.baseSpeed * gameState.speedMultiplier;
+        updateSpeedDisplay();
+        console.log('⚡ Speed:', (gameState.speedMultiplier * 100).toFixed(1) + '%');
     }
     
-    gameState.difficulty = 1 + gameState.score * 0.01;
-    obstacleSpawnInterval = Math.max(60, 80 - gameState.score * 0.4);
+    obstacleSpawnInterval = Math.max(50, 70 - gameState.score * 0.3);
 }
 
 // ============================================
-// GAME UPDATE LOOP
+// GAME UPDATE LOOP (مع نظام الطريق بزوايا ثابتة 30°)
 // ============================================
 
 function updateGame() {
     if (!gameState.isPlaying || gameState.isPaused) return;
     
-    // منحنيات أفقية (يمين/يسار)
-    roadCurve += roadCurveSpeed * gameState.speed * 10;
-    const curveOffsetX = Math.sin(roadCurve) * roadCurveAmount;
+    // نظام الطريق بالزوايا الثابتة 30°
+    const pattern = roadPatterns[currentPatternIndex];
+    patternProgress += gameState.speed * 2.5;
     
-    // منحنيات عمودية (أعلى/أسفل)
-    roadVerticalCurve += roadVerticalSpeed * gameState.speed * 10;
-    const curveOffsetY = Math.sin(roadVerticalCurve) * roadVerticalAmount;
+    if (patternProgress >= pattern.length) {
+        currentPatternIndex = (currentPatternIndex + 1) % roadPatterns.length;
+        patternProgress = 0;
+    }
     
-    road.forEach((segment) => {
+    // تطبيق الزوايا والمنحنيات
+    const angleRad = (pattern.angle || 0) * Math.PI / 180;
+    const curveOffset = (pattern.curve || 0) * Math.sin(roadSegmentIndex * 0.05);
+    
+    road.forEach((segment, index) => {
         segment.position.z += gameState.speed * 2.5;
         
-        const distanceFromBall = segment.position.z - ball.position.z;
-        const curveFactor = Math.min(1, Math.abs(distanceFromBall) / 40);
+        // تطبيق الزاوية
+        if (pattern.type === 'up') {
+            segment.position.y = Math.sin(segment.position.z * 0.05) * 2;
+        } else if (pattern.type === 'down') {
+            segment.position.y = -Math.sin(segment.position.z * 0.05) * 2;
+        }
         
-        segment.position.x = curveOffsetX * curveFactor;
-        segment.position.y = curveOffsetY * curveFactor;
+        // تطبيق المنحنى الأفقي
+        segment.position.x = curveOffset * (Math.abs(segment.position.z) / 30);
         
         if (segment.position.z > 15) {
-            segment.position.z -= 250;
+            segment.position.z -= 300;
+            roadSegmentIndex++;
         }
     });
     
+    // تحريك الكرة
     const targetX = lanePositions[targetLane + 1];
     ball.position.x += (targetX - ball.position.x) * 0.18;
     
@@ -614,25 +585,27 @@ function updateGame() {
         ballGlow.scale.set(pulse, pulse, pulse);
     }
     
-    // إنشاء مثلثات لا نهائية
+    // إنشاء مثلثات (أرقام حتى 1000)
     obstacleSpawnTimer++;
     if (obstacleSpawnTimer > obstacleSpawnInterval) {
         const lane = Math.floor(Math.random() * 3);
-        lastObstacleNumber = (lastObstacleNumber % 99) + 1;
         createObstacle(lane, lastObstacleNumber);
+        lastObstacleNumber = lastObstacleNumber >= 1000 ? 1 : lastObstacleNumber + 1;
         obstacleSpawnTimer = 0;
     }
     
+    // تحريك المثلثات (بدون دوران)
     obstacles.forEach((obstacle, index) => {
         obstacle.position.z += gameState.speed * 2.5;
         
-        const distanceFromBall = obstacle.position.z - ball.position.z;
-        const curveFactor = Math.min(1, Math.abs(distanceFromBall) / 40);
-        const baseLaneX = lanePositions[obstacle.userData.lane];
-        obstacle.position.x = baseLaneX + curveOffsetX * curveFactor;
-        obstacle.position.y = curveOffsetY * curveFactor;
+        // تطبيق نفس منحنى الطريق
+        obstacle.position.x = lanePositions[obstacle.userData.lane] + curveOffset * (Math.abs(obstacle.position.z) / 30);
         
-        obstacle.rotation.y += obstacle.userData.rotationSpeed;
+        if (pattern.type === 'up') {
+            obstacle.position.y = Math.sin(obstacle.position.z * 0.05) * 2 + 2;
+        } else if (pattern.type === 'down') {
+            obstacle.position.y = -Math.sin(obstacle.position.z * 0.05) * 2 + 2;
+        }
         
         if (obstacle.position.z > 8) {
             scene.remove(obstacle);
@@ -641,6 +614,7 @@ function updateGame() {
         }
     });
     
+    // تحديث الجزيئات
     particles.forEach((particle, index) => {
         if (particle.userData.velocity) {
             particle.position.add(particle.userData.velocity);
@@ -660,33 +634,26 @@ function updateGame() {
         }
     });
     
+    // تحريك النجوم
     stars.forEach(star => {
         star.position.z += gameState.speed * 0.6;
-        if (star.position.z > 15) {
-            star.position.z -= 300;
-        }
+        if (star.position.z > 15) star.position.z -= 300;
     });
     
+    // تحديث الكاميرا
     const cameraTargetX = ball.position.x * 0.35;
     const cameraTargetZ = ball.position.z + cameraSettings.distance;
     
     camera.position.x += (cameraTargetX - camera.position.x) * cameraSettings.followSpeed;
     camera.position.z += (cameraTargetZ - camera.position.z) * cameraSettings.followSpeed;
     
-    const lookAtPoint = new THREE.Vector3(
+    camera.lookAt(
         ball.position.x * 0.6,
         ball.position.y + 1,
-        ball.position.z - cameraSettings.lookAheadDistance
+        ball.position.z - cameraSettings.lookAhead
     );
-    camera.lookAt(lookAtPoint);
     
-    if (gameState.speed > 0.35) {
-        camera.position.y = cameraSettings.height + Math.sin(Date.now() * 0.012) * 0.15;
-    }
-    
-    if (checkCollision()) {
-        gameOver();
-    }
+    if (checkCollision()) gameOver();
 }
 
 // ============================================
@@ -700,51 +667,140 @@ function animate() {
 }
 
 // ============================================
-// UI EVENT HANDLERS
+// UI SETUP
 // ============================================
 
-function setupUIEvents() {
-    document.getElementById('start-btn').addEventListener('click', startGame);
-    document.getElementById('retry-btn').addEventListener('click', startGame);
+function setupUI() {
+    // Play Button
+    document.getElementById('play-btn').addEventListener('click', () => {
+        if (gameState.isPlaying) {
+            togglePause();
+        } else {
+            startGame();
+        }
+    });
     
-    const menuBtn = document.getElementById('menu-btn');
-    if (menuBtn) {
-        menuBtn.addEventListener('click', () => {
-            document.getElementById('gameover-screen').classList.remove('active');
-            document.getElementById('menu-screen').classList.add('active');
-        });
-    }
-    
+    // Pause Button
     document.getElementById('pause-btn').addEventListener('click', togglePause);
     
-    const resumeBtn = document.getElementById('resume-btn');
-    if (resumeBtn) {
-        resumeBtn.addEventListener('click', togglePause);
-    }
+    // Settings
+    document.getElementById('toggle-sound').addEventListener('click', function() {
+        gameState.soundEnabled = !gameState.soundEnabled;
+        this.textContent = gameState.soundEnabled ? 'تشغيل' : 'إيقاف';
+        this.classList.toggle('active');
+    });
     
-    const quitBtn = document.getElementById('quit-btn');
-    if (quitBtn) {
-        quitBtn.addEventListener('click', () => {
-            gameState.isPlaying = false;
-            document.getElementById('pause-screen').classList.remove('active');
-            document.getElementById('menu-screen').classList.add('active');
-            document.getElementById('score-display').classList.remove('active');
-            document.getElementById('game-controls').classList.remove('active');
-        });
-    }
+    document.getElementById('toggle-speed-display').addEventListener('click', function() {
+        gameState.speedDisplayEnabled = !gameState.speedDisplayEnabled;
+        this.textContent = gameState.speedDisplayEnabled ? 'تشغيل' : 'إيقاف';
+        this.classList.toggle('active');
+        document.querySelector('.speed-indicator').style.display = 
+            gameState.speedDisplayEnabled ? 'inline-block' : 'none';
+    });
     
-    const soundBtn = document.getElementById('sound-btn');
-    if (soundBtn) {
-        soundBtn.addEventListener('click', () => {
-            gameState.soundEnabled = !gameState.soundEnabled;
-            const icon = soundBtn.querySelector('.btn-icon');
-            icon.textContent = gameState.soundEnabled ? '🔊' : '🔇';
+    document.getElementById('toggle-effects').addEventListener('click', function() {
+        gameState.effectsEnabled = !gameState.effectsEnabled;
+        this.textContent = gameState.effectsEnabled ? 'تشغيل' : 'إيقاف';
+        this.classList.toggle('active');
+    });
+    
+    // Initialize Balls Grid
+    initializeBallsGrid();
+    initializeRoadsGrid();
+}
+
+function initializeBallsGrid() {
+    const grid = document.getElementById('balls-grid');
+    grid.innerHTML = '';
+    
+    BALLS_DATA.forEach(ball => {
+        const card = document.createElement('div');
+        card.className = 'item-card' + (ball.unlocked ? '' : ' locked') + 
+                        (ball.id === selectedBall ? ' selected' : '');
+        
+        card.innerHTML = `
+            ${ball.id === selectedBall ? '<span class="selected-badge">✓</span>' : ''}
+            ${!ball.unlocked ? '<span class="lock-icon">🔒</span>' : ''}
+            <div class="item-icon">${ball.icon}</div>
+            <div class="item-name">${ball.name}</div>
+            ${!ball.unlocked ? `<div class="item-price">${ball.price} 💰</div>` : ''}
+        `;
+        
+        card.addEventListener('click', () => {
+            if (ball.unlocked) {
+                selectBall(ball.id);
+                updateBallColor();
+                initializeBallsGrid();
+            } else if (playerCoins >= ball.price) {
+                if (unlockItem(ball.id, BALLS_DATA)) {
+                    selectBall(ball.id);
+                    updateBallColor();
+                    initializeBallsGrid();
+                }
+            } else {
+                alert('ليس لديك عملات كافية!');
+            }
         });
-    }
+        
+        grid.appendChild(card);
+    });
+}
+
+function initializeRoadsGrid() {
+    const grid = document.getElementById('roads-grid');
+    grid.innerHTML = '';
+    
+    ROADS_DATA.forEach(road => {
+        const card = document.createElement('div');
+        card.className = 'item-card' + (road.unlocked ? '' : ' locked') + 
+                        (road.id === selectedRoad ? ' selected' : '');
+        
+        card.innerHTML = `
+            ${road.id === selectedRoad ? '<span class="selected-badge">✓</span>' : ''}
+            ${!road.unlocked ? '<span class="lock-icon">🔒</span>' : ''}
+            <div class="item-icon">${road.icon}</div>
+            <div class="item-name">${road.name}</div>
+            ${!road.unlocked ? `<div class="item-price">${road.price} 💰</div>` : ''}
+        `;
+        
+        card.addEventListener('click', () => {
+            if (road.unlocked) {
+                selectRoad(road.id);
+                updateRoadColors();
+                initializeRoadsGrid();
+            } else if (playerCoins >= road.price) {
+                if (unlockItem(road.id, ROADS_DATA)) {
+                    selectRoad(road.id);
+                    updateRoadColors();
+                    initializeRoadsGrid();
+                }
+            } else {
+                alert('ليس لديك عملات كافية!');
+            }
+        });
+        
+        grid.appendChild(card);
+    });
 }
 
 // ============================================
-// WINDOW RESIZE
+// PANEL MANAGEMENT
+// ============================================
+
+function openPanel(panelId) {
+    document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(panelId).classList.add('active');
+}
+
+function closePanel(panelId) {
+    document.getElementById(panelId).classList.remove('active');
+}
+
+window.openPanel = openPanel;
+window.closePanel = closePanel;
+
+// ============================================
+// UTILITIES
 // ============================================
 
 function onWindowResize() {
@@ -753,17 +809,10 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// ============================================
-// SAVE/LOAD
-// ============================================
-
 function saveHighScore() {
     try {
         localStorage.setItem('rushHighScore', gameState.highScore.toString());
-        console.log('💾 High score saved:', gameState.highScore);
-    } catch (e) {
-        console.warn('Could not save high score');
-    }
+    } catch (e) {}
 }
 
 function loadHighScore() {
@@ -772,16 +821,12 @@ function loadHighScore() {
         if (saved) {
             gameState.highScore = parseInt(saved);
             document.getElementById('high-score-value').textContent = gameState.highScore;
-            console.log('📂 High score loaded:', gameState.highScore);
         }
-    } catch (e) {
-        console.warn('Could not load high score');
-    }
+    } catch (e) {}
 }
 
 // ============================================
-// START GAME
+// START
 // ============================================
 
 window.addEventListener('load', init);
-console.log('🚀 Rush 3D - Ready to start!');
