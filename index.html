@@ -14,6 +14,7 @@
         <div id="score-display">
             <div class="score-number">0</div>
             <div class="score-label">SCORE</div>
+            <div class="speed-indicator">السرعة: <span id="speed-value">100%</span></div>
         </div>
 
         <!-- Menu Screen -->
@@ -24,12 +25,9 @@
                     <span class="title-3d">3D</span>
                 </h1>
                 <div class="subtitle-box">
-                    <p class="subtitle">🎮 اسحب لليمين أو اليسار للتحكم</p>
+                    <p class="subtitle">🎮 انقر لليمين أو اليسار للتحكم</p>
                     <p class="subtitle-small">تجنب المثلثات المرقمة</p>
                 </div>
-                <button id="start-btn" class="main-btn pulse">
-                    <span>▶ ابدأ اللعب</span>
-                </button>
                 <div class="stats-container">
                     <div class="stat-box">
                         <div class="stat-label">أعلى نقاط</div>
@@ -54,12 +52,6 @@
                         <span id="best-score-value" class="highlight">0</span>
                     </div>
                 </div>
-                <button id="retry-btn" class="main-btn">
-                    <span>🔄 إعادة المحاولة</span>
-                </button>
-                <button id="menu-btn" class="secondary-btn">
-                    <span>🏠 القائمة الرئيسية</span>
-                </button>
             </div>
         </div>
 
@@ -67,32 +59,90 @@
         <div id="pause-screen" class="screen">
             <div class="pause-content">
                 <h2 class="pause-title">⏸ متوقف مؤقتاً</h2>
-                <button id="resume-btn" class="main-btn">
-                    <span>▶ متابعة</span>
-                </button>
-                <button id="quit-btn" class="secondary-btn">
-                    <span>🏠 الخروج</span>
-                </button>
             </div>
         </div>
 
-        <!-- Control Buttons -->
+        <!-- Settings Panel -->
+        <div id="settings-panel" class="side-panel">
+            <div class="panel-header">
+                <h3>⚙️ الإعدادات</h3>
+                <button class="close-panel" onclick="closePanel('settings-panel')">✕</button>
+            </div>
+            <div class="panel-content">
+                <div class="setting-item">
+                    <label>🔊 الصوت</label>
+                    <button id="toggle-sound" class="toggle-btn active">تشغيل</button>
+                </div>
+                <div class="setting-item">
+                    <label>📊 عرض السرعة</label>
+                    <button id="toggle-speed-display" class="toggle-btn active">تشغيل</button>
+                </div>
+                <div class="setting-item">
+                    <label>✨ التأثيرات</label>
+                    <button id="toggle-effects" class="toggle-btn active">تشغيل</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balls Panel -->
+        <div id="balls-panel" class="side-panel">
+            <div class="panel-header">
+                <h3>⚽ الكرات</h3>
+                <button class="close-panel" onclick="closePanel('balls-panel')">✕</button>
+            </div>
+            <div class="panel-content">
+                <div class="items-grid" id="balls-grid">
+                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Roads Panel -->
+        <div id="roads-panel" class="side-panel">
+            <div class="panel-header">
+                <h3>🛣️ الطرقات</h3>
+                <button class="close-panel" onclick="closePanel('roads-panel')">✕</button>
+            </div>
+            <div class="panel-content">
+                <div class="items-grid" id="roads-grid">
+                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Buttons (Top) -->
         <div id="game-controls">
             <button id="pause-btn" class="control-btn">
                 <span class="btn-icon">⏸</span>
             </button>
-            <button id="sound-btn" class="control-btn">
-                <span class="btn-icon">🔊</span>
-            </button>
         </div>
+    </div>
 
-        <!-- Instructions -->
-        <div id="instructions" class="instructions">
-            <div class="instruction-item">
-                <span class="instruction-icon">👆</span>
-                <span>اسحب لليمين/اليسار</span>
-            </div>
-        </div>
+    <!-- Bottom Navigation Bar -->
+    <div id="bottom-nav">
+        <button class="nav-btn" id="roads-btn" onclick="openPanel('roads-panel')">
+            <span class="nav-icon">🛣️</span>
+            <span class="nav-label">طرقات</span>
+        </button>
+        
+        <button class="nav-btn" id="balls-btn" onclick="openPanel('balls-panel')">
+            <span class="nav-icon">⚽</span>
+            <span class="nav-label">كرات</span>
+        </button>
+        
+        <button class="nav-btn nav-btn-play" id="play-btn">
+            <span class="nav-icon play-icon">▶</span>
+        </button>
+        
+        <button class="nav-btn" id="stats-btn">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">إحصائيات</span>
+        </button>
+        
+        <button class="nav-btn" id="settings-btn" onclick="openPanel('settings-panel')">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">إعدادات</span>
+        </button>
     </div>
 
     <!-- Canvas Container -->
@@ -109,7 +159,8 @@
     <!-- Three.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Game Script -->
+    <!-- Game Scripts -->
+    <script src="game-data.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
