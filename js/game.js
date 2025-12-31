@@ -1,5 +1,5 @@
 // ============================================
-// RUSH 3D - MAIN GAME ENGINE (FIXED)
+// RUSH 3D - MAIN GAME ENGINE (FINAL FIX)
 // ============================================
 
 // Game State
@@ -33,7 +33,6 @@ let lastObstacleNumber = 1;
 let currentPatternIndex = 0;
 let patternProgress = 0;
 let currentRoadOffset = { x: 0, y: 0 };
-let roadRotation = 0;
 
 // Input
 let touchStartX = 0;
@@ -89,10 +88,10 @@ function init() {
 // ============================================
 
 function setupLighting() {
-    const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambient);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
     mainLight.position.set(5, 20, 5);
     mainLight.castShadow = true;
     mainLight.shadow.mapSize.set(2048, 2048);
@@ -108,7 +107,7 @@ function setupLighting() {
 }
 
 // ============================================
-// CREATE BALL (في نصف الجهة)
+// CREATE BALL (كرة كبيرة جداً)
 // ============================================
 
 function createBall() {
@@ -118,13 +117,13 @@ function createBall() {
     const material = new THREE.MeshPhongMaterial({
         color: ballData.color,
         emissive: ballData.color,
-        emissiveIntensity: 0.3,
+        emissiveIntensity: 0.4,
         shininess: 150,
         specular: 0xffffff
     });
     
     ball = new THREE.Mesh(geometry, material);
-    ball.position.set(CONFIG.ROAD.LANE_POSITIONS[0], CONFIG.BALL.FIXED_HEIGHT, 0);
+    ball.position.set(CONFIG.ROAD.LANE_POSITIONS[0], CONFIG.BALL.FIXED_HEIGHT + CONFIG.BALL.SIZE, 0);
     ball.castShadow = true;
     scene.add(ball);
 }
@@ -137,7 +136,7 @@ function updateBallColor() {
 }
 
 // ============================================
-// CREATE ROAD
+// CREATE ROAD (مع خط أبيض رقيق في الوسط)
 // ============================================
 
 function createRoad() {
@@ -160,8 +159,9 @@ function createRoad() {
         scene.add(segment);
         road.push(segment);
 
-        if (i % 3 === 0) {
-            createLaneDivider(0, z);
+        // خط أبيض رقيق في الوسط (بدلاً من الخط الأزرق)
+        if (i % 2 === 0) {
+            createCenterLine(0, z);
         }
 
         createSideBarrier(-CONFIG.ROAD.WIDTH / 2, z, 0xff0088);
@@ -169,13 +169,17 @@ function createRoad() {
     }
 }
 
-function createLaneDivider(x, z) {
-    const geo = new THREE.BoxGeometry(0.2, 0.05, 2.5);
-    const mat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.5 });
-    const divider = new THREE.Mesh(geo, mat);
-    divider.position.set(x, 0.05, z);
-    scene.add(divider);
-    road.push(divider);
+function createCenterLine(x, z) {
+    const geo = new THREE.BoxGeometry(0.1, 0.02, 2); // خط رقيق جداً
+    const mat = new THREE.MeshBasicMaterial({ 
+        color: CONFIG.COLORS.CENTER_LINE, 
+        transparent: true, 
+        opacity: 0.6 
+    });
+    const line = new THREE.Mesh(geo, mat);
+    line.position.set(x, 0.02, z); // على سطح الطريق
+    scene.add(line);
+    road.push(line);
 }
 
 function createSideBarrier(x, z, color) {
@@ -221,7 +225,7 @@ function createStarfield() {
 }
 
 // ============================================
-// CREATE OBSTACLE (حجم ثابت من الحافة إلى النصف)
+// CREATE OBSTACLE (مثلثات عالية)
 // ============================================
 
 function createObstacle(lane, number) {
@@ -229,7 +233,6 @@ function createObstacle(lane, number) {
     
     const currentColor = CONFIG.OBSTACLE.COLORS[gameState.currentObstacleColor];
     
-    // مثلث بحجم ثابت (من الحافة إلى النصف)
     const geometry = new THREE.ConeGeometry(CONFIG.OBSTACLE.BASE_SIZE, CONFIG.OBSTACLE.HEIGHT, 3);
     const material = new THREE.MeshPhongMaterial({
         color: currentColor,
@@ -257,7 +260,6 @@ function createObstacle(lane, number) {
         group.add(glow);
     }
 
-    // الرقم
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = 256;
@@ -270,11 +272,10 @@ function createObstacle(lane, number) {
     
     const texture = new THREE.CanvasTexture(canvas);
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true }));
-    sprite.scale.set(2, 2, 1);
-    sprite.position.y = CONFIG.OBSTACLE.HEIGHT;
+    sprite.scale.set(2.5, 2.5, 1);
+    sprite.position.y = CONFIG.OBSTACLE.HEIGHT * 0.7;
     group.add(sprite);
 
-    // الموضع: من الحافة إلى النصف
     group.position.set(
         CONFIG.ROAD.LANE_POSITIONS[lane], 
         CONFIG.OBSTACLE.HEIGHT / 2, 
@@ -369,10 +370,10 @@ function changeLane(direction) {
 
 function checkCollision() {
     for (let obstacle of obstacles) {
-        if (obstacle.position.z > ball.position.z - 3 && 
-            obstacle.position.z < ball.position.z + 3) {
+        if (obstacle.position.z > ball.position.z - 4 && 
+            obstacle.position.z < ball.position.z + 4) {
             const distance = Math.abs(ball.position.x - obstacle.position.x);
-            if (distance < 3) return true;
+            if (distance < 4) return true;
         }
     }
     return false;
@@ -402,9 +403,8 @@ function startGame() {
     currentPatternIndex = 0;
     patternProgress = 0;
     currentRoadOffset = { x: 0, y: 0 };
-    roadRotation = 0;
     
-    ball.position.set(CONFIG.ROAD.LANE_POSITIONS[0], CONFIG.BALL.FIXED_HEIGHT, 0);
+    ball.position.set(CONFIG.ROAD.LANE_POSITIONS[0], CONFIG.BALL.FIXED_HEIGHT + CONFIG.BALL.SIZE, 0);
     
     obstacles.forEach(obs => scene.remove(obs));
     obstacles = [];
@@ -456,13 +456,11 @@ function addScore(points = 1) {
     gameState.obstaclesSinceColorChange += points;
     uiSystem.updateScoreDisplay(gameState.score);
     
-    // تغيير اللون كل 9
     if (gameState.obstaclesSinceColorChange >= CONFIG.GAME.OBSTACLE_COLOR_CHANGE_INTERVAL) {
         gameState.currentObstacleColor = (gameState.currentObstacleColor + 1) % CONFIG.OBSTACLE.COLORS.length;
         gameState.obstaclesSinceColorChange = 0;
     }
     
-    // زيادة السرعة 10% كل 15 مثلث
     if (gameState.obstaclesPassed % CONFIG.GAME.SPEED_INCREASE_INTERVAL === 0) {
         gameState.speedMultiplier += CONFIG.GAME.SPEED_INCREASE_PERCENTAGE;
         gameState.speed = CONFIG.GAME.BASE_SPEED * gameState.speedMultiplier;
@@ -472,10 +470,8 @@ function addScore(points = 1) {
         }
         
         uiSystem.updateSpeedDisplay(gameState.speedMultiplier);
-        console.log('⚡ Speed:', (gameState.speedMultiplier * 100).toFixed(0) + '%');
     }
     
-    // إنشاء نقطة
     if (coinsSystem.onObstaclePassed()) {
         const lane = Math.floor(Math.random() * 2);
         coinsSystem.createCoin(scene, lane);
@@ -489,26 +485,22 @@ function addScore(points = 1) {
 function updateGame() {
     if (!gameState.isPlaying || gameState.isPaused) return;
     
-    // تحديث اتجاه الطريق كل 10 أمتار
     patternProgress += gameState.speed * 2.5;
     
     if (patternProgress >= CONFIG.ROAD.PATTERN_DISTANCE) {
         currentPatternIndex = (currentPatternIndex + 1) % CONFIG.ROAD_PATTERNS.length;
         patternProgress = 0;
-        const pattern = CONFIG.ROAD_PATTERNS[currentPatternIndex];
-        console.log('🛣️ Direction:', pattern.icon);
     }
     
     const currentPattern = CONFIG.ROAD_PATTERNS[currentPatternIndex];
     
-    // حساب الإزاحة بناءً على الاتجاه
     if (currentPattern.xDir !== 0 || currentPattern.yDir !== 0) {
-        const moveSpeed = 0.05;
+        const moveSpeed = 0.02;
         currentRoadOffset.x += currentPattern.xDir * moveSpeed;
         currentRoadOffset.y += currentPattern.yDir * moveSpeed;
     }
     
-    // تحديث الطريق (ثابت، غير متعرج)
+    // تحديث الطريق
     road.forEach(segment => {
         segment.position.z += gameState.speed * 2.5;
         segment.position.x = currentRoadOffset.x;
@@ -519,12 +511,10 @@ function updateGame() {
         }
     });
     
-    // تحريك الكرة
+    // تحريك الكرة (ثابتة في الارتفاع، بدون جاذبية)
     const targetX = CONFIG.ROAD.LANE_POSITIONS[targetLane];
     ball.position.x += (targetX - ball.position.x) * CONFIG.BALL.LANE_CHANGE_SPEED;
-    ball.position.y = CONFIG.BALL.FIXED_HEIGHT;
-    ball.position.x += currentRoadOffset.x * 0.1;
-    ball.position.y += currentRoadOffset.y * 0.1;
+    ball.position.y = CONFIG.BALL.FIXED_HEIGHT + CONFIG.BALL.SIZE; // ثابتة تماماً
     
     ball.rotation.x += 0.1;
     ball.rotation.z += 0.05;
@@ -551,7 +541,7 @@ function updateGame() {
         }
     });
     
-    // تحديث النقاط (مع تصحيح الموضع)
+    // تحديث النقاط
     coinsSystem.activeCoins.forEach((coin, index) => {
         if (coin.userData.collected) return;
         
@@ -561,7 +551,6 @@ function updateGame() {
         
         coin.rotation.y += 0.05;
         
-        // إزالة النقاط البعيدة
         if (coin.position.z > 10) {
             if (coin.parent) coin.parent.remove(coin);
             coinsSystem.activeCoins.splice(index, 1);
@@ -592,8 +581,8 @@ function updateGame() {
         if (star.position.z > 15) star.position.z -= 300;
     });
     
-    // تحديث الكاميرا
-    const cameraTargetX = ball.position.x * 0.35;
+    // تحديث الكاميرا (تتبع الكرة يمين/يسار)
+    const cameraTargetX = ball.position.x * CONFIG.CAMERA.HORIZONTAL_FOLLOW;
     const cameraTargetZ = ball.position.z + CONFIG.CAMERA.DISTANCE;
     
     camera.position.x += (cameraTargetX - camera.position.x) * CONFIG.CAMERA.FOLLOW_SPEED;
@@ -601,7 +590,7 @@ function updateGame() {
     camera.position.y = CONFIG.CAMERA.HEIGHT;
     
     camera.lookAt(
-        ball.position.x * 0.6,
+        ball.position.x,
         ball.position.y,
         ball.position.z - CONFIG.CAMERA.LOOK_AHEAD
     );
