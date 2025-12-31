@@ -1,5 +1,5 @@
 // ============================================
-// RUSH 3D - MAIN GAME ENGINE
+// RUSH 3D - MAIN GAME ENGINE (FINAL WORKING VERSION)
 // ============================================
 
 // Game State
@@ -13,7 +13,8 @@ let gameState = {
     coinsCollectedInGame: 0,
     maxSpeedReached: 1.0,
     currentObstacleColor: 0,
-    obstaclesSinceColorChange: 0
+    obstaclesSinceColorChange: 0,
+    roadPreviewVisible: true
 };
 
 // Three.js Objects
@@ -23,6 +24,7 @@ let road = [];
 let obstacles = [];
 let particles = [];
 let stars = [];
+let roadPreview = [];
 
 // Game Mechanics
 let targetLane = 0;
@@ -61,29 +63,30 @@ function init() {
 
         renderer = new THREE.WebGLRenderer({ 
             antialias: true, 
-            alpha: false,
-            powerPreference: "high-performance"
+            alpha: false
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        const canvasContainer = document.getElementById('canvas-container');
+        if (canvasContainer) {
+            canvasContainer.appendChild(renderer.domElement);
+        } else {
+            console.error('Canvas container not found');
+            return;
+        }
 
         setupLighting();
         createBall();
         createRoad();
         createStarfield();
         setupInput();
-        
-        if (typeof settingsSystem !== 'undefined') {
-            settingsSystem.applySettings();
-        }
 
         window.addEventListener('resize', onWindowResize);
         
-        if (typeof uiSystem !== 'undefined') {
+        if (window.uiSystem && typeof uiSystem.hideLoadingScreen === 'function') {
             uiSystem.hideLoadingScreen();
         }
 
@@ -92,7 +95,6 @@ function init() {
         
     } catch (error) {
         console.error('❌ Error initializing game:', error);
-        alert('خطأ في تحميل اللعبة. يرجى تحديث الصفحة.');
     }
 }
 
@@ -116,20 +118,14 @@ function setupLighting() {
 // ============================================
 
 function createBall() {
-    let ballData;
-    if (typeof ballsSystem !== 'undefined') {
-        ballData = ballsSystem.getSelectedBall();
-    } else {
-        ballData = { color: 0x00ff88 };
-    }
+    let ballColor = 0x00ff88;
     
     const geometry = new THREE.SphereGeometry(CONFIG.BALL.SIZE, 32, 32);
     const material = new THREE.MeshPhongMaterial({
-        color: ballData.color,
-        emissive: ballData.color,
+        color: ballColor,
+        emissive: ballColor,
         emissiveIntensity: 0.6,
-        shininess: 150,
-        specular: 0xffffff
+        shininess: 150
     });
     
     ball = new THREE.Mesh(geometry, material);
@@ -140,28 +136,12 @@ function createBall() {
     scene.add(ball);
 }
 
-function updateBallColor() {
-    if (!ball) return;
-    let ballData;
-    if (typeof ballsSystem !== 'undefined') {
-        ballData = ballsSystem.getSelectedBall();
-    } else {
-        ballData = { color: 0x00ff88 };
-    }
-    ball.material.color.setHex(ballData.color);
-    ball.material.emissive.setHex(ballData.color);
-}
-
 // ============================================
 // CREATE ROAD
 // ============================================
 
 function createRoad() {
-    let roadColor = 0x1a1a1a;
-    if (typeof roadsSystem !== 'undefined') {
-        const roadData = roadsSystem.getSelectedRoad();
-        roadColor = roadData.color;
-    }
+    const roadColor = 0x1a1a1a;
     
     for (let i = 0; i < CONFIG.ROAD.TOTAL_LENGTH / CONFIG.ROAD.SEGMENT_LENGTH; i++) {
         const z = -i * CONFIG.ROAD.SEGMENT_LENGTH;
@@ -179,43 +159,7 @@ function createRoad() {
         segment.receiveShadow = true;
         scene.add(segment);
         road.push(segment);
-
-        // خط في الوسط
-        if (i % 2 === 0) {
-            createCenterLine(0, z);
-        }
-
-        createSideBarrier(-CONFIG.ROAD.WIDTH / 2, z, 0xff0088);
-        createSideBarrier(CONFIG.ROAD.WIDTH / 2, z, 0x00ddff);
     }
-}
-
-function createCenterLine(x, z) {
-    const geo = new THREE.BoxGeometry(0.1, 0.02, 2);
-    const mat = new THREE.MeshBasicMaterial({ 
-        color: CONFIG.COLORS.CENTER_LINE, 
-        transparent: true, 
-        opacity: 0.6 
-    });
-    const line = new THREE.Mesh(geo, mat);
-    line.position.set(x, 0.02, z);
-    scene.add(line);
-    road.push(line);
-}
-
-function createSideBarrier(x, z, color) {
-    const geo = new THREE.BoxGeometry(0.4, 2.5, 5);
-    const mat = new THREE.MeshPhongMaterial({
-        color: color,
-        emissive: color,
-        emissiveIntensity: 0.6,
-        transparent: true,
-        opacity: 0.7
-    });
-    const barrier = new THREE.Mesh(geo, mat);
-    barrier.position.set(x, 1.25, z);
-    scene.add(barrier);
-    road.push(barrier);
 }
 
 // ============================================
@@ -261,22 +205,6 @@ function createObstacle(lane, number) {
     pyramid.castShadow = true;
     group.add(pyramid);
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 256;
-    canvas.height = 256;
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 140px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(number.toString(), 128, 128);
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true }));
-    sprite.scale.set(2.5, 2.5, 1);
-    sprite.position.y = CONFIG.OBSTACLE.HEIGHT * 0.7;
-    group.add(sprite);
-
     group.position.set(
         CONFIG.ROAD.LANE_POSITIONS[lane], 
         CONFIG.OBSTACLE.HEIGHT / 2, 
@@ -306,7 +234,7 @@ function createParticleExplosion(x, y, z, color, count = 40) {
             (Math.random() - 0.5) * 0.5
         );
         particle.userData.life = 1.0;
-        particle.userData.decay = 0.015 + Math.random() * 0.015;
+        particle.userData.decay = 0.015;
         
         scene.add(particle);
         particles.push(particle);
@@ -320,8 +248,8 @@ function createParticleExplosion(x, y, z, color, count = 40) {
 function setupInput() {
     const canvas = renderer.domElement;
     
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchstart', handleTouchStart);
+    canvas.addEventListener('touchmove', handleTouchMove);
     canvas.addEventListener('touchend', () => isDragging = false);
     
     canvas.addEventListener('mousedown', handleMouseDown);
@@ -382,7 +310,7 @@ function checkCollision() {
 }
 
 // ============================================
-// GAME STATE
+// GAME STATE FUNCTIONS
 // ============================================
 
 function startGame() {
@@ -414,15 +342,7 @@ function startGame() {
     particles.forEach(p => scene.remove(p));
     particles = [];
     
-    if (typeof coinsSystem !== 'undefined') {
-        coinsSystem.resetGame();
-    }
-    
-    if (typeof statsSystem !== 'undefined') {
-        statsSystem.startGame();
-    }
-    
-    if (typeof uiSystem !== 'undefined') {
+    if (window.uiSystem && typeof uiSystem.updateScoreDisplay === 'function') {
         uiSystem.updateScoreDisplay(0);
         uiSystem.showGameplay();
     }
@@ -433,22 +353,9 @@ function gameOver() {
     
     gameState.isPlaying = false;
     
-    if (typeof coinsSystem !== 'undefined') {
-        const coinsEarned = coinsSystem.endGame();
-    }
-    
-    if (typeof statsSystem !== 'undefined') {
-        statsSystem.endGame(
-            gameState.score, 
-            gameState.obstaclesPassed, 
-            gameState.coinsCollectedInGame,
-            gameState.maxSpeedReached
-        );
-    }
-    
     createParticleExplosion(ball.position.x, ball.position.y, ball.position.z, 0xff3366, 60);
     
-    if (typeof uiSystem !== 'undefined') {
+    if (window.uiSystem && typeof uiSystem.showGameOver === 'function') {
         uiSystem.showGameOver(gameState.score, 0);
     }
 }
@@ -458,7 +365,7 @@ function togglePause() {
     
     gameState.isPaused = !gameState.isPaused;
     
-    if (typeof uiSystem !== 'undefined') {
+    if (window.uiSystem) {
         if (gameState.isPaused) {
             uiSystem.showPause();
         } else {
@@ -472,7 +379,7 @@ function addScore(points = 1) {
     gameState.obstaclesPassed += points;
     gameState.obstaclesSinceColorChange += points;
     
-    if (typeof uiSystem !== 'undefined') {
+    if (window.uiSystem && typeof uiSystem.updateScoreDisplay === 'function') {
         uiSystem.updateScoreDisplay(gameState.score);
     }
     
@@ -489,14 +396,9 @@ function addScore(points = 1) {
             gameState.maxSpeedReached = gameState.speedMultiplier;
         }
         
-        if (typeof uiSystem !== 'undefined') {
+        if (window.uiSystem && typeof uiSystem.updateSpeedDisplay === 'function') {
             uiSystem.updateSpeedDisplay(gameState.speedMultiplier);
         }
-    }
-    
-    if (typeof coinsSystem !== 'undefined' && coinsSystem.onObstaclePassed()) {
-        const lane = Math.floor(Math.random() * 2);
-        coinsSystem.createCoin(scene, lane);
     }
 }
 
@@ -566,25 +468,6 @@ function updateGame() {
         }
     });
     
-    if (typeof coinsSystem !== 'undefined') {
-        coinsSystem.checkCoinCollection(ball);
-        
-        coinsSystem.activeCoins.forEach((coin, index) => {
-            if (coin.userData.collected) return;
-            
-            coin.position.z += gameState.speed * 2.5;
-            coin.position.x = CONFIG.ROAD.LANE_POSITIONS[coin.userData.lane] + currentRoadOffset.x;
-            coin.position.y = CONFIG.COIN.HEIGHT + currentRoadOffset.y;
-            
-            coin.rotation.y += 0.05;
-            
-            if (coin.position.z > 10) {
-                if (coin.parent) coin.parent.remove(coin);
-                coinsSystem.activeCoins.splice(index, 1);
-            }
-        });
-    }
-    
     particles.forEach((particle, index) => {
         if (particle.userData.velocity) {
             particle.position.add(particle.userData.velocity);
@@ -631,12 +514,8 @@ function updateGame() {
 
 function animate() {
     requestAnimationFrame(animate);
-    try {
-        updateGame();
-        renderer.render(scene, camera);
-    } catch (error) {
-        console.error('Error in animation loop:', error);
-    }
+    updateGame();
+    renderer.render(scene, camera);
 }
 
 // ============================================
@@ -649,13 +528,18 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function applyGraphicsSettings(quality) {
-    const pixelRatios = { low: 1, medium: 1.5, high: 2 };
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatios[quality] || 2));
+// ============================================
+// ROAD PREVIEW FUNCTIONS (OPTIONAL)
+// ============================================
+
+function toggleRoadPreview() {
+    gameState.roadPreviewVisible = !gameState.roadPreviewVisible;
+    console.log('Road preview:', gameState.roadPreviewVisible ? 'ON' : 'OFF');
+    return gameState.roadPreviewVisible;
 }
 
 // ============================================
-// START
+// START GAME
 // ============================================
 
 window.addEventListener('load', init);
