@@ -1,13 +1,13 @@
 // ============================================
-// GAME CONFIGURATION (FINAL)
+// GAME CONFIGURATION (UPDATED)
 // ============================================
 
 const CONFIG = {
     // Game Settings
     GAME: {
-        BASE_SPEED: 0.25,
-        SPEED_INCREASE_INTERVAL: 15,
-        SPEED_INCREASE_PERCENTAGE: 0.10,
+        BASE_SPEED: 1.0, // 400% زيادة من السرعة الأصلية (من 0.25 إلى 1.0)
+        SPEED_INCREASE_INTERVAL: 15, // كل 15 مثلث
+        SPEED_INCREASE_PERCENTAGE: 0.20, // زيادة 20% كل مرة
         COIN_SPAWN_INTERVAL: 7,
         COIN_VALUE: 1,
         MAX_OBSTACLE_NUMBER: 1000,
@@ -21,7 +21,7 @@ const CONFIG = {
         HEIGHT: 8,
         FOLLOW_SPEED: 0.15,
         LOOK_AHEAD: 10,
-        HORIZONTAL_FOLLOW: 0.3 // تتبع أفقي للكرة
+        HORIZONTAL_FOLLOW: 0.3
     },
 
     // Road Settings
@@ -33,19 +33,23 @@ const CONFIG = {
         PATTERN_DISTANCE: 40
     },
 
-    // Road Patterns
+    // Road Patterns (طريق متعرج مثل لعبة Rush)
     ROAD_PATTERNS: [
-        { type: 'straight', xDir: 0, yDir: 0, icon: '⤴️' },
-        { type: 'up', xDir: 0, yDir: 0.5, icon: '⬆️' },
-        { type: 'right', xDir: 0.5, yDir: 0, icon: '➡️' },
-        { type: 'down', xDir: 0, yDir: -0.5, icon: '⬇️' },
-        { type: 'left', xDir: -0.5, yDir: 0, icon: '⬅️' }
+        { type: 'straight', xDir: 0, yDir: 0, icon: '⤴️', duration: 3 },
+        { type: 'up', xDir: 0, yDir: 0.3, icon: '⬆️', duration: 2 },
+        { type: 'right', xDir: 0.3, yDir: 0, icon: '➡️', duration: 2 },
+        { type: 'down', xDir: 0, yDir: -0.3, icon: '⬇️', duration: 2 },
+        { type: 'left', xDir: -0.3, yDir: 0, icon: '⬅️', duration: 2 },
+        { type: 'curve_right_up', xDir: 0.2, yDir: 0.2, icon: '↗️', duration: 2 },
+        { type: 'curve_right_down', xDir: 0.2, yDir: -0.2, icon: '↘️', duration: 2 },
+        { type: 'curve_left_up', xDir: -0.2, yDir: 0.2, icon: '↖️', duration: 2 },
+        { type: 'curve_left_down', xDir: -0.2, yDir: -0.2, icon: '↙️', duration: 2 }
     ],
 
-    // Obstacle Settings (مثلثات عالية)
+    // Obstacle Settings (مثلث كبير جداً)
     OBSTACLE: {
-        BASE_SIZE: 2.5,
-        HEIGHT: 4.0, // مثلثات عالية
+        BASE_SIZE: 4.0, // حجم كبير جداً
+        HEIGHT: 5.0,
         SPAWN_INTERVAL: 70,
         MIN_SPAWN_INTERVAL: 50,
         COLORS: [
@@ -64,12 +68,12 @@ const CONFIG = {
         ]
     },
 
-    // Ball Settings (كرة كبيرة من الحافة إلى النصف)
+    // Ball Settings (كرة صغيرة ملتصقة بالأرض)
     BALL: {
-        SIZE: 3.0, // كرة كبيرة جداً
-        LANE_CHANGE_SPEED: 0.2,
-        FIXED_HEIGHT: 1.5,
-        GRAVITY: 0 // بدون جاذبية
+        SIZE: 1.5, // تصغير 50% (من 3.0 إلى 1.5)
+        LANE_CHANGE_SPEED: 0.3, // زيادة سرعة تحريك الكرة
+        FIXED_HEIGHT: 0.75, // ملتصقة بالأرض (نصف الحجم)
+        GRAVITY: 0
     },
 
     // Coin Settings
@@ -92,7 +96,7 @@ const CONFIG = {
         OBSTACLE: 0xffff00,
         COIN: 0xffd700,
         BACKGROUND: 0x0a0a0a,
-        CENTER_LINE: 0xffffff // خط أبيض في الوسط
+        CENTER_LINE: 0xffffff
     },
 
     // Input
