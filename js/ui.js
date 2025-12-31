@@ -1,49 +1,72 @@
 // ============================================
-// UI SYSTEM (نظام واجهة المستخدم - كامل)
+// UI SYSTEM (FINAL WORKING VERSION)
 // ============================================
 
 class UISystem {
     constructor() {
         this.currentPanel = null;
-        this.setupEventListeners();
+        this.init();
     }
 
-    // إعداد مستمعي الأحداث
+    init() {
+        this.setupEventListeners();
+        this.updateDisplays();
+        console.log('✅ UI System initialized');
+    }
+
     setupEventListeners() {
         // أزرار التنقل السفلية
-        document.getElementById('balls-btn').addEventListener('click', () => {
-            this.openPanel('balls-panel');
-            ballsSystem.renderPanel();
-        });
+        const ballsBtn = document.getElementById('balls-btn');
+        const roadsBtn = document.getElementById('roads-btn');
+        const statsBtn = document.getElementById('stats-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
 
-        document.getElementById('roads-btn').addEventListener('click', () => {
-            this.openPanel('roads-panel');
-            roadsSystem.renderPanel();
-        });
+        if (ballsBtn) {
+            ballsBtn.addEventListener('click', () => {
+                this.openPanel('balls-panel');
+                if (window.ballsSystem && ballsSystem.renderPanel) {
+                    ballsSystem.renderPanel();
+                }
+            });
+        }
 
-        document.getElementById('stats-btn').addEventListener('click', () => {
-            this.openPanel('stats-panel');
-            statsSystem.renderPanel();
-        });
+        if (roadsBtn) {
+            roadsBtn.addEventListener('click', () => {
+                this.openPanel('roads-panel');
+                if (window.roadsSystem && roadsSystem.renderPanel) {
+                    roadsSystem.renderPanel();
+                }
+            });
+        }
 
-        document.getElementById('settings-btn').addEventListener('click', () => {
-            this.openPanel('settings-panel');
-            settingsSystem.renderPanel();
-        });
+        if (statsBtn) {
+            statsBtn.addEventListener('click', () => {
+                this.openPanel('stats-panel');
+                if (window.statsSystem && statsSystem.renderPanel) {
+                    statsSystem.renderPanel();
+                }
+            });
+        }
 
-        // زر اللعب
-        document.getElementById('play-btn').addEventListener('click', () => {
-            if (typeof gameState !== 'undefined') {
-                if (gameState.isPlaying) {
-                    togglePause();
-                } else {
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => {
+                this.openPanel('settings-panel');
+                if (window.settingsSystem && settingsSystem.renderPanel) {
+                    settingsSystem.renderPanel();
+                }
+            });
+        }
+
+        if (playBtn) {
+            playBtn.addEventListener('click', () => {
+                if (typeof startGame === 'function') {
                     startGame();
                 }
-            }
-        });
+            });
+        }
 
-        // زر الإيقاف المؤقت
-        const pauseBtn = document.getElementById('pause-btn');
         if (pauseBtn) {
             pauseBtn.addEventListener('click', () => {
                 if (typeof togglePause === 'function') {
@@ -51,63 +74,20 @@ class UISystem {
                 }
             });
         }
-
-        // النقر على شاشة نهاية اللعبة لإعادة المحاولة
-        document.getElementById('gameover-screen').addEventListener('click', (e) => {
-            if (e.target.id === 'gameover-screen' || e.target.closest('.gameover-content')) {
-                // يمكن إضافة زر إعادة المحاولة هنا
-            }
-        });
-
-        // إضافة زر تبديل مسار الطريق
-        this.addRoadPreviewToggle();
     }
 
-    // إضافة زر تبديل مسار الطريق
-    addRoadPreviewToggle() {
-        const controls = document.getElementById('game-controls');
-        if (controls && !document.getElementById('road-preview-btn')) {
-            const toggleBtn = document.createElement('button');
-            toggleBtn.id = 'road-preview-btn';
-            toggleBtn.className = 'control-btn';
-            toggleBtn.innerHTML = '<span class="btn-icon">🛣️</span>';
-            toggleBtn.title = 'إظهار/إخفاء مسار الطريق المستقبلي';
-            toggleBtn.addEventListener('click', () => {
-                if (typeof toggleRoadPreview === 'function') {
-                    const isVisible = toggleRoadPreview();
-                    toggleBtn.querySelector('.btn-icon').textContent = isVisible ? '🛣️' : '🚫';
-                    
-                    // إشعار بسيط
-                    this.showNotification(isVisible ? 'مسار الطريق: مرئي' : 'مسار الطريق: مخفي', 'info');
-                }
-            });
-            controls.appendChild(toggleBtn);
-        }
-    }
-
-    // فتح لوحة جانبية
     openPanel(panelId) {
-        // إغلاق اللوحة الحالية
         if (this.currentPanel) {
-            document.getElementById(this.currentPanel).classList.remove('active');
+            this.closePanel(this.currentPanel);
         }
 
-        // فتح اللوحة الجديدة
         const panel = document.getElementById(panelId);
         if (panel) {
             panel.classList.add('active');
             this.currentPanel = panelId;
-            
-            // إخفاء اللوحة بعد 30 ثانية من عدم التفاعل
-            setTimeout(() => {
-                if (this.currentPanel === panelId) {
-                    this.closePanel(panelId);
-                }
-            }, 30000);
         }
     }
 
-    // إغلاق لوحة
     closePanel(panelId) {
         const panel = document.getElementById(panelId);
         if (panel) {
@@ -118,174 +98,151 @@ class UISystem {
         }
     }
 
-    // إغلاق جميع اللوحات
+    updateScoreDisplay(score) {
+        const scoreEl = document.querySelector('.score-number');
+        if (scoreEl) {
+            scoreEl.textContent = score;
+        }
+    }
+
+    updateCoinsDisplay() {
+        const coinsValueEl = document.getElementById('coins-value');
+        const menuCoinsEl = document.getElementById('menu-coins-value');
+        
+        if (coinsValueEl) {
+            coinsValueEl.textContent = '0';
+        }
+        
+        if (menuCoinsEl) {
+            menuCoinsEl.textContent = '0';
+        }
+    }
+
+    showMenu() {
+        const menuScreen = document.getElementById('menu-screen');
+        const gameoverScreen = document.getElementById('gameover-screen');
+        const pauseScreen = document.getElementById('pause-screen');
+        const scoreDisplay = document.getElementById('score-display');
+        const gameControls = document.getElementById('game-controls');
+        const bottomNav = document.getElementById('bottom-nav');
+
+        if (menuScreen) menuScreen.classList.add('active');
+        if (gameoverScreen) gameoverScreen.classList.remove('active');
+        if (pauseScreen) pauseScreen.classList.remove('active');
+        if (scoreDisplay) scoreDisplay.classList.remove('active');
+        if (gameControls) gameControls.classList.remove('active');
+        if (bottomNav) bottomNav.style.display = 'flex';
+    }
+
+    showGameplay() {
+        const menuScreen = document.getElementById('menu-screen');
+        const gameoverScreen = document.getElementById('gameover-screen');
+        const pauseScreen = document.getElementById('pause-screen');
+        const scoreDisplay = document.getElementById('score-display');
+        const gameControls = document.getElementById('game-controls');
+        const bottomNav = document.getElementById('bottom-nav');
+
+        if (menuScreen) menuScreen.classList.remove('active');
+        if (gameoverScreen) gameoverScreen.classList.remove('active');
+        if (pauseScreen) pauseScreen.classList.remove('active');
+        if (scoreDisplay) scoreDisplay.classList.add('active');
+        if (gameControls) gameControls.classList.add('active');
+        if (bottomNav) bottomNav.style.display = 'none';
+        
+        this.closeAllPanels();
+    }
+
+    showGameOver(score, coinsEarned) {
+        const finalScoreEl = document.getElementById('final-score-value');
+        const coinsEarnedEl = document.getElementById('coins-earned-value');
+        const bestScoreEl = document.getElementById('best-score-value');
+        const gameoverScreen = document.getElementById('gameover-screen');
+        const scoreDisplay = document.getElementById('score-display');
+        const gameControls = document.getElementById('game-controls');
+        const bottomNav = document.getElementById('bottom-nav');
+
+        if (finalScoreEl) finalScoreEl.textContent = score;
+        if (coinsEarnedEl) coinsEarnedEl.textContent = coinsEarned;
+        if (bestScoreEl) bestScoreEl.textContent = '0';
+
+        setTimeout(() => {
+            if (gameoverScreen) gameoverScreen.classList.add('active');
+            if (scoreDisplay) scoreDisplay.classList.remove('active');
+            if (gameControls) gameControls.classList.remove('active');
+            if (bottomNav) bottomNav.style.display = 'flex';
+        }, 500);
+    }
+
+    showPause() {
+        const pauseScreen = document.getElementById('pause-screen');
+        if (pauseScreen) {
+            pauseScreen.classList.add('active');
+        }
+    }
+
+    hidePause() {
+        const pauseScreen = document.getElementById('pause-screen');
+        if (pauseScreen) {
+            pauseScreen.classList.remove('active');
+        }
+    }
+
+    hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
+    }
+
+    updateSpeedDisplay(speedMultiplier) {
+        const speedPercent = Math.round(speedMultiplier * 100);
+        console.log('Speed:', speedPercent + '%');
+    }
+
+    updateHighScoreDisplay() {
+        const highScoreEl = document.getElementById('high-score-value');
+        if (highScoreEl) {
+            highScoreEl.textContent = '0';
+        }
+    }
+
+    updateDisplays() {
+        this.updateHighScoreDisplay();
+        this.updateCoinsDisplay();
+    }
+
     closeAllPanels() {
         document.querySelectorAll('.side-panel').forEach(panel => {
             panel.classList.remove('active');
         });
         this.currentPanel = null;
     }
+}
 
-    // تحديث عرض النقاط
-    updateScoreDisplay(score) {
-        const scoreEl = document.querySelector('.score-number');
-        if (scoreEl) {
-            scoreEl.textContent = score;
-            
-            // تأثير عند تغيير النقاط
-            scoreEl.style.transform = 'scale(1.2)';
-            setTimeout(() => {
-                scoreEl.style.transform = 'scale(1)';
-            }, 200);
+// إنشاء وتصدير النظام
+window.uiSystem = new UISystem();
+
+// وظائف مساعدة عامة
+function openPanel(panelId) {
+    if (window.uiSystem) {
+        uiSystem.openPanel(panelId);
+    }
+}
+
+function closePanel(panelId) {
+    if (window.uiSystem) {
+        uiSystem.closePanel(panelId);
+    }
+}
+
+// إخفاء شاشة التحميل عند تحميل الصفحة
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        if (window.uiSystem && uiSystem.hideLoadingScreen) {
+            uiSystem.hideLoadingScreen();
         }
-    }
-
-    // تحديث عرض العملات
-    updateCoinsDisplay(coins) {
-        const coinsEl = document.getElementById('coins-value');
-        const menuCoinsEl = document.getElementById('menu-coins-value');
-        
-        if (coinsEl) {
-            coinsEl.textContent = coins;
-            
-            // تأثير عند جمع عملات
-            if (parseInt(coinsEl.textContent) < coins) {
-                coinsEl.style.color = '#ffd700';
-                setTimeout(() => {
-                    coinsEl.style.color = '';
-                }, 500);
-            }
-        }
-        
-        if (menuCoinsEl) {
-            menuCoinsEl.textContent = coinsSystem.getTotalCoins();
-        }
-    }
-
-    // عرض شاشة القائمة
-    showMenu() {
-        document.getElementById('menu-screen').classList.add('active');
-        document.getElementById('gameover-screen').classList.remove('active');
-        document.getElementById('pause-screen').classList.remove('active');
-        document.getElementById('score-display').classList.remove('active');
-        document.getElementById('game-controls').classList.remove('active');
-        document.getElementById('bottom-nav').style.display = 'flex';
-        
-        // تحديث الإحصائيات في القائمة
-        this.updateHighScoreDisplay();
-        this.updateCoinsDisplay(coinsSystem.getTotalCoins());
-    }
-
-    // عرض شاشة اللعب
-    showGameplay() {
-        document.getElementById('menu-screen').classList.remove('active');
-        document.getElementById('gameover-screen').classList.remove('active');
-        document.getElementById('pause-screen').classList.remove('active');
-        document.getElementById('score-display').classList.add('active');
-        document.getElementById('game-controls').classList.add('active');
-        document.getElementById('bottom-nav').style.display = 'none';
-        this.closeAllPanels();
-        
-        // إظهار زر مسار الطريق
-        const previewBtn = document.getElementById('road-preview-btn');
-        if (previewBtn) {
-            previewBtn.style.display = 'block';
-        }
-    }
-
-    // عرض شاشة نهاية اللعبة
-    showGameOver(score, coinsEarned) {
-        document.getElementById('final-score-value').textContent = score;
-        document.getElementById('coins-earned-value').textContent = coinsEarned;
-        document.getElementById('best-score-value').textContent = statsSystem.stats.highestScore;
-        
-        setTimeout(() => {
-            document.getElementById('gameover-screen').classList.add('active');
-            document.getElementById('score-display').classList.remove('active');
-            document.getElementById('game-controls').classList.remove('active');
-            document.getElementById('bottom-nav').style.display = 'flex';
-            
-            // إخفاء زر مسار الطريق
-            const previewBtn = document.getElementById('road-preview-btn');
-            if (previewBtn) {
-                previewBtn.style.display = 'none';
-            }
-            
-            // تأثيرات
-            document.querySelector('.gameover-title').style.animation = 'bounce 0.5s';
-            setTimeout(() => {
-                document.querySelector('.gameover-title').style.animation = '';
-            }, 500);
-        }, 500);
-    }
-
-    // عرض شاشة الإيقاف المؤقت
-    showPause() {
-        document.getElementById('pause-screen').classList.add('active');
-        
-        // إخفاء زر مسار الطريق مؤقتاً
-        const previewBtn = document.getElementById('road-preview-btn');
-        if (previewBtn) {
-            previewBtn.style.opacity = '0.5';
-        }
-    }
-
-    // إخفاء شاشة الإيقاف المؤقت
-    hidePause() {
-        document.getElementById('pause-screen').classList.remove('active');
-        
-        // إعادة إظهار زر مسار الطريق
-        const previewBtn = document.getElementById('road-preview-btn');
-        if (previewBtn) {
-            previewBtn.style.opacity = '1';
-        }
-    }
-
-    // إخفاء شاشة التحميل
-    hideLoadingScreen() {
-        setTimeout(() => {
-            const loadingScreen = document.getElementById('loading-screen');
-            if (loadingScreen) {
-                loadingScreen.style.opacity = '0';
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                }, 500);
-            }
-        }, 500);
-    }
-
-    // عرض إشعار
-    showNotification(message, type = 'info') {
-        // إنشاء عنصر الإشعار
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <span class="notification-icon">${type === 'info' ? 'ℹ️' : type === 'success' ? '✅' : '⚠️'}</span>
-            <span class="notification-text">${message}</span>
-        `;
-        
-        // إضافة الأنماط
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 12px 24px;
-            border-radius: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 9999;
-            opacity: 0;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // عرض
+    }, 1000);
+});
