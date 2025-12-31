@@ -1,9 +1,9 @@
 // ============================================
-// RUSH 3D - MAIN GAME ENGINE (COMPLETE FIXED VERSION)
+// RUSH 3D - MAIN GAME ENGINE
 // ============================================
 
 // Game State
-const gameState = {
+let gameState = {
     isPlaying: false,
     isPaused: false,
     score: 0,
@@ -13,8 +13,7 @@ const gameState = {
     coinsCollectedInGame: 0,
     maxSpeedReached: 1.0,
     currentObstacleColor: 0,
-    obstaclesSinceColorChange: 0,
-    roadPreviewVisible: true // لعرض مسار الطريق المستقبلي
+    obstaclesSinceColorChange: 0
 };
 
 // Three.js Objects
@@ -24,8 +23,6 @@ let road = [];
 let obstacles = [];
 let particles = [];
 let stars = [];
-let roadPreview = []; // مسار الطريق المستقبلي
-let roadPathPoints = []; // نقاط مسار الطريق
 
 // Game Mechanics
 let targetLane = 0;
@@ -34,7 +31,6 @@ let lastObstacleNumber = 1;
 
 // Road Direction System
 let currentPatternIndex = 0;
-let patternProgress = 0;
 let patternDuration = 0;
 let currentRoadOffset = { x: 0, y: 0 };
 let targetRoadOffset = { x: 0, y: 0 };
@@ -50,43 +46,54 @@ let isDragging = false;
 function init() {
     console.log('🎮 Initializing Rush 3D...');
     
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(CONFIG.COLORS.BACKGROUND);
-    scene.fog = new THREE.FogExp2(CONFIG.COLORS.BACKGROUND, CONFIG.EFFECTS.FOG_DENSITY);
+    try {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(CONFIG.COLORS.BACKGROUND);
+        scene.fog = new THREE.FogExp2(CONFIG.COLORS.BACKGROUND, CONFIG.EFFECTS.FOG_DENSITY);
 
-    camera = new THREE.PerspectiveCamera(
-        CONFIG.CAMERA.FOV,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-    );
-    camera.position.set(0, CONFIG.CAMERA.HEIGHT, CONFIG.CAMERA.DISTANCE);
+        camera = new THREE.PerspectiveCamera(
+            CONFIG.CAMERA.FOV,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+        );
+        camera.position.set(0, CONFIG.CAMERA.HEIGHT, CONFIG.CAMERA.DISTANCE);
 
-    renderer = new THREE.WebGLRenderer({ 
-        antialias: true, 
-        alpha: false,
-        powerPreference: "high-performance"
-    });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    
-    document.getElementById('canvas-container').appendChild(renderer.domElement);
+        renderer = new THREE.WebGLRenderer({ 
+            antialias: true, 
+            alpha: false,
+            powerPreference: "high-performance"
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    setupLighting();
-    createBall();
-    createRoad();
-    createStarfield();
-    createRoadPreview(); // إنشاء مسار الطريق المستقبلي
-    setupInput();
-    settingsSystem.applySettings();
+        setupLighting();
+        createBall();
+        createRoad();
+        createStarfield();
+        setupInput();
+        
+        if (typeof settingsSystem !== 'undefined') {
+            settingsSystem.applySettings();
+        }
 
-    window.addEventListener('resize', onWindowResize);
-    uiSystem.hideLoadingScreen();
+        window.addEventListener('resize', onWindowResize);
+        
+        if (typeof uiSystem !== 'undefined') {
+            uiSystem.hideLoadingScreen();
+        }
 
-    animate();
-    console.log('✅ Game initialized!');
+        animate();
+        console.log('✅ Game initialized successfully!');
+        
+    } catch (error) {
+        console.error('❌ Error initializing game:', error);
+        alert('خطأ في تحميل اللعبة. يرجى تحديث الصفحة.');
+    }
 }
 
 // ============================================
@@ -102,22 +109,19 @@ function setupLighting() {
     mainLight.castShadow = true;
     mainLight.shadow.mapSize.set(2048, 2048);
     scene.add(mainLight);
-
-    const pointLight1 = new THREE.PointLight(0x00ff88, 2, 50);
-    pointLight1.position.set(-10, 5, -10);
-    scene.add(pointLight1);
-
-    const pointLight2 = new THREE.PointLight(0xff0088, 2, 50);
-    pointLight2.position.set(10, 5, -10);
-    scene.add(pointLight2);
 }
 
 // ============================================
-// CREATE BALL (كرة متوسطة مرتفعة عن الأرض)
+// CREATE BALL
 // ============================================
 
 function createBall() {
-    const ballData = ballsSystem.getSelectedBall();
+    let ballData;
+    if (typeof ballsSystem !== 'undefined') {
+        ballData = ballsSystem.getSelectedBall();
+    } else {
+        ballData = { color: 0x00ff88 };
+    }
     
     const geometry = new THREE.SphereGeometry(CONFIG.BALL.SIZE, 32, 32);
     const material = new THREE.MeshPhongMaterial({
@@ -129,47 +133,42 @@ function createBall() {
     });
     
     ball = new THREE.Mesh(geometry, material);
-    // الكرة مرتفعة عن الأرض (تطفو)
     ball.position.set(CONFIG.ROAD.LANE_POSITIONS[0], CONFIG.BALL.FIXED_HEIGHT, 0);
     ball.castShadow = true;
     ball.receiveShadow = true;
-    
-    // إضافة توهج للكرة
-    if (CONFIG.EFFECTS.ENABLE_BALL_GLOW) {
-        const glowGeometry = new THREE.SphereGeometry(CONFIG.BALL.SIZE * 1.2, 16, 16);
-        const glowMaterial = new THREE.MeshBasicMaterial({
-            color: ballData.color,
-            transparent: true,
-            opacity: 0.3,
-            side: THREE.BackSide
-        });
-        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-        ball.add(glow);
-    }
     
     scene.add(ball);
 }
 
 function updateBallColor() {
     if (!ball) return;
-    const ballData = ballsSystem.getSelectedBall();
+    let ballData;
+    if (typeof ballsSystem !== 'undefined') {
+        ballData = ballsSystem.getSelectedBall();
+    } else {
+        ballData = { color: 0x00ff88 };
+    }
     ball.material.color.setHex(ballData.color);
     ball.material.emissive.setHex(ballData.color);
 }
 
 // ============================================
-// CREATE ROAD (مع خط أبيض رقيق في الوسط)
+// CREATE ROAD
 // ============================================
 
 function createRoad() {
-    const roadData = roadsSystem.getSelectedRoad();
+    let roadColor = 0x1a1a1a;
+    if (typeof roadsSystem !== 'undefined') {
+        const roadData = roadsSystem.getSelectedRoad();
+        roadColor = roadData.color;
+    }
     
     for (let i = 0; i < CONFIG.ROAD.TOTAL_LENGTH / CONFIG.ROAD.SEGMENT_LENGTH; i++) {
         const z = -i * CONFIG.ROAD.SEGMENT_LENGTH;
         
         const segmentGeometry = new THREE.PlaneGeometry(CONFIG.ROAD.WIDTH, CONFIG.ROAD.SEGMENT_LENGTH);
         const segmentMaterial = new THREE.MeshStandardMaterial({
-            color: roadData.color,
+            color: roadColor,
             roughness: 0.85,
             metalness: 0.15
         });
@@ -181,7 +180,7 @@ function createRoad() {
         scene.add(segment);
         road.push(segment);
 
-        // خط أبيض رقيق في الوسط (بدلاً من الخط الأزرق)
+        // خط في الوسط
         if (i % 2 === 0) {
             createCenterLine(0, z);
         }
@@ -192,14 +191,14 @@ function createRoad() {
 }
 
 function createCenterLine(x, z) {
-    const geo = new THREE.BoxGeometry(0.1, 0.02, 2); // خط رقيق جداً
+    const geo = new THREE.BoxGeometry(0.1, 0.02, 2);
     const mat = new THREE.MeshBasicMaterial({ 
         color: CONFIG.COLORS.CENTER_LINE, 
         transparent: true, 
         opacity: 0.6 
     });
     const line = new THREE.Mesh(geo, mat);
-    line.position.set(x, 0.02, z); // على سطح الطريق
+    line.position.set(x, 0.02, z);
     scene.add(line);
     road.push(line);
 }
@@ -217,13 +216,6 @@ function createSideBarrier(x, z, color) {
     barrier.position.set(x, 1.25, z);
     scene.add(barrier);
     road.push(barrier);
-}
-
-function updateRoadColor() {
-    const roadData = roadsSystem.getSelectedRoad();
-    road.forEach(segment => {
-        if (segment.material.color) segment.material.color.setHex(roadData.color);
-    });
 }
 
 // ============================================
@@ -247,91 +239,7 @@ function createStarfield() {
 }
 
 // ============================================
-// CREATE ROAD PREVIEW (مسار الطريق المستقبلي)
-// ============================================
-
-function createRoadPreview() {
-    // إزالة المسار القديم
-    roadPreview.forEach(item => scene.remove(item));
-    roadPreview = [];
-    roadPathPoints = [];
-    
-    // إنشاء نقاط المسار المستقبلي
-    const segmentCount = 100; // عرض مسار حتى 1000 متر
-    const previewMaterial = new THREE.LineBasicMaterial({
-        color: CONFIG.COLORS.ROAD_PREVIEW,
-        transparent: true,
-        opacity: 0.4,
-        linewidth: 2
-    });
-    
-    // إنشاء النقاط
-    let currentX = 0;
-    let currentY = 0;
-    let currentZ = -50; // بداية المسار قبل الكرة
-    
-    const points = [];
-    
-    for (let i = 0; i < segmentCount; i++) {
-        points.push(new THREE.Vector3(currentX, currentY, currentZ));
-        currentZ -= 10; // مسافة أكبر بين النقاط
-        
-        // تغيير عشوائي في الاتجاه (كل 5 نقاط)
-        if (i % 5 === 0) {
-            const randomPattern = CONFIG.ROAD_PATTERNS[Math.floor(Math.random() * CONFIG.ROAD_PATTERNS.length)];
-            currentX += randomPattern.xDir * 15;
-            currentY += randomPattern.yDir * 8;
-        }
-        
-        // الحد من الحركة
-        currentX = Math.max(-20, Math.min(20, currentX));
-        currentY = Math.max(-10, Math.min(10, currentY));
-    }
-    
-    // إنشاء الخط
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const line = new THREE.Line(geometry, previewMaterial);
-    scene.add(line);
-    roadPreview.push(line);
-    
-    // إضافة نقاط إرشادية على المسار
-    for (let i = 0; i < points.length; i += 10) {
-        const point = points[i];
-        const dotGeometry = new THREE.SphereGeometry(0.4, 8, 8);
-        const dotMaterial = new THREE.MeshBasicMaterial({
-            color: CONFIG.COLORS.ROAD_PREVIEW,
-            transparent: true,
-            opacity: 0.7
-        });
-        const dot = new THREE.Mesh(dotGeometry, dotMaterial);
-        dot.position.copy(point);
-        scene.add(dot);
-        roadPreview.push(dot);
-    }
-    
-    roadPathPoints = points;
-}
-
-// ============================================
-// UPDATE ROAD PREVIEW (تحديث مسار الطريق المستقبلي)
-// ============================================
-
-function updateRoadPreview() {
-    if (!gameState.roadPreviewVisible || roadPreview.length === 0) return;
-    
-    // تحريك المسار مع الكرة
-    roadPreview.forEach(item => {
-        item.position.z += gameState.speed * 2.5;
-        
-        // إعادة تعيين المسار عندما يبتعد
-        if (item.position.z > 10) {
-            item.position.z -= 1000; // إعادة تعيين للمسار الطويل
-        }
-    });
-}
-
-// ============================================
-// CREATE OBSTACLE (مثلثات)
+// CREATE OBSTACLE
 // ============================================
 
 function createObstacle(lane, number) {
@@ -352,19 +260,6 @@ function createObstacle(lane, number) {
     pyramid.rotation.y = Math.PI / 6;
     pyramid.castShadow = true;
     group.add(pyramid);
-
-    if (settingsSystem.get('effectsEnabled')) {
-        const glowGeometry = new THREE.ConeGeometry(CONFIG.OBSTACLE.BASE_SIZE * 1.2, CONFIG.OBSTACLE.HEIGHT * 1.2, 3);
-        const glowMaterial = new THREE.MeshBasicMaterial({
-            color: currentColor,
-            transparent: true,
-            opacity: 0.4,
-            side: THREE.BackSide
-        });
-        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-        glow.rotation.y = Math.PI / 6;
-        group.add(glow);
-    }
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -399,8 +294,6 @@ function createObstacle(lane, number) {
 // ============================================
 
 function createParticleExplosion(x, y, z, color, count = 40) {
-    if (!settingsSystem.get('particlesEnabled')) return;
-    
     for (let i = 0; i < count; i++) {
         const geo = new THREE.SphereGeometry(0.2, 8, 8);
         const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true });
@@ -429,7 +322,7 @@ function setupInput() {
     
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', () => isDragging = false, { passive: false });
+    canvas.addEventListener('touchend', () => isDragging = false);
     
     canvas.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('keydown', handleKeyDown);
@@ -471,7 +364,7 @@ function changeLane(direction) {
 }
 
 // ============================================
-// COLLISION (تحديث لكرة مرتفعة)
+// COLLISION
 // ============================================
 
 function checkCollision() {
@@ -480,8 +373,7 @@ function checkCollision() {
             obstacle.position.z < ball.position.z + 4) {
             
             const distance = Math.abs(ball.position.x - obstacle.position.x);
-            // تصادم مع الأخذ في الاعتبار ارتفاع الكرة
-            if (distance < 2.5 && Math.abs(ball.position.y - obstacle.position.y) < 3) {
+            if (distance < 2.5) {
                 return true;
             }
         }
@@ -494,46 +386,46 @@ function checkCollision() {
 // ============================================
 
 function startGame() {
-    console.log('🎮 Starting Rush 3D with road preview...');
+    console.log('🎮 Starting game...');
     
     gameState.isPlaying = true;
     gameState.isPaused = false;
     gameState.score = 0;
-    gameState.speed = CONFIG.GAME.BASE_SPEED; // سرعة 200%
+    gameState.speed = CONFIG.GAME.BASE_SPEED;
     gameState.speedMultiplier = 1.0;
     gameState.obstaclesPassed = 0;
     gameState.coinsCollectedInGame = 0;
     gameState.maxSpeedReached = 1.0;
     gameState.currentObstacleColor = 0;
     gameState.obstaclesSinceColorChange = 0;
-    gameState.roadPreviewVisible = true;
     
     targetLane = 0;
     obstacleSpawnTimer = 0;
     lastObstacleNumber = 1;
     currentPatternIndex = 0;
-    patternProgress = 0;
     patternDuration = 60;
     currentRoadOffset = { x: 0, y: 0 };
     targetRoadOffset = { x: 0, y: 0 };
     
-    // وضع الكرة (مرتفعة فوق الأرض)
     ball.position.set(CONFIG.ROAD.LANE_POSITIONS[0], CONFIG.BALL.FIXED_HEIGHT, 0);
     
-    // تنظيف
     obstacles.forEach(obs => scene.remove(obs));
     obstacles = [];
     particles.forEach(p => scene.remove(p));
     particles = [];
     
-    // إعادة إنشاء مسار الطريق المستقبلي
-    createRoadPreview();
+    if (typeof coinsSystem !== 'undefined') {
+        coinsSystem.resetGame();
+    }
     
-    coinsSystem.resetGame();
-    statsSystem.startGame();
+    if (typeof statsSystem !== 'undefined') {
+        statsSystem.startGame();
+    }
     
-    uiSystem.updateScoreDisplay(0);
-    uiSystem.showGameplay();
+    if (typeof uiSystem !== 'undefined') {
+        uiSystem.updateScoreDisplay(0);
+        uiSystem.showGameplay();
+    }
 }
 
 function gameOver() {
@@ -541,17 +433,24 @@ function gameOver() {
     
     gameState.isPlaying = false;
     
-    const coinsEarned = coinsSystem.endGame();
-    statsSystem.endGame(
-        gameState.score, 
-        gameState.obstaclesPassed, 
-        gameState.coinsCollectedInGame,
-        gameState.maxSpeedReached
-    );
+    if (typeof coinsSystem !== 'undefined') {
+        const coinsEarned = coinsSystem.endGame();
+    }
+    
+    if (typeof statsSystem !== 'undefined') {
+        statsSystem.endGame(
+            gameState.score, 
+            gameState.obstaclesPassed, 
+            gameState.coinsCollectedInGame,
+            gameState.maxSpeedReached
+        );
+    }
     
     createParticleExplosion(ball.position.x, ball.position.y, ball.position.z, 0xff3366, 60);
     
-    uiSystem.showGameOver(gameState.score, coinsEarned);
+    if (typeof uiSystem !== 'undefined') {
+        uiSystem.showGameOver(gameState.score, 0);
+    }
 }
 
 function togglePause() {
@@ -559,12 +458,12 @@ function togglePause() {
     
     gameState.isPaused = !gameState.isPaused;
     
-    if (gameState.isPaused) {
-        uiSystem.showPause();
-        document.getElementById('pause-btn').querySelector('.btn-icon').textContent = '▶';
-    } else {
-        uiSystem.hidePause();
-        document.getElementById('pause-btn').querySelector('.btn-icon').textContent = '⏸';
+    if (typeof uiSystem !== 'undefined') {
+        if (gameState.isPaused) {
+            uiSystem.showPause();
+        } else {
+            uiSystem.hidePause();
+        }
     }
 }
 
@@ -572,14 +471,16 @@ function addScore(points = 1) {
     gameState.score += points;
     gameState.obstaclesPassed += points;
     gameState.obstaclesSinceColorChange += points;
-    uiSystem.updateScoreDisplay(gameState.score);
+    
+    if (typeof uiSystem !== 'undefined') {
+        uiSystem.updateScoreDisplay(gameState.score);
+    }
     
     if (gameState.obstaclesSinceColorChange >= CONFIG.GAME.OBSTACLE_COLOR_CHANGE_INTERVAL) {
         gameState.currentObstacleColor = (gameState.currentObstacleColor + 1) % CONFIG.OBSTACLE.COLORS.length;
         gameState.obstaclesSinceColorChange = 0;
     }
     
-    // زيادة السرعة بنسبة 20% كل 15 مثلث
     if (gameState.obstaclesPassed % CONFIG.GAME.SPEED_INCREASE_INTERVAL === 0) {
         gameState.speedMultiplier += CONFIG.GAME.SPEED_INCREASE_PERCENTAGE;
         gameState.speed = CONFIG.GAME.BASE_SPEED * gameState.speedMultiplier;
@@ -588,45 +489,42 @@ function addScore(points = 1) {
             gameState.maxSpeedReached = gameState.speedMultiplier;
         }
         
-        uiSystem.updateSpeedDisplay(gameState.speedMultiplier);
+        if (typeof uiSystem !== 'undefined') {
+            uiSystem.updateSpeedDisplay(gameState.speedMultiplier);
+        }
     }
     
-    if (coinsSystem.onObstaclePassed()) {
+    if (typeof coinsSystem !== 'undefined' && coinsSystem.onObstaclePassed()) {
         const lane = Math.floor(Math.random() * 2);
         coinsSystem.createCoin(scene, lane);
     }
 }
 
 // ============================================
-// GAME UPDATE LOOP (طريق متعرجة مع عرض المسار)
+// GAME UPDATE LOOP
 // ============================================
 
 function updateGame() {
     if (!gameState.isPlaying || gameState.isPaused) return;
     
-    // تغيير نمط الطريق كل فترة
     patternDuration--;
     if (patternDuration <= 0) {
         currentPatternIndex = Math.floor(Math.random() * CONFIG.ROAD_PATTERNS.length);
-        patternDuration = 60 + Math.random() * 60; // 1-2 ثانية
+        patternDuration = 60 + Math.random() * 60;
     }
     
     const currentPattern = CONFIG.ROAD_PATTERNS[currentPatternIndex];
     
-    // حركة الطريق المتعرجة
     targetRoadOffset.x += currentPattern.xDir * CONFIG.ROAD.CURVE_INTENSITY;
     targetRoadOffset.y += currentPattern.yDir * CONFIG.ROAD.CURVE_INTENSITY * 0.5;
     
-    // الحد من حركة الطريق
     const maxOffset = 15;
     targetRoadOffset.x = Math.max(-maxOffset, Math.min(maxOffset, targetRoadOffset.x));
     targetRoadOffset.y = Math.max(-maxOffset * 0.5, Math.min(maxOffset * 0.5, targetRoadOffset.y));
     
-    // حركة سلسلة للطريق
     currentRoadOffset.x += (targetRoadOffset.x - currentRoadOffset.x) * 0.05;
     currentRoadOffset.y += (targetRoadOffset.y - currentRoadOffset.y) * 0.05;
     
-    // تحديث الطريق
     road.forEach(segment => {
         segment.position.z += gameState.speed * 2.5;
         segment.position.x = currentRoadOffset.x;
@@ -637,24 +535,15 @@ function updateGame() {
         }
     });
     
-    // تحديث مسار الطريق المستقبلي
-    updateRoadPreview();
-    
-    // تحريك الكرة (تطفو فوق الطريق)
     const targetX = CONFIG.ROAD.LANE_POSITIONS[targetLane] + currentRoadOffset.x;
     const targetY = CONFIG.BALL.FIXED_HEIGHT + currentRoadOffset.y;
     
     ball.position.x += (targetX - ball.position.x) * CONFIG.BALL.LANE_CHANGE_SPEED;
     ball.position.y += (targetY - ball.position.y) * CONFIG.BALL.LANE_CHANGE_SPEED;
     
-    // دوران الكرة
     ball.rotation.x += gameState.speed * 0.15;
     ball.rotation.z += gameState.speed * 0.08;
     
-    // حركة طفو خفيفة للكرة
-    ball.position.y += Math.sin(Date.now() * 0.002) * 0.05;
-    
-    // إنشاء المثلثات
     obstacleSpawnTimer++;
     if (obstacleSpawnTimer > CONFIG.OBSTACLE.SPAWN_INTERVAL) {
         const lane = Math.floor(Math.random() * 2);
@@ -663,13 +552,11 @@ function updateGame() {
         obstacleSpawnTimer = 0;
     }
     
-    // تحديث المثلثات
     obstacles.forEach((obstacle, index) => {
         obstacle.position.z += gameState.speed * 2.5;
         obstacle.position.x = CONFIG.ROAD.LANE_POSITIONS[obstacle.userData.lane] + currentRoadOffset.x;
         obstacle.position.y = CONFIG.OBSTACLE.HEIGHT / 2 + currentRoadOffset.y;
         
-        // حركة دوران للمثلثات
         obstacle.rotation.y += 0.02;
         
         if (obstacle.position.z > 8) {
@@ -679,26 +566,25 @@ function updateGame() {
         }
     });
     
-    // تحديث النقاط
-    coinsSystem.activeCoins.forEach((coin, index) => {
-        if (coin.userData.collected) return;
+    if (typeof coinsSystem !== 'undefined') {
+        coinsSystem.checkCoinCollection(ball);
         
-        coin.position.z += gameState.speed * 2.5;
-        coin.position.x = CONFIG.ROAD.LANE_POSITIONS[coin.userData.lane] + currentRoadOffset.x;
-        coin.position.y = CONFIG.COIN.HEIGHT + currentRoadOffset.y;
-        
-        coin.rotation.y += 0.05;
-        coin.position.y += Math.sin(Date.now() * 0.003 + index) * 0.1; // حركة طفو للنقاط
-        
-        if (coin.position.z > 10) {
-            if (coin.parent) coin.parent.remove(coin);
-            coinsSystem.activeCoins.splice(index, 1);
-        }
-    });
+        coinsSystem.activeCoins.forEach((coin, index) => {
+            if (coin.userData.collected) return;
+            
+            coin.position.z += gameState.speed * 2.5;
+            coin.position.x = CONFIG.ROAD.LANE_POSITIONS[coin.userData.lane] + currentRoadOffset.x;
+            coin.position.y = CONFIG.COIN.HEIGHT + currentRoadOffset.y;
+            
+            coin.rotation.y += 0.05;
+            
+            if (coin.position.z > 10) {
+                if (coin.parent) coin.parent.remove(coin);
+                coinsSystem.activeCoins.splice(index, 1);
+            }
+        });
+    }
     
-    coinsSystem.checkCoinCollection(ball);
-    
-    // تحديث الجزيئات
     particles.forEach((particle, index) => {
         if (particle.userData.velocity) {
             particle.position.add(particle.userData.velocity);
@@ -714,7 +600,6 @@ function updateGame() {
         }
     });
     
-    // تحديث النجوم
     stars.forEach(star => {
         star.position.z += gameState.speed * 0.8;
         star.position.x += currentPattern.xDir * 0.1;
@@ -723,7 +608,6 @@ function updateGame() {
         if (star.position.z > 15) star.position.z -= 300;
     });
     
-    // تحديث الكاميرا
     const cameraTargetX = ball.position.x * CONFIG.CAMERA.HORIZONTAL_FOLLOW;
     const cameraTargetZ = ball.position.z + CONFIG.CAMERA.DISTANCE;
     const cameraTargetY = CONFIG.CAMERA.HEIGHT + currentRoadOffset.y;
@@ -747,8 +631,12 @@ function updateGame() {
 
 function animate() {
     requestAnimationFrame(animate);
-    updateGame();
-    renderer.render(scene, camera);
+    try {
+        updateGame();
+        renderer.render(scene, camera);
+    } catch (error) {
+        console.error('Error in animation loop:', error);
+    }
 }
 
 // ============================================
@@ -764,21 +652,6 @@ function onWindowResize() {
 function applyGraphicsSettings(quality) {
     const pixelRatios = { low: 1, medium: 1.5, high: 2 };
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatios[quality] || 2));
-}
-
-// ============================================
-// ROAD PREVIEW TOGGLE
-// ============================================
-
-function toggleRoadPreview() {
-    gameState.roadPreviewVisible = !gameState.roadPreviewVisible;
-    
-    // إظهار/إخفاء المسار
-    roadPreview.forEach(item => {
-        item.visible = gameState.roadPreviewVisible;
-    });
-    
-    return gameState.roadPreviewVisible;
 }
 
 // ============================================
