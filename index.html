@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="description" content="Rush 3D - Professional 3D Game">
     <title>Rush 3D - Professional Game</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <!-- UI Container -->
@@ -14,7 +13,7 @@
         <div id="score-display">
             <div class="score-number">0</div>
             <div class="score-label">SCORE</div>
-            <div class="speed-indicator">السرعة: <span id="speed-value">100%</span></div>
+            <div class="coins-display">💰 <span id="coins-value">0</span></div>
         </div>
 
         <!-- Menu Screen -->
@@ -25,13 +24,17 @@
                     <span class="title-3d">3D</span>
                 </h1>
                 <div class="subtitle-box">
-                    <p class="subtitle">🎮 انقر لليمين أو اليسار للتحكم</p>
-                    <p class="subtitle-small">تجنب المثلثات المرقمة</p>
+                    <p class="subtitle">🎮 انقر يمين/يسار للتحكم</p>
+                    <p class="subtitle-small">اجمع النقاط الذهبية!</p>
                 </div>
                 <div class="stats-container">
                     <div class="stat-box">
                         <div class="stat-label">أعلى نقاط</div>
                         <div class="stat-value" id="high-score-value">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">عملاتك</div>
+                        <div class="stat-value" id="menu-coins-value">0</div>
                     </div>
                 </div>
             </div>
@@ -42,13 +45,17 @@
             <div class="gameover-content">
                 <h2 class="gameover-title">💥 انتهت اللعبة!</h2>
                 <div class="final-score-box">
-                    <div class="score-label-small">نقاطك النهائية</div>
+                    <div class="score-label-small">نقاطك</div>
                     <div id="final-score-value" class="score-big">0</div>
+                </div>
+                <div class="coins-earned">
+                    <span class="coins-icon">💰</span>
+                    <span id="coins-earned-value">0</span>
+                    <span class="coins-label">عملة جديدة</span>
                 </div>
                 <div class="stats-row">
                     <div class="stat-item">
-                        <span class="stat-icon">🏆</span>
-                        <span>أفضل: </span>
+                        <span>🏆 أفضل: </span>
                         <span id="best-score-value" class="highlight">0</span>
                     </div>
                 </div>
@@ -63,54 +70,18 @@
         </div>
 
         <!-- Settings Panel -->
-        <div id="settings-panel" class="side-panel">
-            <div class="panel-header">
-                <h3>⚙️ الإعدادات</h3>
-                <button class="close-panel" onclick="closePanel('settings-panel')">✕</button>
-            </div>
-            <div class="panel-content">
-                <div class="setting-item">
-                    <label>🔊 الصوت</label>
-                    <button id="toggle-sound" class="toggle-btn active">تشغيل</button>
-                </div>
-                <div class="setting-item">
-                    <label>📊 عرض السرعة</label>
-                    <button id="toggle-speed-display" class="toggle-btn active">تشغيل</button>
-                </div>
-                <div class="setting-item">
-                    <label>✨ التأثيرات</label>
-                    <button id="toggle-effects" class="toggle-btn active">تشغيل</button>
-                </div>
-            </div>
-        </div>
+        <div id="settings-panel" class="side-panel"></div>
 
         <!-- Balls Panel -->
-        <div id="balls-panel" class="side-panel">
-            <div class="panel-header">
-                <h3>⚽ الكرات</h3>
-                <button class="close-panel" onclick="closePanel('balls-panel')">✕</button>
-            </div>
-            <div class="panel-content">
-                <div class="items-grid" id="balls-grid">
-                    <!-- سيتم ملؤها بواسطة JavaScript -->
-                </div>
-            </div>
-        </div>
+        <div id="balls-panel" class="side-panel"></div>
 
         <!-- Roads Panel -->
-        <div id="roads-panel" class="side-panel">
-            <div class="panel-header">
-                <h3>🛣️ الطرقات</h3>
-                <button class="close-panel" onclick="closePanel('roads-panel')">✕</button>
-            </div>
-            <div class="panel-content">
-                <div class="items-grid" id="roads-grid">
-                    <!-- سيتم ملؤها بواسطة JavaScript -->
-                </div>
-            </div>
-        </div>
+        <div id="roads-panel" class="side-panel"></div>
 
-        <!-- Control Buttons (Top) -->
+        <!-- Stats Panel -->
+        <div id="stats-panel" class="side-panel"></div>
+
+        <!-- Control Buttons -->
         <div id="game-controls">
             <button id="pause-btn" class="control-btn">
                 <span class="btn-icon">⏸</span>
@@ -118,14 +89,14 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation -->
     <div id="bottom-nav">
-        <button class="nav-btn" id="roads-btn" onclick="openPanel('roads-panel')">
+        <button class="nav-btn" id="roads-btn">
             <span class="nav-icon">🛣️</span>
             <span class="nav-label">طرقات</span>
         </button>
         
-        <button class="nav-btn" id="balls-btn" onclick="openPanel('balls-panel')">
+        <button class="nav-btn" id="balls-btn">
             <span class="nav-icon">⚽</span>
             <span class="nav-label">كرات</span>
         </button>
@@ -139,7 +110,7 @@
             <span class="nav-label">إحصائيات</span>
         </button>
         
-        <button class="nav-btn" id="settings-btn" onclick="openPanel('settings-panel')">
+        <button class="nav-btn" id="settings-btn">
             <span class="nav-icon">⚙️</span>
             <span class="nav-label">إعدادات</span>
         </button>
@@ -156,11 +127,17 @@
         </div>
     </div>
 
-    <!-- Three.js Library -->
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Game Scripts -->
-    <script src="game-data.js"></script>
-    <script src="game.js"></script>
+    <!-- Game Scripts (بالترتيب) -->
+    <script src="js/config.js"></script>
+    <script src="js/coins.js"></script>
+    <script src="js/balls.js"></script>
+    <script src="js/roads.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/stats.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
 </body>
 </html>
