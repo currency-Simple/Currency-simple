@@ -1,72 +1,49 @@
 // ============================================
-// UI SYSTEM (FINAL WORKING VERSION)
+// UI SYSTEM (نظام واجهة المستخدم)
 // ============================================
 
 class UISystem {
     constructor() {
         this.currentPanel = null;
-        this.init();
-    }
-
-    init() {
         this.setupEventListeners();
-        this.updateDisplays();
-        console.log('✅ UI System initialized');
     }
 
+    // إعداد مستمعي الأحداث
     setupEventListeners() {
         // أزرار التنقل السفلية
-        const ballsBtn = document.getElementById('balls-btn');
-        const roadsBtn = document.getElementById('roads-btn');
-        const statsBtn = document.getElementById('stats-btn');
-        const settingsBtn = document.getElementById('settings-btn');
-        const playBtn = document.getElementById('play-btn');
-        const pauseBtn = document.getElementById('pause-btn');
+        document.getElementById('balls-btn').addEventListener('click', () => {
+            this.openPanel('balls-panel');
+            ballsSystem.renderPanel();
+        });
 
-        if (ballsBtn) {
-            ballsBtn.addEventListener('click', () => {
-                this.openPanel('balls-panel');
-                if (window.ballsSystem && ballsSystem.renderPanel) {
-                    ballsSystem.renderPanel();
-                }
-            });
-        }
+        document.getElementById('roads-btn').addEventListener('click', () => {
+            this.openPanel('roads-panel');
+            roadsSystem.renderPanel();
+        });
 
-        if (roadsBtn) {
-            roadsBtn.addEventListener('click', () => {
-                this.openPanel('roads-panel');
-                if (window.roadsSystem && roadsSystem.renderPanel) {
-                    roadsSystem.renderPanel();
-                }
-            });
-        }
+        document.getElementById('stats-btn').addEventListener('click', () => {
+            this.openPanel('stats-panel');
+            statsSystem.renderPanel();
+        });
 
-        if (statsBtn) {
-            statsBtn.addEventListener('click', () => {
-                this.openPanel('stats-panel');
-                if (window.statsSystem && statsSystem.renderPanel) {
-                    statsSystem.renderPanel();
-                }
-            });
-        }
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            this.openPanel('settings-panel');
+            settingsSystem.renderPanel();
+        });
 
-        if (settingsBtn) {
-            settingsBtn.addEventListener('click', () => {
-                this.openPanel('settings-panel');
-                if (window.settingsSystem && settingsSystem.renderPanel) {
-                    settingsSystem.renderPanel();
-                }
-            });
-        }
-
-        if (playBtn) {
-            playBtn.addEventListener('click', () => {
-                if (typeof startGame === 'function') {
+        // زر اللعب
+        document.getElementById('play-btn').addEventListener('click', () => {
+            if (typeof gameState !== 'undefined') {
+                if (gameState.isPlaying) {
+                    togglePause();
+                } else {
                     startGame();
                 }
-            });
-        }
+            }
+        });
 
+        // زر الإيقاف المؤقت
+        const pauseBtn = document.getElementById('pause-btn');
         if (pauseBtn) {
             pauseBtn.addEventListener('click', () => {
                 if (typeof togglePause === 'function') {
@@ -74,13 +51,23 @@ class UISystem {
                 }
             });
         }
+
+        // النقر على الشاشة لإعادة المحاولة
+        document.getElementById('gameover-screen').addEventListener('click', (e) => {
+            if (e.target.id === 'gameover-screen' || e.target.closest('.gameover-content')) {
+                // يمكن إضافة زر إعادة المحاولة هنا
+            }
+        });
     }
 
+    // فتح لوحة جانبية
     openPanel(panelId) {
+        // إغلاق اللوحة الحالية
         if (this.currentPanel) {
-            this.closePanel(this.currentPanel);
+            document.getElementById(this.currentPanel).classList.remove('active');
         }
 
+        // فتح اللوحة الجديدة
         const panel = document.getElementById(panelId);
         if (panel) {
             panel.classList.add('active');
@@ -88,6 +75,7 @@ class UISystem {
         }
     }
 
+    // إغلاق لوحة
     closePanel(panelId) {
         const panel = document.getElementById(panelId);
         if (panel) {
@@ -98,6 +86,15 @@ class UISystem {
         }
     }
 
+    // إغلاق جميع اللوحات
+    closeAllPanels() {
+        document.querySelectorAll('.side-panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        this.currentPanel = null;
+    }
+
+    // تحديث عرض النقاط
     updateScoreDisplay(score) {
         const scoreEl = document.querySelector('.score-number');
         if (scoreEl) {
@@ -105,144 +102,117 @@ class UISystem {
         }
     }
 
-    updateCoinsDisplay() {
-        const coinsValueEl = document.getElementById('coins-value');
+    // تحديث عرض العملات
+    updateCoinsDisplay(coins) {
+        const coinsEl = document.getElementById('coins-value');
         const menuCoinsEl = document.getElementById('menu-coins-value');
         
-        if (coinsValueEl) {
-            coinsValueEl.textContent = '0';
-        }
-        
-        if (menuCoinsEl) {
-            menuCoinsEl.textContent = '0';
-        }
+        if (coinsEl) coinsEl.textContent = coins;
+        if (menuCoinsEl) menuCoinsEl.textContent = coinsSystem.getTotalCoins();
     }
 
+    // عرض شاشة القائمة
     showMenu() {
-        const menuScreen = document.getElementById('menu-screen');
-        const gameoverScreen = document.getElementById('gameover-screen');
-        const pauseScreen = document.getElementById('pause-screen');
-        const scoreDisplay = document.getElementById('score-display');
-        const gameControls = document.getElementById('game-controls');
-        const bottomNav = document.getElementById('bottom-nav');
-
-        if (menuScreen) menuScreen.classList.add('active');
-        if (gameoverScreen) gameoverScreen.classList.remove('active');
-        if (pauseScreen) pauseScreen.classList.remove('active');
-        if (scoreDisplay) scoreDisplay.classList.remove('active');
-        if (gameControls) gameControls.classList.remove('active');
-        if (bottomNav) bottomNav.style.display = 'flex';
+        document.getElementById('menu-screen').classList.add('active');
+        document.getElementById('gameover-screen').classList.remove('active');
+        document.getElementById('pause-screen').classList.remove('active');
+        document.getElementById('score-display').classList.remove('active');
+        document.getElementById('game-controls').classList.remove('active');
+        document.getElementById('bottom-nav').style.display = 'flex';
     }
 
+    // عرض شاشة اللعب
     showGameplay() {
-        const menuScreen = document.getElementById('menu-screen');
-        const gameoverScreen = document.getElementById('gameover-screen');
-        const pauseScreen = document.getElementById('pause-screen');
-        const scoreDisplay = document.getElementById('score-display');
-        const gameControls = document.getElementById('game-controls');
-        const bottomNav = document.getElementById('bottom-nav');
-
-        if (menuScreen) menuScreen.classList.remove('active');
-        if (gameoverScreen) gameoverScreen.classList.remove('active');
-        if (pauseScreen) pauseScreen.classList.remove('active');
-        if (scoreDisplay) scoreDisplay.classList.add('active');
-        if (gameControls) gameControls.classList.add('active');
-        if (bottomNav) bottomNav.style.display = 'none';
-        
+        document.getElementById('menu-screen').classList.remove('active');
+        document.getElementById('gameover-screen').classList.remove('active');
+        document.getElementById('pause-screen').classList.remove('active');
+        document.getElementById('score-display').classList.add('active');
+        document.getElementById('game-controls').classList.add('active');
+        document.getElementById('bottom-nav').style.display = 'none';
         this.closeAllPanels();
     }
 
+    // عرض شاشة نهاية اللعبة
     showGameOver(score, coinsEarned) {
-        const finalScoreEl = document.getElementById('final-score-value');
-        const coinsEarnedEl = document.getElementById('coins-earned-value');
-        const bestScoreEl = document.getElementById('best-score-value');
-        const gameoverScreen = document.getElementById('gameover-screen');
-        const scoreDisplay = document.getElementById('score-display');
-        const gameControls = document.getElementById('game-controls');
-        const bottomNav = document.getElementById('bottom-nav');
-
-        if (finalScoreEl) finalScoreEl.textContent = score;
-        if (coinsEarnedEl) coinsEarnedEl.textContent = coinsEarned;
-        if (bestScoreEl) bestScoreEl.textContent = '0';
-
+        document.getElementById('final-score-value').textContent = score;
+        document.getElementById('coins-earned-value').textContent = coinsEarned;
+        document.getElementById('best-score-value').textContent = statsSystem.stats.highestScore;
+        
         setTimeout(() => {
-            if (gameoverScreen) gameoverScreen.classList.add('active');
-            if (scoreDisplay) scoreDisplay.classList.remove('active');
-            if (gameControls) gameControls.classList.remove('active');
-            if (bottomNav) bottomNav.style.display = 'flex';
+            document.getElementById('gameover-screen').classList.add('active');
+            document.getElementById('score-display').classList.remove('active');
+            document.getElementById('game-controls').classList.remove('active');
+            document.getElementById('bottom-nav').style.display = 'flex';
         }, 500);
     }
 
+    // عرض شاشة الإيقاف المؤقت
     showPause() {
-        const pauseScreen = document.getElementById('pause-screen');
-        if (pauseScreen) {
-            pauseScreen.classList.add('active');
-        }
+        document.getElementById('pause-screen').classList.add('active');
     }
 
+    // إخفاء شاشة الإيقاف المؤقت
     hidePause() {
-        const pauseScreen = document.getElementById('pause-screen');
-        if (pauseScreen) {
-            pauseScreen.classList.remove('active');
-        }
+        document.getElementById('pause-screen').classList.remove('active');
     }
 
+    // إخفاء شاشة التحميل
     hideLoadingScreen() {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-            }, 500);
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+            }
+        }, 500);
+    }
+
+    // عرض إشعار
+    showNotification(message, type = 'info') {
+        // يمكن تحسين هذا لاحقاً بإضافة نظام إشعارات جميل
+        console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+
+    // تحديث عرض السرعة
+    updateSpeedDisplay(speedMultiplier) {
+        const speedValue = document.getElementById('speed-value');
+        if (speedValue && settingsSystem.get('speedDisplay')) {
+            const speedPercent = Math.round(speedMultiplier * 100);
+            speedValue.textContent = speedPercent + '%';
+            
+            // تغيير اللون حسب السرعة
+            if (speedPercent >= 150) {
+                speedValue.style.color = '#ff3366';
+            } else if (speedPercent >= 125) {
+                speedValue.style.color = '#ffaa00';
+            } else {
+                speedValue.style.color = '#00ff88';
+            }
         }
     }
 
-    updateSpeedDisplay(speedMultiplier) {
-        const speedPercent = Math.round(speedMultiplier * 100);
-        console.log('Speed:', speedPercent + '%');
-    }
-
+    // تحديث النقاط العالية في القائمة
     updateHighScoreDisplay() {
         const highScoreEl = document.getElementById('high-score-value');
         if (highScoreEl) {
-            highScoreEl.textContent = '0';
+            highScoreEl.textContent = statsSystem.stats.highestScore;
         }
-    }
-
-    updateDisplays() {
-        this.updateHighScoreDisplay();
-        this.updateCoinsDisplay();
-    }
-
-    closeAllPanels() {
-        document.querySelectorAll('.side-panel').forEach(panel => {
-            panel.classList.remove('active');
-        });
-        this.currentPanel = null;
     }
 }
 
-// إنشاء وتصدير النظام
-window.uiSystem = new UISystem();
+// إنشاء نسخة عامة
+const uiSystem = new UISystem();
 
-// وظائف مساعدة عامة
+// وظائف عامة للوصول السريع
 function openPanel(panelId) {
-    if (window.uiSystem) {
-        uiSystem.openPanel(panelId);
-    }
+    uiSystem.openPanel(panelId);
 }
 
 function closePanel(panelId) {
-    if (window.uiSystem) {
-        uiSystem.closePanel(panelId);
-    }
+    uiSystem.closePanel(panelId);
 }
 
-// إخفاء شاشة التحميل عند تحميل الصفحة
-window.addEventListener('load', function() {
-    setTimeout(function() {
-        if (window.uiSystem && uiSystem.hideLoadingScreen) {
-            uiSystem.hideLoadingScreen();
-        }
-    }, 1000);
+// تحديث العروض عند تحميل الصفحة
+window.addEventListener('load', () => {
+    coinsSystem.updateDisplay();
+    uiSystem.updateHighScoreDisplay();
 });
