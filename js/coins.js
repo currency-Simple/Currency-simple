@@ -1,5 +1,5 @@
 // ============================================
-// COINS SYSTEM (نظام النقاط والعملات)
+// COINS SYSTEM (مع إصلاح الموضع)
 // ============================================
 
 class CoinsSystem {
@@ -7,16 +7,16 @@ class CoinsSystem {
         this.totalCoins = 0;
         this.coinsInGame = 0;
         this.obstacleCounter = 0;
-        this.activeCoins = []; // النقاط الموجودة على الطريق
+        this.activeCoins = [];
         this.load();
     }
 
-    // إنشاء نقطة ذهبية على الطريق
+    // إنشاء نقطة ذهبية
     createCoin(scene, lane) {
         const group = new THREE.Group();
         
         // النقطة الذهبية
-        const geometry = new THREE.SphereGeometry(0.6, 16, 16);
+        const geometry = new THREE.SphereGeometry(CONFIG.COIN.SIZE, 16, 16);
         const material = new THREE.MeshPhongMaterial({
             color: CONFIG.COLORS.COIN,
             emissive: CONFIG.COLORS.COIN,
@@ -29,7 +29,7 @@ class CoinsSystem {
         group.add(coin);
 
         // توهج
-        const glowGeometry = new THREE.SphereGeometry(0.9, 16, 16);
+        const glowGeometry = new THREE.SphereGeometry(CONFIG.COIN.GLOW_SIZE, 16, 16);
         const glowMaterial = new THREE.MeshBasicMaterial({
             color: CONFIG.COLORS.COIN,
             transparent: true,
@@ -39,8 +39,12 @@ class CoinsSystem {
         const glow = new THREE.Mesh(glowGeometry, glowMaterial);
         group.add(glow);
 
-        // الموضع
-        group.position.set(CONFIG.ROAD.LANE_POSITIONS[lane], 2, -70);
+        // الموضع: في مسار الكرة مباشرة
+        group.position.set(
+            CONFIG.ROAD.LANE_POSITIONS[lane], 
+            CONFIG.COIN.HEIGHT, 
+            -60
+        );
         group.userData.isCoin = true;
         group.userData.lane = lane;
         group.userData.collected = false;
@@ -54,11 +58,16 @@ class CoinsSystem {
     // التحقق من التقاط النقطة
     checkCoinCollection(ball) {
         this.activeCoins.forEach((coin, index) => {
-            if (!coin.userData.collected && 
-                coin.position.z > ball.position.z - 2 && 
-                coin.position.z < ball.position.z + 2) {
+            if (coin.userData.collected) return;
+            
+            // مسافة أكبر للتقاط
+            if (coin.position.z > ball.position.z - 3 && 
+                coin.position.z < ball.position.z + 3) {
                 
-                const distance = Math.abs(ball.position.x - coin.position.x);
+                const distance = Math.sqrt(
+                    Math.pow(ball.position.x - coin.position.x, 2) +
+                    Math.pow(ball.position.y - coin.position.y, 2)
+                );
                 
                 if (distance < 2) {
                     this.collectCoin(coin, index);
@@ -93,13 +102,12 @@ class CoinsSystem {
         }, 100);
     }
 
-    // تحديث العداد عند تجاوز مثلث
+    // تحديث العداد
     onObstaclePassed() {
         this.obstacleCounter++;
         
-        // إنشاء نقطة كل 7 مثلثات
         if (this.obstacleCounter % CONFIG.GAME.COIN_SPAWN_INTERVAL === 0) {
-            return true; // إشارة لإنشاء نقطة
+            return true;
         }
         return false;
     }
@@ -122,12 +130,12 @@ class CoinsSystem {
         return false;
     }
 
-    // الحصول على إجمالي العملات
+    // الحصول على العملات
     getTotalCoins() {
         return this.totalCoins;
     }
 
-    // إنهاء اللعبة - تحويل النقاط المجموعة إلى عملات
+    // إنهاء اللعبة
     endGame() {
         const coinsEarned = this.coinsInGame;
         this.totalCoins += coinsEarned;
@@ -135,10 +143,13 @@ class CoinsSystem {
         return coinsEarned;
     }
 
-    // إعادة تعيين اللعبة
+    // إعادة تعيين
     resetGame() {
         this.coinsInGame = 0;
         this.obstacleCounter = 0;
+        this.activeCoins.forEach(coin => {
+            if (coin.parent) coin.parent.remove(coin);
+        });
         this.activeCoins = [];
         this.updateDisplay();
     }
@@ -156,7 +167,7 @@ class CoinsSystem {
         }
     }
 
-    // حفظ البيانات
+    // حفظ
     save() {
         try {
             localStorage.setItem('rushCoins', this.totalCoins.toString());
@@ -165,7 +176,7 @@ class CoinsSystem {
         }
     }
 
-    // تحميل البيانات
+    // تحميل
     load() {
         try {
             const saved = localStorage.getItem('rushCoins');
@@ -176,32 +187,6 @@ class CoinsSystem {
         } catch (e) {
             console.warn('Could not load coins');
         }
-    }
-
-    // تحديث موضع النقاط (يستدعى في حلقة اللعبة)
-    updateCoins(speed, roadPattern, patternProgress) {
-        this.activeCoins.forEach((coin, index) => {
-            if (coin.userData.collected) return;
-            
-            coin.position.z += speed * 2.5;
-            
-            // تطبيق نفس نمط الطريق
-            if (roadPattern) {
-                const progress = Math.min(1, patternProgress / roadPattern.length);
-                coin.position.x = CONFIG.ROAD.LANE_POSITIONS[coin.userData.lane] + 
-                                 (roadPattern.xOffset || 0) * progress;
-                coin.position.y = 2 + (roadPattern.yOffset || 0) * Math.sin(progress * Math.PI);
-            }
-            
-            // دوران النقطة
-            coin.rotation.y += 0.05;
-            
-            // إزالة النقاط البعيدة
-            if (coin.position.z > 10) {
-                if (coin.parent) coin.parent.remove(coin);
-                this.activeCoins.splice(index, 1);
-            }
-        });
     }
 }
 
