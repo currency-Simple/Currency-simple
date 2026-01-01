@@ -1,301 +1,153 @@
-# 🎮 Rush 3D - Professional Game
+# 🎮 Rolling Ball 3D Game
 
-<div align="center">
+A modern 3D rolling ball game built with React, featuring dynamic paths, progressive speed increases, and multiple gameplay modes.
 
-![Rush 3D](https://img.shields.io/badge/Rush-3D-00ff88?style=for-the-badge)
-![Three.js](https://img.shields.io/badge/Three.js-r128-ff0088?style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-00ddff?style=for-the-badge)
+## ✨ Features
 
-**لعبة ثلاثية الأبعاد احترافية مستوحاة من Rush**
+- 🎯 10 unique path types with different patterns
+- 🏐 5 customizable ball colors
+- 🚀 Progressive speed system (starts at 300%, increases 20% every 10 triangles)
+- 📱 Touch controls for mobile devices
+- 🎨 Neon visual effects with smooth animations
+- 🏆 Score tracking system
+- ⚙️ Real-time game controls
 
-[العب الآن](#-التشغيل-السريع) • [المميزات](#-المميزات) • [التنصيب](#-التنصيب) • [التحكم](#-التحكم)
+## 🎮 Game Modes
 
-</div>
+1. **Straight Path** - Classic straight corridor
+2. **Curved Path** - Smooth sinusoidal curves
+3. **Zigzag Path** - Sharp alternating turns
+4. **Wavy Path** - Flowing wave patterns
+5. **Spiral Path** - Circular spiral motion
+6. **Jump Path** - Platforms with gaps
+7. **Narrow Path** - Progressively narrowing corridor
+8. **Split Path** - Branching paths
+9. **Circular Path** - Full circular loops
+10. **Random Path** - Unpredictable dynamic paths
 
----
+## 🚀 Getting Started
 
-## 📸 لقطات شاشة
+### Prerequisites
 
-```
-🎮 قائمة البداية     →  🏃 طريقة اللعب    →  💥 نهاية اللعبة
-   [صورة هنا]            [صورة هنا]           [صورة هنا]
-```
+- Node.js (v14 or higher)
+- npm or yarn
 
----
-
-## ✨ المميزات
-
-### 🎥 **رسومات ثلاثية الأبعاد متقدمة**
-- ✅ كاميرا ديناميكية تتبع الكرة من الخلف
-- ✅ تأثيرات إضاءة احترافية (Point Lights, Directional Light, Hemisphere Light)
-- ✅ ظلال واقعية (Shadow Mapping)
-- ✅ تأثيرات توهج (Glow Effects) للكرة والعوائق
-
-### 🌀 **طريق دائري متعرج**
-- ✅ مسار منحني يتحرك بشكل ديناميكي
-- ✅ تأثير Parallax للنجوم
-- ✅ خطوط فاصلة متحركة بين المسارات
-- ✅ جدران جانبية مضيئة ملونة
-
-### 🔺 **عوائق مثلثية مرقمة**
-- ✅ أهرامات ثلاثية الأضلاع
-- ✅ أرقام واضحة على كل عائق
-- ✅ تدور بشكل عشوائي
-- ✅ تأثيرات توهج حمراء
-
-### ⚡ **تأثيرات بصرية متطورة**
-- ✅ نظام جزيئات متقدم (Particle System)
-- ✅ انفجارات عند الاصطدام
-- ✅ أثر حركة خلف الكرة (Trail Effect)
-- ✅ تأثيرات ضباب (Fog)
-
-### 🎯 **آليات لعب احترافية**
-- ✅ 3 مسارات للتنقل
-- ✅ صعوبة متزايدة تدريجياً
-- ✅ نظام نقاط وحفظ أعلى نقاط
-- ✅ استجابة فورية للتحكم
-
-### 📱 **متوافق مع جميع الأجهزة**
-- ✅ يعمل على الكمبيوتر (لوحة المفاتيح + فأرة)
-- ✅ يعمل على الهواتف (لمس وسحب)
-- ✅ يعمل على الأجهزة اللوحية
-- ✅ تصميم Responsive كامل
-
----
-
-## 🚀 التشغيل السريع
-
-### الطريقة 1: فتح مباشر
-```bash
-1. افتح ملف index.html في المتصفح
-2. ابدأ اللعب!
-```
-
-### الطريقة 2: استخدام Live Server
-```bash
-# إذا كان لديك Visual Studio Code
-1. افتح المجلد في VS Code
-2. انقر بزر الماوس الأيمن على index.html
-3. اختر "Open with Live Server"
-```
-
-### الطريقة 3: استخدام Python Server
-```bash
-# Python 3
-python -m http.server 8000
-
-# Python 2
-python -m SimpleHTTPServer 8000
-
-# ثم افتح: http://localhost:8000
-```
-
----
-
-## 📦 التنصيب
-
-### المتطلبات
-- متصفح حديث (Chrome, Firefox, Edge, Safari)
-- دعم WebGL
-- لا توجد dependencies خارجية (Three.js يُحمّل من CDN)
-
-### خطوات التنصيب
+### Installation
 
 ```bash
-# 1. استنساخ المستودع
-git clone https://github.com/yourusername/rush-3d-game.git
+# Clone the repository
+git clone https://github.com/yourusername/rolling-ball-3d.git
 
-# 2. الدخول للمجلد
-cd rush-3d-game
+# Navigate to project directory
+cd rolling-ball-3d
 
-# 3. فتح اللعبة
-# افتح index.html في المتصفح أو استخدم Live Server
+# Install dependencies
+npm install
+
+# Start development server
+npm start
 ```
 
----
+The game will open at `http://localhost:3000`
 
-## 🎮 التحكم
+## 🎯 How to Play
 
-### 💻 **الكمبيوتر**
-| المفتاح | الإجراء |
-|---------|---------|
-| `←` أو `A` | التحرك لليسار |
-| `→` أو `D` | التحرك لليمين |
-| `Space` | إيقاف مؤقت |
-| `ESC` | الخروج للقائمة |
+1. **Choose Your Ball**: Select from 5 different colored balls
+2. **Select Path Type**: Pick one of 10 unique path patterns
+3. **Control the Ball**: 
+   - 🖱️ Desktop: Click and drag
+   - 📱 Mobile: Touch and swipe
+4. **Avoid Falling**: Stay on the path to survive
+5. **Score Points**: Pass through triangles to increase your score
 
-### 📱 **الهاتف/الجهاز اللوحي**
-- **اسحب لليمين** → التحرك لليمين
-- **اسحب لليسار** → التحرك لليسار
-- **اضغط على ⏸** → إيقاف مؤقت
+## 🎛️ Controls
 
-### 🖱️ **الفأرة**
-- **اسحب بالفأرة** → التحرك بين المسارات
+- **Home Button**: Return to main menu
+- **Play/Pause**: Toggle game state
+- **Restart**: Reset the game
+- **Change Path**: Switch to next path type
+- **Speed Up**: Increase game speed by 50%
 
----
+## 📊 Speed System
 
-## 📁 هيكل الملفات
+- **Initial Speed**: 300% of base speed
+- **Progression**: +20% every 10 triangles passed
+- **Formula**: `speed = baseSpeed × (3 + 0.2 × floor(score / 10))`
 
-```
-rush-3d-game/
-│
-├── index.html          # الملف الرئيسي
-├── style.css           # ملف التنسيقات
-├── game.js             # محرك اللعبة (مقسم لجزئين)
-├── README.md           # هذا الملف
-├── package.json        # معلومات المشروع
-├── .gitignore         # ملفات محذوفة من Git
-│
-└── screenshots/        # (اختياري) صور توضيحية
-    ├── menu.png
-    ├── gameplay.png
-    └── gameover.png
-```
-
----
-
-## 🛠️ التقنيات المستخدمة
-
-| التقنية | الإصدار | الاستخدام |
-|---------|---------|----------|
-| **Three.js** | r128 | محرك الرسومات 3D |
-| **HTML5** | - | البنية الأساسية |
-| **CSS3** | - | التنسيقات والرسوم المتحركة |
-| **JavaScript** | ES6+ | منطق اللعبة |
-| **WebGL** | 2.0 | التصيير ثلاثي الأبعاد |
-
----
-
-## 🎯 كيفية اللعب
-
-### الهدف
-تجنب المثلثات المرقمة واجمع أكبر عدد من النقاط!
-
-### القواعد
-1. **تحرك بين المسارات** لتجنب العوائق
-2. **كل عائق تتجنبه** = نقطة واحدة
-3. **الاصطدام بعائق** = نهاية اللعبة
-4. **السرعة تزداد** كلما زادت نقاطك
-
-### نصائح للفوز 🏆
-- 📍 **خطط مسبقاً**: انظر للعوائق القادمة
-- ⚡ **تحرك بسرعة**: لا تتردد في التبديل بين المسارات
-- 🎯 **ابق هادئاً**: التركيز مفتاح النجاح
-- 💪 **تدرب**: كلما لعبت أكثر، أصبحت أفضل
-
----
-
-## 🔧 التخصيص والتطوير
-
-### تعديل الألوان
-في ملف `game.js`، ابحث عن:
-```javascript
-ball.material.color = 0x00ff88;  // لون الكرة (أخضر نيون)
-obstacle.material.color = 0xff3366;  // لون العوائق (أحمر)
-```
-
-### تعديل الصعوبة
-```javascript
-gameState.speed = 0.2;  // السرعة الابتدائية
-obstacleSpawnInterval = 100;  // تردد ظهور العوائق
-```
-
-### إضافة مستويات جديدة
-يمكنك إضافة أنواع جديدة من العوائق في دالة `createObstacle()`
-
----
-
-## 🐛 حل المشاكل الشائعة
-
-### اللعبة لا تعمل
-- ✅ تأكد من أن المتصفح يدعم WebGL
-- ✅ جرب تعطيل Ad Blockers
-- ✅ افتح Console (F12) لرؤية الأخطاء
-
-### الأداء بطيء
-- ✅ أغلق التطبيقات الأخرى
-- ✅ قلل جودة الرسومات بتعديل `renderer.setPixelRatio(1)`
-- ✅ استخدم متصفح حديث
-
-### التحكم لا يستجيب
-- ✅ تأكد من الضغط داخل منطقة اللعبة
-- ✅ جرب إعادة تحميل الصفحة
-- ✅ تحقق من إعدادات اللمس (للهواتف)
-
----
-
-## 🤝 المساهمة
-
-المساهمات مرحب بها! 
-
-### كيف تساهم:
-1. Fork المستودع
-2. أنشئ فرع جديد (`git checkout -b feature/amazing-feature`)
-3. Commit تغييراتك (`git commit -m 'Add amazing feature'`)
-4. Push للفرع (`git push origin feature/amazing-feature`)
-5. افتح Pull Request
-
-### أفكار للتطوير:
-- 🎵 إضافة مؤثرات صوتية وموسيقى
-- 🏆 نظام إنجازات
-- 👥 وضع اللعب الجماعي
-- 🎨 ثيمات ألوان متعددة
-- 💎 Power-ups وعناصر خاصة
-- 📊 إحصائيات مفصلة
-
----
-
-## 📄 الترخيص
-
-هذا المشروع مرخص تحت **MIT License** - انظر ملف [LICENSE](LICENSE) للتفاصيل.
+## 🏗️ Project Structure
 
 ```
-يمكنك استخدام وتعديل ونشر الكود بحرية!
+src/
+├── components/        # React components
+├── game/             # Game logic
+│   ├── config/       # Configuration files
+│   ├── managers/     # Game state managers
+│   ├── generators/   # Path generation
+│   ├── physics/      # Collision detection
+│   └── constants/    # Game constants
+├── hooks/            # Custom React hooks
+├── utils/            # Helper functions
+└── styles/           # CSS styles
 ```
 
+## 🛠️ Technologies
+
+- **React 18** - UI framework
+- **JavaScript ES6+** - Core logic
+- **CSS3** - Styling and animations
+- **HTML5** - Canvas and touch events
+
+## 📝 Development
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+### Running Tests
+
+```bash
+npm test
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👤 Author
+
+Your Name - [@yourhandle](https://twitter.com/yourhandle)
+
+## 🙏 Acknowledgments
+
+- Inspired by classic endless runner games
+- Built with modern React practices
+- Optimized for mobile performance
+
+## 📸 Screenshots
+
+[Add screenshots of your game here]
+
+## 🎯 Future Enhancements
+
+- [ ] Add sound effects and music
+- [ ] Implement leaderboard system
+- [ ] Add power-ups and obstacles
+- [ ] Create multiplayer mode
+- [ ] Add more path patterns
+- [ ] Implement difficulty levels
+
 ---
 
-## 👨‍💻 المطور
-
-**اسمك هنا**
-- 🌐 الموقع: [yourwebsite.com](https://yourwebsite.com)
-- 📧 البريد: your.email@example.com
-- 🐦 تويتر: [@yourhandle](https://twitter.com/yourhandle)
-- 💼 LinkedIn: [yourprofile](https://linkedin.com/in/yourprofile)
-
----
-
-## 🙏 شكر وتقدير
-
-- **Three.js** - مكتبة رسومات 3D الرائعة
-- **Ketchapp** - الإلهام من لعبة Rush الأصلية
-- المجتمع - كل من ساهم في التطوير
-
----
-
-## 📊 الإحصائيات
-
-![GitHub stars](https://img.shields.io/github/stars/yourusername/rush-3d-game?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/rush-3d-game?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/yourusername/rush-3d-game?style=social)
-
----
-
-## 🔗 روابط مفيدة
-
-- 📚 [توثيق Three.js](https://threejs.org/docs/)
-- 🎓 [دروس Three.js](https://threejs.org/manual/)
-- 💬 [Discord Server](https://discord.gg/yourserver)
-- 🎮 [ألعاب مشابهة](https://github.com/topics/endless-runner)
-
----
-
-<div align="center">
-
-**⭐ إذا أعجبتك اللعبة، لا تنسَ وضع نجمة! ⭐**
-
-Made with ❤️ and ☕ by [Your Name]
-
-[⬆ العودة للأعلى](#-rush-3d---professional-game)
-
-</div>
+Made with ❤️ and React
