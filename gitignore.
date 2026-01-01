@@ -1,98 +1,54 @@
-# ============================================
-# RUSH 3D - .gitignore
-# ============================================
-
 # Dependencies
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
-yarn.lock
+/node_modules
+/.pnp
+.pnp.js
 
-# Build Output
-dist/
-build/
-out/
-*.min.js
-*.min.css
+# Testing
+/coverage
 
-# IDE & Editors
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
+# Production
+/build
+
+# Misc
 .DS_Store
-*.swp
-*.swo
-*~
-
-# OS Files
-Thumbs.db
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Desktop.ini
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-
-# Environment Variables
-.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Cache
-.cache/
-.npm/
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
 .eslintcache
-.stylelintcache
 
-# Test Coverage
-coverage/
-.nyc_output/
+# Optional REPL history
+.node_repl_history
 
-# Temporary Files
-tmp/
-temp/
-*.tmp
-*.temp
+# Output of 'npm pack'
+*.tgz
 
-# Documentation Build
-docs/_build/
-.docusaurus/
-
-# Optional
-.git/
-.svn/
-.hg/
-
-# Backup Files
-*.bak
-*.backup
-*~
-
-# Local Development
-local/
-.local/
-
-# Screenshots & Media (اختياري - احذف هذا السطر إذا أردت رفع الصور)
-# screenshots/
-# *.png
-# *.jpg
-# *.gif
-# *.mp4
-
-# User-specific
-.history/
-.vscode-upload.json
+# Yarn
+.yarn-integrity
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
