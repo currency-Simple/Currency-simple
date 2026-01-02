@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <title>Speedball 3D</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="assets/images/icon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen active">
+            <div class="loader">
+                <div class="spinner"></div>
+                <p>جاري التحميل...</p>
+            </div>
+        </div>
+
+        <!-- Menu Screen -->
+        <div id="menu-screen" class="screen">
+            <div class="menu-header">
+                <h1 class="game-title">SPEEDBALL 3D</h1>
+                <div class="user-info" id="user-info"></div>
+            </div>
+            <div class="menu-buttons">
+                <button class="menu-btn play-btn" id="btn-play">▶️ ابدأ اللعب</button>
+                <button class="menu-btn" id="btn-profile">👤 الملف الشخصي</button>
+                <button class="menu-btn" id="btn-leaderboard">🏆 المتصدرين</button>
+                <button class="menu-btn" id="btn-settings">⚙️ الإعدادات</button>
+            </div>
+            <div class="stats-preview">
+                <div class="stat-item">
+                    <span class="stat-label">أفضل نتيجة</span>
+                    <span class="stat-value" id="best-score">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">العملات</span>
+                    <span class="stat-value" id="coins">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Screen -->
+        <div id="auth-screen" class="screen">
+            <div class="auth-container">
+                <button class="back-btn" id="auth-back">← رجوع</button>
+                <h2 id="auth-title">تسجيل الدخول</h2>
+                <form id="auth-form">
+                    <div class="input-group">
+                        <label>البريد الإلكتروني (Gmail)</label>
+                        <input type="email" id="auth-email" placeholder="example@gmail.com" required>
+                        <span class="input-hint" id="email-hint"></span>
+                    </div>
+                    <div class="input-group">
+                        <label>كلمة السر</label>
+                        <input type="password" id="auth-password" placeholder="••••••••" required>
+                        <div class="password-strength"><div class="password-strength-bar" id="password-strength"></div></div>
+                        <span class="input-hint" id="password-hint"></span>
+                    </div>
+                    <button type="submit" class="submit-btn"><span id="auth-submit-text">دخول</span></button>
+                </form>
+                <p class="auth-toggle">
+                    <span id="auth-toggle-text">ليس لديك حساب؟</span>
+                    <a href="#" id="auth-toggle-link">سجل الآن</a>
+                </p>
+                <div class="auth-message" id="auth-message"></div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-ui">
+                <div class="game-header">
+                    <div class="score-display">
+                        <span class="label">النقاط</span>
+                        <span class="value" id="game-score">0</span>
+                    </div>
+                    <div class="time-display">
+                        <span class="label">⏱️</span>
+                        <span class="value" id="game-time">0</span>
+                    </div>
+                    <button class="pause-btn" id="btn-pause">⏸️</button>
+                </div>
+                <canvas id="game-canvas"></canvas>
+                <div class="game-controls">
+                    <button class="control-btn" id="btn-left">◀️</button>
+                    <button class="control-btn" id="btn-jump">⬆️</button>
+                    <button class="control-btn" id="btn-right">▶️</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Screen -->
+        <div id="profile-screen" class="screen">
+            <button class="back-btn" id="profile-back">← رجوع</button>
+            <div class="profile-container"></div>
+        </div>
+
+        <!-- Leaderboard Screen -->
+        <div id="leaderboard-screen" class="screen">
+            <button class="back-btn" id="leaderboard-back">← رجوع</button>
+            <div class="leaderboard-container">
+                <h2>🏆 المتصدرين</h2>
+                <div class="leaderboard-list" id="leaderboard-list"></div>
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="screen">
+            <button class="back-btn" id="settings-back">← رجوع</button>
+            <div class="settings-container"></div>
+        </div>
+    </div>
+
+    <!-- ⚡ Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- 📦 Main App (مباشر بدون modules) -->
+    <script>
+        console.log('🎮 Starting Speedball 3D...');
+        
+        // التحقق من تحميل Supabase
+        if (typeof supabase === 'undefined') {
+            console.error('❌ Supabase not loaded!');
+            document.querySelector('#loading-screen p').textContent = 'خطأ: فشل تحميل المكتبات الأساسية';
+        } else {
+            console.log('✅ Supabase loaded successfully');
+        }
+        
+        // إخفاء شاشة التحميل بعد 2 ثانية
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const menuScreen = document.getElementById('menu-screen');
+            const authScreen = document.getElementById('auth-screen');
+            
+            if (loadingScreen) loadingScreen.classList.remove('active');
+            
+            // عرض شاشة التسجيل مباشرة
+            if (authScreen) authScreen.classList.add('active');
+            
+            console.log('✅ App loaded');
+        }, 2000);
+        
+        // إعداد الأزرار الأساسية
+        document.addEventListener('DOMContentLoaded', () => {
+            // زر الرجوع من التسجيل
+            const authBack = document.getElementById('auth-back');
+            if (authBack) {
+                authBack.addEventListener('click', () => {
+                    document.getElementById('auth-screen').classList.remove('active');
+                    document.getElementById('menu-screen').classList.add('active');
+                });
+            }
+            
+            // تبديل بين تسجيل ودخول
+            const toggleLink = document.getElementById('auth-toggle-link');
+            if (toggleLink) {
+                toggleLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const title = document.getElementById('auth-title');
+                    const submitText = document.getElementById('auth-submit-text');
+                    const toggleText = document.getElementById('auth-toggle-text');
+                    
+                    if (title.textContent === 'تسجيل الدخول') {
+                        title.textContent = 'إنشاء حساب';
+                        submitText.textContent = 'تسجيل';
+                        toggleText.textContent = 'لديك حساب؟';
+                        toggleLink.textContent = 'سجل دخول';
+                    } else {
+                        title.textContent = 'تسجيل الدخول';
+                        submitText.textContent = 'دخول';
+                        toggleText.textContent = 'ليس لديك حساب؟';
+                        toggleLink.textContent = 'سجل الآن';
+                    }
+                });
+            }
+            
+            console.log('✅ Basic UI initialized');
+        });
+    </script>
+</body>
+</html>
