@@ -1,11 +1,11 @@
 // ============================================
-// 🔐 AUTH MANAGER
+// 🔐 AUTH MANAGER (مع OAuth)
 // ============================================
-// إدارة تسجيل الدخول والتسجيل والخروج
 
-import { supabase } from './supabase-config.js';
+// استخدام Supabase Client العام
+const getSupabase = () => window.supabaseClient;
 
-// ✉️ التحقق من صحة البريد الإلكتروني (Gmail فقط)
+// ✉️ التحقق من صحة البريد الإلكتروني
 export function validateEmail(email) {
   const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
   
@@ -23,51 +23,30 @@ export function validateEmail(email) {
 // 🔒 التحقق من قوة كلمة السر
 export function validatePassword(password) {
   if (!password) {
-    return { 
-      valid: false, 
-      strength: 0,
-      message: 'الرجاء إدخال كلمة السر' 
-    };
+    return { valid: false, strength: 0, message: 'الرجاء إدخال كلمة السر' };
   }
   
   if (password.length < 8) {
-    return { 
-      valid: false, 
-      strength: 20,
-      message: 'كلمة السر يجب أن تكون 8 أحرف على الأقل' 
-    };
+    return { valid: false, strength: 20, message: 'كلمة السر يجب أن تكون 8 أحرف على الأقل' };
   }
   
   let strength = 40;
   
   if (!/[A-Z]/.test(password)) {
-    return { 
-      valid: false, 
-      strength: 40,
-      message: 'يجب أن تحتوي على حرف كبير (A-Z)' 
-    };
+    return { valid: false, strength: 40, message: 'يجب أن تحتوي على حرف كبير (A-Z)' };
   }
   strength += 20;
   
   if (!/[a-z]/.test(password)) {
-    return { 
-      valid: false, 
-      strength: 60,
-      message: 'يجب أن تحتوي على حرف صغير (a-z)' 
-    };
+    return { valid: false, strength: 60, message: 'يجب أن تحتوي على حرف صغير (a-z)' };
   }
   strength += 20;
   
   if (!/[0-9]/.test(password)) {
-    return { 
-      valid: false, 
-      strength: 80,
-      message: 'يجب أن تحتوي على رقم (0-9)' 
-    };
+    return { valid: false, strength: 80, message: 'يجب أن تحتوي على رقم (0-9)' };
   }
   strength += 20;
   
-  // إضافية: رموز خاصة تزيد القوة
   if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
     strength = Math.min(100, strength + 10);
   }
@@ -79,22 +58,22 @@ export function validatePassword(password) {
   };
 }
 
-// 📝 تسجيل مستخدم جديد
+// 📝 تسجيل مستخدم جديد (Email/Password)
 export async function signUp(email, password, username = null) {
   try {
-    // التحقق من البريد
+    const supabase = getSupabase();
+    if (!supabase) return { success: false, error: 'Supabase غير متصل' };
+
     const emailValidation = validateEmail(email);
     if (!emailValidation.valid) {
       return { success: false, error: emailValidation.message };
     }
     
-    // التحقق من كلمة السر
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
       return { success: false, error: passwordValidation.message };
     }
     
-    // تسجيل المستخدم في Supabase
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -115,7 +94,6 @@ export async function signUp(email, password, username = null) {
       };
     }
     
-    // إنشاء ملف شخصي افتراضي
     if (data.user) {
       await createDefaultProfile(data.user.id, username || email.split('@')[0], email);
     }
@@ -123,27 +101,23 @@ export async function signUp(email, password, username = null) {
     return { 
       success: true, 
       user: data.user,
-      message: 'تم التسجيل بنجاح! يمكنك الآن تسجيل الدخول' 
+      message: 'تم التسجيل بنجاح! ✅' 
     };
     
   } catch (error) {
     console.error('Sign up error:', error);
-    return { 
-      success: false, 
-      error: 'حدث خطأ غير متوقع. الرجاء المحاولة لاحقاً' 
-    };
+    return { success: false, error: 'حدث خطأ غير متوقع' };
   }
 }
 
-// 🔓 تسجيل الدخول
+// 🔓 تسجيل الدخول (Email/Password)
 export async function signIn(email, password) {
   try {
-    // التحقق الأساسي
+    const supabase = getSupabase();
+    if (!supabase) return { success: false, error: 'Supabase غير متصل' };
+
     if (!email || !password) {
-      return { 
-        success: false, 
-        error: 'الرجاء إدخال البريد وكلمة السر' 
-      };
+      return { success: false, error: 'الرجاء إدخال البريد وكلمة السر' };
     }
     
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -160,7 +134,6 @@ export async function signIn(email, password) {
       };
     }
     
-    // جلب الملف الشخصي
     const profile = await getProfile(data.user.id);
     
     return { 
@@ -172,23 +145,104 @@ export async function signIn(email, password) {
     
   } catch (error) {
     console.error('Sign in error:', error);
-    return { 
-      success: false, 
-      error: 'حدث خطأ غير متوقع' 
-    };
+    return { success: false, error: 'حدث خطأ غير متوقع' };
+  }
+}
+
+// 🔐 تسجيل الدخول عبر Google
+export async function signInWithGoogle() {
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return { success: false, error: 'Supabase غير متصل' };
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
+      }
+    });
+    
+    if (error) {
+      console.error('Google sign in error:', error);
+      return { success: false, error: 'فشل تسجيل الدخول عبر Google' };
+    }
+    
+    return { success: true, message: 'جاري التحويل إلى Google...' };
+    
+  } catch (error) {
+    console.error('Google sign in error:', error);
+    return { success: false, error: 'حدث خطأ في تسجيل الدخول' };
+  }
+}
+
+// 🐙 تسجيل الدخول عبر GitHub
+export async function signInWithGithub() {
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return { success: false, error: 'Supabase غير متصل' };
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+    
+    if (error) {
+      console.error('GitHub sign in error:', error);
+      return { success: false, error: 'فشل تسجيل الدخول عبر GitHub' };
+    }
+    
+    return { success: true, message: 'جاري التحويل إلى GitHub...' };
+    
+  } catch (error) {
+    console.error('GitHub sign in error:', error);
+    return { success: false, error: 'حدث خطأ في تسجيل الدخول' };
+  }
+}
+
+// 💬 تسجيل الدخول عبر Discord
+export async function signInWithDiscord() {
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return { success: false, error: 'Supabase غير متصل' };
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+    
+    if (error) {
+      console.error('Discord sign in error:', error);
+      return { success: false, error: 'فشل تسجيل الدخول عبر Discord' };
+    }
+    
+    return { success: true, message: 'جاري التحويل إلى Discord...' };
+    
+  } catch (error) {
+    console.error('Discord sign in error:', error);
+    return { success: false, error: 'حدث خطأ في تسجيل الدخول' };
   }
 }
 
 // 🚪 تسجيل الخروج
 export async function signOut() {
   try {
+    const supabase = getSupabase();
+    if (!supabase) return { success: false, error: 'Supabase غير متصل' };
+
     const { error } = await supabase.auth.signOut();
     
     if (error) {
       return { success: false, error: 'حدث خطأ في تسجيل الخروج' };
     }
     
-    // مسح البيانات المحلية
     localStorage.removeItem('game_cache');
     
     return { success: true, message: 'تم تسجيل الخروج بنجاح' };
@@ -202,6 +256,9 @@ export async function signOut() {
 // 👤 الحصول على المستخدم الحالي
 export async function getCurrentUser() {
   try {
+    const supabase = getSupabase();
+    if (!supabase) return null;
+
     const { data, error } = await supabase.auth.getUser();
     
     if (error || !data.user) {
@@ -219,6 +276,9 @@ export async function getCurrentUser() {
 // 🔍 جلب الملف الشخصي
 async function getProfile(userId) {
   try {
+    const supabase = getSupabase();
+    if (!supabase) return null;
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -241,6 +301,9 @@ async function getProfile(userId) {
 // 🆕 إنشاء ملف شخصي افتراضي
 async function createDefaultProfile(userId, username, email) {
   try {
+    const supabase = getSupabase();
+    if (!supabase) return;
+
     const { error } = await supabase
       .from('profiles')
       .insert({
@@ -253,7 +316,6 @@ async function createDefaultProfile(userId, username, email) {
         total_score: 0,
         total_games: 0,
         best_score: 0,
-        coins: 100, // عملات ترحيبية
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
@@ -267,54 +329,57 @@ async function createDefaultProfile(userId, username, email) {
   }
 }
 
-// 🔄 تحديث الجلسة تلقائياً
-export async function refreshSession() {
+// 🔔 معالجة OAuth Callback
+export async function handleOAuthCallback() {
   try {
-    const { data, error } = await supabase.auth.getSession();
+    const supabase = getSupabase();
+    if (!supabase) return { success: false };
+
+    const { data: { user }, error } = await supabase.auth.getUser();
     
-    if (error || !data.session) {
-      return null;
+    if (error || !user) {
+      return { success: false, error: 'فشل التحقق من المستخدم' };
+    }
+
+    // التحقق من وجود ملف شخصي
+    const profile = await getProfile(user.id);
+    
+    if (!profile) {
+      // إنشاء ملف شخصي جديد
+      const username = user.user_metadata?.full_name || 
+                      user.user_metadata?.user_name || 
+                      user.email?.split('@')[0] || 
+                      'Player';
+      
+      await createDefaultProfile(user.id, username, user.email);
     }
     
-    return data.session;
-    
-  } catch (error) {
-    console.error('Refresh session error:', error);
-    return null;
-  }
-}
-
-// 🔔 مراقبة حالة المصادقة
-export function onAuthStateChange(callback) {
-  return supabase.auth.onAuthStateChange((event, session) => {
-    callback(event, session);
-  });
-}
-
-// 📧 إعادة تعيين كلمة السر
-export async function resetPassword(email) {
-  try {
-    const emailValidation = validateEmail(email);
-    if (!emailValidation.valid) {
-      return { success: false, error: emailValidation.message };
-    }
-    
-    // هذه الميزة تحتاج إعداد في Supabase Dashboard
-    // const { error } = await supabase.auth.resetPasswordForEmail(email);
-    
-    // محاكاة مؤقتة
     return { 
       success: true, 
-      message: 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني' 
+      user,
+      message: 'تم تسجيل الدخول بنجاح! ✅'
     };
     
   } catch (error) {
-    return { success: false, error: 'حدث خطأ في الإرسال' };
+    console.error('OAuth callback error:', error);
+    return { success: false, error: 'حدث خطأ' };
   }
 }
 
-// ✅ استخدام:
-// import { signUp, signIn, signOut, getCurrentUser } from './auth-manager.js';
-// 
-// const result = await signUp('test@gmail.com', 'Password123');
-// if (result.success) { console.log('تم التسجيل!'); }
+// تصدير للاستخدام العام
+if (typeof window !== 'undefined') {
+  window.authManager = {
+    signUp,
+    signIn,
+    signInWithGoogle,
+    signInWithGithub,
+    signInWithDiscord,
+    signOut,
+    getCurrentUser,
+    handleOAuthCallback,
+    validateEmail,
+    validatePassword
+  };
+}
+
+console.log('✅ Auth Manager loaded with OAuth support');
