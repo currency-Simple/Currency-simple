@@ -1,5 +1,5 @@
 // ============================================
-// 🔧 SUPABASE CONFIG (Simplified)
+// 🔧 SUPABASE CONFIG (مع OAuth)
 // ============================================
 
 // ⚠️ ضع مفاتيحك هنا
@@ -17,7 +17,15 @@ let supabaseClient = null;
 
 try {
     if (typeof supabase !== 'undefined' && supabase.createClient) {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                flowType: 'pkce',
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true,
+                storage: localStorage
+            }
+        });
         console.log('✅ Supabase client created successfully');
     } else {
         console.error('❌ Supabase library not loaded');
@@ -29,5 +37,25 @@ try {
 // تصدير
 window.supabaseClient = supabaseClient;
 window.SUPABASE_URL = SUPABASE_URL;
+
+// دالة لفحص حالة OAuth عند التحميل
+function checkOAuthState() {
+    if (window.supabaseClient) {
+        supabaseClient.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                console.log('✅ User is already logged in via OAuth');
+                document.getElementById('auth-screen')?.classList.remove('active');
+                document.getElementById('menu-screen')?.classList.add('active');
+            }
+        });
+    }
+}
+
+// تشغيل فحص OAuth عند تحميل الصفحة
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkOAuthState);
+} else {
+    checkOAuthState();
+}
 
 console.log('✅ Supabase config loaded');
