@@ -8,6 +8,74 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="assets/images/icon.png">
     <link rel="stylesheet" href="style.css">
+    
+    <!-- OAuth Styles -->
+    <style>
+        .oauth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .oauth-btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .oauth-btn:hover {
+            transform: translateY(-3px);
+        }
+        
+        .github-btn {
+            background: linear-gradient(135deg, #24292e 0%, #181c20 100%);
+        }
+        
+        .google-btn {
+            background: linear-gradient(135deg, #4285F4 0%, #3367D6 100%);
+        }
+        
+        .discord-btn {
+            background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+        }
+        
+        .oauth-divider {
+            text-align: center;
+            margin: 20px 0;
+            color: rgba(255, 255, 255, 0.5);
+            position: relative;
+        }
+        
+        .oauth-divider::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .oauth-divider::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
 </head>
 <body>
     <div id="app">
@@ -48,6 +116,24 @@
             <div class="auth-container">
                 <button class="back-btn" id="auth-back">← رجوع</button>
                 <h2 id="auth-title">تسجيل الدخول</h2>
+                
+                <!-- أزرار OAuth -->
+                <div class="oauth-buttons">
+                    <button class="oauth-btn github-btn" onclick="loginWithGitHub()">
+                        <span>🐙</span> GitHub
+                    </button>
+                    
+                    <button class="oauth-btn google-btn" onclick="loginWithGoogle()">
+                        <span>🔍</span> Google
+                    </button>
+                    
+                    <button class="oauth-btn discord-btn" onclick="loginWithDiscord()">
+                        <span>💬</span> Discord
+                    </button>
+                </div>
+                
+                <div class="oauth-divider">أو</div>
+                
                 <form id="auth-form">
                     <div class="input-group">
                         <label>البريد الإلكتروني (Gmail)</label>
@@ -117,6 +203,99 @@
 
     <!-- ⚡ Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- 📦 OAuth Manager -->
+    <script>
+    // ============================================
+    // 🔗 OAUTH MANAGER (GitHub + Discord + Google)
+    // ============================================
+    
+    // 🔵 GitHub OAuth
+    async function loginWithGitHub() {
+        try {
+            if (!window.supabaseClient) {
+                throw new Error('Supabase client not loaded');
+            }
+            
+            const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'github',
+                options: {
+                    redirectTo: window.location.origin + '/',
+                    queryParams: { prompt: 'login' }
+                }
+            });
+            
+            if (error) throw error;
+            
+        } catch (err) {
+            console.error('GitHub login error:', err);
+            showAuthMessage('GitHub login failed: ' + err.message, 'error');
+        }
+    }
+    
+    // 🔵 Google OAuth
+    async function loginWithGoogle() {
+        try {
+            if (!window.supabaseClient) {
+                throw new Error('Supabase client not loaded');
+            }
+            
+            const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + '/',
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent'
+                    }
+                }
+            });
+            
+            if (error) throw error;
+            
+        } catch (err) {
+            console.error('Google login error:', err);
+            showAuthMessage('Google login failed: ' + err.message, 'error');
+        }
+    }
+    
+    // 🔵 Discord OAuth
+    async function loginWithDiscord() {
+        try {
+            if (!window.supabaseClient) {
+                throw new Error('Supabase client not loaded');
+            }
+            
+            const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'discord',
+                options: {
+                    redirectTo: window.location.origin + '/'
+                }
+            });
+            
+            if (error) throw error;
+            
+        } catch (err) {
+            console.error('Discord login error:', err);
+            showAuthMessage('Discord login failed: ' + err.message, 'error');
+        }
+    }
+    
+    function showAuthMessage(message, type = 'info') {
+        const messageEl = document.getElementById('auth-message');
+        if (messageEl) {
+            messageEl.textContent = message;
+            messageEl.className = `auth-message ${type}`;
+            messageEl.style.display = 'block';
+            setTimeout(() => messageEl.style.display = 'none', 5000);
+        } else {
+            alert(message);
+        }
+    }
+    
+    // تشغيل عند تحميل الصفحة
+    console.log('✅ OAuth Manager Loaded');
+    </script>
     
     <!-- 📦 Main App (مباشر بدون modules) -->
     <script>
