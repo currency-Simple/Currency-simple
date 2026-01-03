@@ -186,11 +186,11 @@
                 <p>🔺 Collect triangles to score</p>
                 <p>⚡ Speed increases every 10 triangles</p>
             </div>
-            <button class="btn-start" onclick="startGame()">START GAME</button>
+            <button class="btn-start" id="btnStartGame">START GAME</button>
         </div>
     </div>
 
-    <!-- Load JavaScript Files -->
+    <!-- Load JavaScript Files in correct order -->
     <script src="config.js"></script>
     <script src="balls.js"></script>
     <script src="roads.js"></script>
@@ -200,5 +200,22 @@
     <script src="settings.js"></script>
     <script src="ui.js"></script>
     <script src="game.js"></script>
+    
+    <script>
+        // Ensure start button works
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('btnStartGame');
+            if (startBtn) {
+                startBtn.addEventListener('click', function() {
+                    console.log('Start button clicked!');
+                    if (typeof startGame === 'function') {
+                        startGame();
+                    } else if (window.game) {
+                        window.game.startGame();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
