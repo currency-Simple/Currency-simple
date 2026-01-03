@@ -1,5 +1,5 @@
 // ============================================
-// SPEEDBALL 3D - MAIN GAME ENGINE
+// SPEEDBALL 3D - MAIN GAME ENGINE (FIXED)
 // ============================================
 
 class SpeedballGame {
@@ -14,37 +14,24 @@ class SpeedballGame {
         this.currentSpeed = CONFIG.GAME.BASE_SPEED * CONFIG.GAME.SPEED_MULTIPLIER;
         this.lastSpeedIncrease = 0;
         
-        this.ballManager = null;
-        this.roadManager = null;
-        this.gameData = null;
-        this.statsManager = null;
-        this.coinManager = null;
-        this.settingsManager = null;
-        
-        this.obstacles = [];
-        this.particles = [];
-        
-        this.animationFrameId = null;
-        this.lastTimestamp = 0;
-        
-        this.isInitialized = false;
-    }
-
-    initialize() {
-        if (this.isInitialized) return;
-        
-        console.log('Initializing Speedball Game...');
-        
-        this.setupCanvas();
-        
-        // تهيئة المانجرز
         this.ballManager = new BallManager();
         this.roadManager = new RoadManager();
         this.gameData = new GameData();
         this.statsManager = new StatsManager();
-        this.coinManager = new CoinManager();
         this.settingsManager = new SettingsManager();
         
+        this.obstacles = [];
+        this.particles = [];
+        
+        this.animationId = null;
+        
+        this.initialize();
+    }
+
+    initialize() {
+        console.log('Initializing game...');
+        this.setupCanvas();
+        this.setupControls();
         this.loadBestScore();
         this.roadManager.initialize();
         
@@ -53,73 +40,38 @@ class SpeedballGame {
             this.addObstacle(-i * CONFIG.OBSTACLES.SPAWN_DISTANCE - 20);
         }
         
-        this.setupControls();
-        
-        // عرض الشاشة الترحيبية
-        this.showWelcomeScreen();
-        
-        // بدء حلقة التصيير
         this.render();
-        
-        this.isInitialized = true;
-        console.log('Game initialized successfully');
-    }
-
-    showWelcomeScreen() {
-        const welcomeScreen = document.getElementById('welcomeScreen');
-        if (welcomeScreen) {
-            welcomeScreen.classList.remove('hidden');
-        }
+        console.log('Game initialized successfully!');
     }
 
     setupCanvas() {
         const resize = () => {
             this.canvas.width = window.innerWidth;
             this.canvas.height = window.innerHeight;
-            console.log(`Canvas resized to: ${this.canvas.width}x${this.canvas.height}`);
         };
-        
         resize();
         window.addEventListener('resize', resize);
     }
 
     setupControls() {
-        // زر PLAY
-        const playBtn = document.getElementById('btnPlay');
-        if (playBtn) {
-            playBtn.addEventListener('click', () => this.togglePlay());
-        }
-        
-        // زر START من الشاشة الترحيبية
-        const startBtn = document.querySelector('.btn-start');
-        if (startBtn) {
-            startBtn.addEventListener('click', () => this.startGame());
-        }
-        
-        // الأزرار الأخرى
-        const roadBtn = document.getElementById('btnRoad');
-        const sphereBtn = document.getElementById('btnSphere');
-        const statsBtn = document.getElementById('btnStats');
-        const settingsBtn = document.getElementById('btnSettings');
-        
-        if (roadBtn) roadBtn.addEventListener('click', () => this.showRoadModal());
-        if (sphereBtn) sphereBtn.addEventListener('click', () => this.showSphereModal());
-        if (statsBtn) statsBtn.addEventListener('click', () => this.showStatsModal());
-        if (settingsBtn) settingsBtn.addEventListener('click', () => this.showSettingsModal());
-        
-        // التحكم باللمس/ماوس
+        // Touch/Mouse controls
         this.canvas.addEventListener('mousedown', (e) => this.handleInput(e));
-        this.canvas.addEventListener('touchstart', (e) => this.handleInput(e));
-        
-        // أزرار إغلاق المودال
-        document.querySelectorAll('.close-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const modal = e.target.closest('.modal');
-                if (modal) {
-                    this.closeModal(modal.id);
-                }
-            });
-        });
+        this.canvas.addEventListener('touchstart', (e) => this.handleInput(e), { passive: false });
+
+        // Button controls
+        const btnPlay = document.getElementById('btnPlay');
+        const btnRoad = document.getElementById('btnRoad');
+        const btnSphere = document.getElementById('btnSphere');
+        const btnStats = document.getElementById('btnStats');
+        const btnSettings = document.getElementById('btnSettings');
+
+        if (btnPlay) btnPlay.addEventListener('click', () => this.togglePlay());
+        if (btnRoad) btnRoad.addEventListener('click', () => this.showRoadModal());
+        if (btnSphere) btnSphere.addEventListener('click', () => this.showSphereModal());
+        if (btnStats) btnStats.addEventListener('click', () => this.showStatsModal());
+        if (btnSettings) btnSettings.addEventListener('click', () => this.showSettingsModal());
+
+        console.log('Controls setup complete');
     }
 
     handleInput(e) {
@@ -140,12 +92,13 @@ class SpeedballGame {
             lane = 1;
         }
         
-        if (this.ballManager && this.ballManager.currentBall) {
+        if (this.ballManager.currentBall) {
             this.ballManager.currentBall.moveTo(lane);
         }
     }
 
     togglePlay() {
+        console.log('Toggle play, current state:', this.gameState);
         if (this.gameState === 'menu' || this.gameState === 'gameover') {
             this.startGame();
         } else if (this.gameState === 'playing') {
@@ -158,13 +111,12 @@ class SpeedballGame {
     startGame() {
         console.log('Starting game...');
         
-        // إخفاء الشاشة الترحيبية
+        // Hide welcome screen
         const welcomeScreen = document.getElementById('welcomeScreen');
         if (welcomeScreen) {
             welcomeScreen.classList.add('hidden');
         }
         
-        // إعادة تعيين حالة اللعبة
         this.gameState = 'playing';
         this.score = 0;
         this.trianglesPassed = 0;
@@ -174,91 +126,80 @@ class SpeedballGame {
         this.obstacles = [];
         this.particles = [];
         
-        if (this.coinManager) {
-            this.coinManager.initialize();
-        }
-        
-        if (this.ballManager && this.ballManager.currentBall) {
+        if (this.ballManager.currentBall) {
             this.ballManager.currentBall.reset();
         }
         
-        if (this.roadManager) {
-            this.roadManager.reset();
-        }
+        this.roadManager.reset();
         
-        // إنشاء العقبات الأولية
+        // Generate obstacles
         for (let i = 0; i < CONFIG.OBSTACLES.INITIAL_COUNT; i++) {
             this.addObstacle(-i * CONFIG.OBSTACLES.SPAWN_DISTANCE - 20);
         }
         
-        // تحديث واجهة المستخدم
         this.updateUI();
+        this.gameLoop();
         
-        // تغيير زر التشغيل
+        // Update play button
         const playIcon = document.getElementById('playIcon');
         const pauseIcon = document.getElementById('pauseIcon');
         if (playIcon) playIcon.style.display = 'none';
         if (pauseIcon) pauseIcon.style.display = 'block';
         
-        // بدء حلقة اللعبة
-        this.gameLoop();
+        console.log('Game started!');
     }
 
     pauseGame() {
         this.gameState = 'paused';
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+        
         const playIcon = document.getElementById('playIcon');
         const pauseIcon = document.getElementById('pauseIcon');
         if (playIcon) playIcon.style.display = 'block';
         if (pauseIcon) pauseIcon.style.display = 'none';
-        
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-            this.animationFrameId = null;
-        }
     }
 
     resumeGame() {
         this.gameState = 'playing';
+        this.gameLoop();
+        
         const playIcon = document.getElementById('playIcon');
         const pauseIcon = document.getElementById('pauseIcon');
         if (playIcon) playIcon.style.display = 'none';
         if (pauseIcon) pauseIcon.style.display = 'block';
-        
-        this.gameLoop();
     }
 
     gameOver() {
         this.gameState = 'gameover';
         
-        // تحديث الإحصائيات
-        if (this.statsManager) {
-            this.statsManager.addGame(this.score, this.trianglesPassed);
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
         }
         
-        if (this.gameData) {
-            this.gameData.save();
-        }
+        // Update stats
+        this.statsManager.addGame(this.score, this.trianglesPassed);
+        this.gameData.save();
         
-        // التحقق من أعلى نتيجة
+        // Check for new best score
         if (this.score > this.bestScore) {
             this.bestScore = this.score;
             this.saveBestScore();
         }
         
-        // التحقق من فتح الكرات
-        if (this.ballManager && this.statsManager) {
-            this.ballManager.checkUnlocks(this.statsManager.getStats());
-        }
+        // Check ball unlocks
+        this.ballManager.checkUnlocks(this.statsManager.getStats());
         
-        // تغيير زر التشغيل
         const playIcon = document.getElementById('playIcon');
         const pauseIcon = document.getElementById('pauseIcon');
         if (playIcon) playIcon.style.display = 'block';
         if (pauseIcon) pauseIcon.style.display = 'none';
         
-        // عرض نتيجة اللعبة
         setTimeout(() => {
-            alert(`🎮 Game Over!\n🏆 Score: ${this.score}\n🔺 Triangles: ${this.trianglesPassed}`);
+            alert(`Game Over!\nScore: ${this.score}\nTriangles: ${this.trianglesPassed}`);
         }, 500);
     }
 
@@ -278,8 +219,7 @@ class SpeedballGame {
                    (CONFIG.OBSTACLES.MAX_NUMBER - CONFIG.OBSTACLES.MIN_NUMBER + 1)) + 
                    CONFIG.OBSTACLES.MIN_NUMBER,
             hit: false,
-            color: (this.ballManager && this.ballManager.currentBall) ? 
-                   this.ballManager.currentBall.type.color : '#00FF00'
+            color: this.ballManager.currentBall?.type.color || '#00FF00'
         });
     }
 
@@ -303,7 +243,7 @@ class SpeedballGame {
     update() {
         if (this.gameState !== 'playing') return;
 
-        // تحديث السرعة كل 10 مثلثات
+        // Update speed every 10 triangles
         if (this.trianglesPassed >= this.lastSpeedIncrease + CONFIG.GAME.SPEED_INCREMENT_INTERVAL) {
             const increments = Math.floor(this.trianglesPassed / CONFIG.GAME.SPEED_INCREMENT_INTERVAL);
             this.currentSpeed = CONFIG.GAME.BASE_SPEED * 
@@ -312,41 +252,33 @@ class SpeedballGame {
                                     CONFIG.GAME.SPEED_INCREMENT_INTERVAL;
         }
 
-        // تحديث الكرة
-        if (this.ballManager && this.ballManager.currentBall) {
+        // Update ball
+        if (this.ballManager.currentBall) {
             this.ballManager.currentBall.update();
         }
 
-        // تحديث الطريق
-        if (this.roadManager) {
-            this.roadManager.update(this.currentSpeed);
-        }
+        // Update road
+        this.roadManager.update(this.currentSpeed);
 
-        // تحديث العملات
-        if (this.coinManager && this.ballManager && this.ballManager.currentBall) {
-            const ballPos = this.ballManager.currentBall.getPosition();
-            this.coinManager.update(this.currentSpeed, ballPos);
-        }
-
-        // تحديث العقبات
+        // Update obstacles
         this.updateObstacles();
 
-        // تحديث الجزيئات
+        // Update particles
         this.updateParticles();
 
-        // تحديث واجهة المستخدم
+        // Update UI
         this.updateUI();
     }
 
     updateObstacles() {
-        const ball = this.ballManager ? this.ballManager.currentBall : null;
+        const ball = this.ballManager.currentBall;
         if (!ball) return;
 
         this.obstacles = this.obstacles.filter(obs => {
             obs.z += this.currentSpeed * 0.1;
             obs.rotation += obs.rotationSpeed;
 
-            // التحقق من الاصطدام
+            // Check collision
             if (!obs.hit && obs.z > -1 && obs.z < 1) {
                 const dist = Math.sqrt(
                     Math.pow(obs.x - ball.x, 2) + 
@@ -359,17 +291,14 @@ class SpeedballGame {
                     this.score += obs.number;
                     this.createParticles(obs.x, obs.y, obs.z, obs.color);
                     
-                    // حفظ التقدم
-                    if (this.gameData) {
-                        this.gameData.addScore(obs.number);
-                    }
+                    // Save progress
+                    this.gameData.addScore(obs.number);
                 }
             }
 
-            // إزالة إذا تجاوزت
+            // Remove if passed
             if (obs.z > 15) {
-                const lastZ = this.obstacles.length > 0 ? 
-                    Math.min(...this.obstacles.map(o => o.z)) : 0;
+                const lastZ = Math.min(...this.obstacles.map(o => o.z));
                 this.addObstacle(lastZ - CONFIG.OBSTACLES.SPAWN_DISTANCE);
                 return false;
             }
@@ -393,33 +322,23 @@ class SpeedballGame {
         const w = this.canvas.width;
         const h = this.canvas.height;
 
-        // مسح الشاشة مع تأثير التلاشي
+        // Clear with fade
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fillRect(0, 0, w, h);
 
-        // تصيير الطريق
-        if (this.roadManager) {
-            this.roadManager.render(ctx, this.canvas);
-        }
+        // Render road
+        this.roadManager.render(ctx, this.canvas);
 
-        // تصيير العقبات
+        // Render obstacles
         this.renderObstacles();
 
-        // تصيير العملات
-        if (this.coinManager) {
-            this.coinManager.render(ctx, this.canvas);
-        }
-
-        // تصيير الكرة
-        if (this.ballManager && this.ballManager.currentBall) {
+        // Render ball
+        if (this.ballManager.currentBall) {
             this.ballManager.currentBall.render(ctx, this.canvas);
         }
 
-        // تصيير الجزيئات
+        // Render particles
         this.renderParticles();
-        
-        // طلب الإطار التالي للتصيير
-        this.animationFrameId = requestAnimationFrame(() => this.render());
     }
 
     renderObstacles() {
@@ -439,7 +358,7 @@ class SpeedballGame {
             ctx.translate(screenX, screenY);
             ctx.rotate(obs.rotation);
 
-            // الظل
+            // Shadow
             if (CONFIG.GRAPHICS.SHADOWS) {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
                 ctx.beginPath();
@@ -450,7 +369,7 @@ class SpeedballGame {
                 ctx.fill();
             }
 
-            // التوهج
+            // Glow
             if (CONFIG.GRAPHICS.GLOW_EFFECTS) {
                 const glowGradient = ctx.createRadialGradient(0, 0, size * 0.5, 0, 0, size * 1.5);
                 glowGradient.addColorStop(0, obs.color + '80');
@@ -461,7 +380,7 @@ class SpeedballGame {
                 ctx.fill();
             }
 
-            // المثلث
+            // Triangle
             const gradient = ctx.createLinearGradient(0, -size, 0, size);
             gradient.addColorStop(0, obs.color);
             gradient.addColorStop(1, obs.color + '80');
@@ -473,12 +392,12 @@ class SpeedballGame {
             ctx.closePath();
             ctx.fill();
 
-            // الحدود
+            // Outline
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // الرقم
+            // Number
             ctx.fillStyle = '#000';
             ctx.font = `bold ${size * 0.6}px Arial`;
             ctx.textAlign = 'center';
@@ -508,113 +427,106 @@ class SpeedballGame {
         });
     }
 
+    updateUI() {
+        const scoreEl = document.getElementById('currentScore');
+        const bestEl = document.getElementById('bestScore');
+        const triangleEl = document.getElementById('triangleCount');
+        const speedEl = document.getElementById('speedValue');
+
+        if (scoreEl) scoreEl.textContent = this.score;
+        if (bestEl) bestEl.textContent = this.bestScore;
+        if (triangleEl) triangleEl.textContent = this.trianglesPassed;
+        if (speedEl) {
+            speedEl.textContent = Math.floor((this.currentSpeed / CONFIG.GAME.BASE_SPEED) * 100) + '%';
+        }
+    }
+
     gameLoop() {
         if (this.gameState !== 'playing') return;
 
         this.update();
-        
-        // طلب الإطار التالي
-        this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
-    }
+        this.render();
 
-    updateUI() {
-        const currentScoreEl = document.getElementById('currentScore');
-        const bestScoreEl = document.getElementById('bestScore');
-        const triangleCountEl = document.getElementById('triangleCount');
-        const speedValueEl = document.getElementById('speedValue');
-        
-        if (currentScoreEl) currentScoreEl.textContent = this.score;
-        if (bestScoreEl) bestScoreEl.textContent = this.bestScore;
-        if (triangleCountEl) triangleCountEl.textContent = this.trianglesPassed;
-        if (speedValueEl) {
-            speedValueEl.textContent = Math.floor((this.currentSpeed / CONFIG.GAME.BASE_SPEED) * 100) + '%';
-        }
+        this.animationId = requestAnimationFrame(() => this.gameLoop());
     }
 
     saveBestScore() {
-        localStorage.setItem('speedballBestScore', this.bestScore.toString());
+        try {
+            localStorage.setItem('speedballBestScore', this.bestScore.toString());
+        } catch (e) {
+            console.error('Failed to save best score:', e);
+        }
     }
 
     loadBestScore() {
-        const saved = localStorage.getItem('speedballBestScore');
-        this.bestScore = saved ? parseInt(saved) : 0;
+        try {
+            const saved = localStorage.getItem('speedballBestScore');
+            this.bestScore = saved ? parseInt(saved) : 0;
+        } catch (e) {
+            console.error('Failed to load best score:', e);
+            this.bestScore = 0;
+        }
     }
 
     showRoadModal() {
-        this.openModal('roadModal');
+        openModal('roadModal');
         if (typeof populateRoadList === 'function') {
             populateRoadList();
         }
     }
 
     showSphereModal() {
-        this.openModal('sphereModal');
+        openModal('sphereModal');
         if (typeof populateSphereGrid === 'function') {
             populateSphereGrid();
         }
     }
 
     showStatsModal() {
-        this.openModal('statsModal');
+        openModal('statsModal');
         if (typeof updateStatsDisplay === 'function') {
             updateStatsDisplay();
         }
     }
 
     showSettingsModal() {
-        this.openModal('settingsModal');
-        if (typeof initializeSettingsUI === 'function') {
-            initializeSettingsUI();
-        }
-    }
-
-    openModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.add('active');
-        }
-    }
-
-    closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.remove('active');
-        }
+        openModal('settingsModal');
     }
 }
 
-// تهيئة اللعبة عند تحميل الصفحة
-let game = null;
-
+// Initialize game when page loads
+let game;
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing game...');
-    
-    // إنشاء مثيل اللعبة
-    game = new SpeedballGame();
-    
-    // تهيئة اللعبة بعد تحميل جميع الموارد
-    setTimeout(() => {
-        if (game && typeof game.initialize === 'function') {
-            game.initialize();
-        }
-    }, 100);
+    console.log('DOM loaded, creating game...');
+    try {
+        game = new SpeedballGame();
+        window.game = game; // Make it globally accessible
+        console.log('Game created successfully!');
+    } catch (error) {
+        console.error('Error creating game:', error);
+    }
 });
 
-// الدوال العامة للأزرار
+// Global functions for buttons
 function startGame() {
-    if (game && typeof game.startGame === 'function') {
+    console.log('startGame function called');
+    if (game) {
         game.startGame();
+    } else {
+        console.error('Game not initialized!');
     }
 }
 
 function openModal(modalId) {
-    if (game && typeof game.openModal === 'function') {
-        game.openModal(modalId);
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('active');
     }
 }
 
 function closeModal(modalId) {
-    if (game && typeof game.closeModal === 'function') {
-        game.closeModal(modalId);
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
     }
 }
