@@ -2,204 +2,206 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#000000">
-    <title>Speedball 3D</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="assets/images/icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedBall 3D - لعبة الكرة السريعة</title>
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app">
-        <!-- Loading Screen -->
-        <div id="loading-screen" class="screen active">
-            <div class="loader">
-                <div class="spinner"></div>
-                <p>جاري التحميل...</p>
-            </div>
-        </div>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>جاري التحميل...</p>
+    </div>
 
-        <!-- Menu Screen -->
-        <div id="menu-screen" class="screen">
-            <div class="menu-header">
-                <h1 class="game-title">SPEEDBALL 3D</h1>
-                <div class="user-info" id="user-info"></div>
-            </div>
-            <div class="menu-buttons">
-                <button class="menu-btn play-btn" id="btn-play">▶️ ابدأ اللعب</button>
-                <button class="menu-btn" id="btn-profile">👤 الملف الشخصي</button>
-                <button class="menu-btn" id="btn-leaderboard">🏆 المتصدرين</button>
-                <button class="menu-btn" id="btn-settings">⚙️ الإعدادات</button>
-            </div>
-            <div class="stats-preview">
-                <div class="stat-item">
-                    <span class="stat-label">أفضل نتيجة</span>
-                    <span class="stat-value" id="best-score">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">العملات</span>
-                    <span class="stat-value" id="coins">0</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Auth Screen -->
-        <div id="auth-screen" class="screen">
-            <div class="auth-container">
-                <button class="back-btn" id="auth-back">← رجوع</button>
-                <h2 id="auth-title">تسجيل الدخول</h2>
-                <!-- OAuth Buttons -->
-                <div class="oauth-buttons">
-                    <button type="button" class="oauth-btn google-btn" id="btn-google">
-                        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
-                        تسجيل عبر Google
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeAuthModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <h2 id="authTitle">تسجيل الدخول</h2>
+            
+            <div id="authForm">
+                <input type="text" id="username" placeholder="اسم المستخدم" class="hidden">
+                <input type="email" id="email" placeholder="البريد الإلكتروني" required>
+                <input type="password" id="password" placeholder="كلمة المرور" required>
+                
+                <button id="authSubmitBtn" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> دخول
+                </button>
+                
+                <div class="divider">أو</div>
+                
+                <div class="social-login">
+                    <button class="btn btn-github" onclick="signInWithProvider('github')">
+                        <i class="fab fa-github"></i> GitHub
                     </button>
-                    <button type="button" class="oauth-btn github-btn" id="btn-github">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                        تسجيل عبر GitHub
+                    <button class="btn btn-google" onclick="signInWithProvider('google')">
+                        <i class="fab fa-google"></i> Google
                     </button>
-                    <button type="button" class="oauth-btn discord-btn" id="btn-discord">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-                        تسجيل عبر Discord
+                    <button class="btn btn-discord" onclick="signInWithProvider('discord')">
+                        <i class="fab fa-discord"></i> Discord
                     </button>
                 </div>
                 
-                <div class="divider">
-                    <span>أو</span>
-                </div>
-
-                <form id="auth-form">
-                    <div class="input-group">
-                        <label>البريد الإلكتروني (Gmail)</label>
-                        <input type="email" id="auth-email" placeholder="example@gmail.com" required>
-                        <span class="input-hint" id="email-hint"></span>
-                    </div>
-                    <div class="input-group">
-                        <label>كلمة السر</label>
-                        <input type="password" id="auth-password" placeholder="••••••••" required>
-                        <div class="password-strength"><div class="password-strength-bar" id="password-strength"></div></div>
-                        <span class="input-hint" id="password-hint"></span>
-                    </div>
-                    <button type="submit" class="submit-btn"><span id="auth-submit-text">دخول</span></button>
-                </form>
-                <p class="auth-toggle">
-                    <span id="auth-toggle-text">ليس لديك حساب؟</span>
-                    <a href="#" id="auth-toggle-link">سجل الآن</a>
+                <p class="toggle-auth">
+                    <a href="#" id="toggleAuthMode">ليس لديك حساب؟ سجل الآن</a>
                 </p>
-                <div class="auth-message" id="auth-message"></div>
             </div>
-        </div>
-
-        <!-- Game Screen -->
-        <div id="game-screen" class="screen">
-            <div class="game-ui">
-                <div class="game-header">
-                    <div class="score-display">
-                        <span class="label">النقاط</span>
-                        <span class="value" id="game-score">0</span>
-                    </div>
-                    <div class="time-display">
-                        <span class="label">⏱️</span>
-                        <span class="value" id="game-time">0</span>
-                    </div>
-                    <button class="pause-btn" id="btn-pause">⏸️</button>
-                </div>
-                <canvas id="game-canvas"></canvas>
-                <div class="game-controls">
-                    <button class="control-btn" id="btn-left">◀️</button>
-                    <button class="control-btn" id="btn-jump">⬆️</button>
-                    <button class="control-btn" id="btn-right">▶️</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Profile Screen -->
-        <div id="profile-screen" class="screen">
-            <button class="back-btn" id="profile-back">← رجوع</button>
-            <div class="profile-container"></div>
-        </div>
-
-        <!-- Leaderboard Screen -->
-        <div id="leaderboard-screen" class="screen">
-            <button class="back-btn" id="leaderboard-back">← رجوع</button>
-            <div class="leaderboard-container">
-                <h2>🏆 المتصدرين</h2>
-                <div class="leaderboard-list" id="leaderboard-list"></div>
-            </div>
-        </div>
-
-        <!-- Settings Screen -->
-        <div id="settings-screen" class="screen">
-            <button class="back-btn" id="settings-back">← رجوع</button>
-            <div class="settings-container"></div>
         </div>
     </div>
 
-    <!-- ⚡ Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- 📦 Main App (مباشر بدون modules) -->
-    <script>
-        console.log('🎮 Starting Speedball 3D...');
-        
-        // التحقق من تحميل Supabase
-        if (typeof supabase === 'undefined') {
-            console.error('❌ Supabase not loaded!');
-            document.querySelector('#loading-screen p').textContent = 'خطأ: فشل تحميل المكتبات الأساسية';
-        } else {
-            console.log('✅ Supabase loaded successfully');
-        }
-        
-        // إخفاء شاشة التحميل بعد 2 ثانية
-        setTimeout(() => {
-            const loadingScreen = document.getElementById('loading-screen');
-            const menuScreen = document.getElementById('menu-screen');
-            const authScreen = document.getElementById('auth-screen');
+    <!-- Game Container -->
+    <div id="gameContainer">
+        <!-- Header -->
+        <header class="game-header">
+            <div class="logo">
+                <i class="fas fa-circle"></i>
+                <span>SpeedBall 3D</span>
+            </div>
             
-            if (loadingScreen) loadingScreen.classList.remove('active');
+            <div class="user-info">
+                <div id="userProfile" class="hidden">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="userName"></span>
+                    <button class="btn-logout" onclick="signOut()">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+                <button id="loginBtn" class="btn btn-login" onclick="showAuthModal()">
+                    <i class="fas fa-sign-in-alt"></i> دخول
+                </button>
+            </div>
+        </header>
+
+        <!-- Game Stats -->
+        <div class="game-stats">
+            <div class="stat-item">
+                <i class="fas fa-heart"></i>
+                <span id="lives">3</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-star"></i>
+                <span id="score">0</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-trophy"></i>
+                <span id="highScore">0</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span id="speed">1x</span>
+            </div>
+        </div>
+
+        <!-- Game Canvas -->
+        <div id="gameCanvas" class="game-canvas">
+            <!-- Road -->
+            <div class="road">
+                <div class="road-line road-line-1"></div>
+                <div class="road-line road-line-2"></div>
+                <div class="road-line road-line-3"></div>
+            </div>
             
-            // عرض شاشة التسجيل مباشرة
-            if (authScreen) authScreen.classList.add('active');
+            <!-- Ball -->
+            <div id="ball" class="ball"></div>
             
-            console.log('✅ App loaded');
-        }, 2000);
-        
-        // إعداد الأزرار الأساسية
-        document.addEventListener('DOMContentLoaded', () => {
-            // زر الرجوع من التسجيل
-            const authBack = document.getElementById('auth-back');
-            if (authBack) {
-                authBack.addEventListener('click', () => {
-                    document.getElementById('auth-screen').classList.remove('active');
-                    document.getElementById('menu-screen').classList.add('active');
-                });
-            }
+            <!-- Obstacles Container -->
+            <div id="obstaclesContainer"></div>
             
-            // تبديل بين تسجيل ودخول
-            const toggleLink = document.getElementById('auth-toggle-link');
-            if (toggleLink) {
-                toggleLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const title = document.getElementById('auth-title');
-                    const submitText = document.getElementById('auth-submit-text');
-                    const toggleText = document.getElementById('auth-toggle-text');
+            <!-- Game Over Screen -->
+            <div id="gameOverScreen" class="game-screen hidden">
+                <div class="screen-content">
+                    <h1 class="game-over-title">انتهت اللعبة!</h1>
+                    <div class="final-stats">
+                        <p>النتيجة: <span id="finalScore">0</span></p>
+                        <p>الأفضل: <span id="finalHighScore">0</span></p>
+                    </div>
+                    <button class="btn btn-primary" onclick="restartGame()">
+                        <i class="fas fa-redo"></i> لعب مرة أخرى
+                    </button>
+                    <button class="btn btn-secondary" onclick="showMenu()">
+                        <i class="fas fa-home"></i> القائمة
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Menu Screen -->
+            <div id="menuScreen" class="game-screen">
+                <div class="screen-content">
+                    <h1 class="game-title">SpeedBall 3D</h1>
+                    <p class="game-subtitle">تجنب العوائق واجمع النقاط!</p>
                     
-                    if (title.textContent === 'تسجيل الدخول') {
-                        title.textContent = 'إنشاء حساب';
-                        submitText.textContent = 'تسجيل';
-                        toggleText.textContent = 'لديك حساب؟';
-                        toggleLink.textContent = 'سجل دخول';
-                    } else {
-                        title.textContent = 'تسجيل الدخول';
-                        submitText.textContent = 'دخول';
-                        toggleText.textContent = 'ليس لديك حساب؟';
-                        toggleLink.textContent = 'سجل الآن';
-                    }
-                });
-            }
+                    <div class="menu-buttons">
+                        <button class="btn btn-play" onclick="startGame()">
+                            <i class="fas fa-play"></i> ابدأ اللعبة
+                        </button>
+                        <button class="btn btn-secondary" onclick="showLeaderboard()">
+                            <i class="fas fa-trophy"></i> المتصدرين
+                        </button>
+                        <button class="btn btn-secondary" onclick="showInstructions()">
+                            <i class="fas fa-question-circle"></i> كيف تلعب
+                        </button>
+                    </div>
+                </div>
+            </div>
             
-            console.log('✅ Basic UI initialized');
-        });
-    </script>
+            <!-- Instructions Screen -->
+            <div id="instructionsScreen" class="game-screen hidden">
+                <div class="screen-content">
+                    <h2>كيفية اللعب</h2>
+                    <div class="instructions">
+                        <p><i class="fas fa-mouse-pointer"></i> انقر في أي مكان للقفز</p>
+                        <p><i class="fas fa-exclamation-triangle"></i> تجنب العوائق الحمراء</p>
+                        <p><i class="fas fa-star"></i> اجمع النقاط لزيادة السرعة</p>
+                        <p><i class="fas fa-heart"></i> لديك 3 محاولات فقط</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="hideInstructions()">
+                        <i class="fas fa-check"></i> فهمت
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Leaderboard Screen -->
+            <div id="leaderboardScreen" class="game-screen hidden">
+                <div class="screen-content">
+                    <h2><i class="fas fa-trophy"></i> المتصدرين</h2>
+                    <div id="leaderboardList" class="leaderboard-list">
+                        <p class="loading">جاري التحميل...</p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="hideLeaderboard()">
+                        <i class="fas fa-arrow-right"></i> رجوع
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="game-controls">
+            <button id="pauseBtn" class="btn btn-control hidden" onclick="togglePause()">
+                <i class="fas fa-pause"></i>
+            </button>
+            <button id="soundBtn" class="btn btn-control" onclick="toggleSound()">
+                <i class="fas fa-volume-up"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="supabase-client.js"></script>
+    <script src="auth.js"></script>
+    <script src="ball.js"></script>
+    <script src="obstacles.js"></script>
+    <script src="game.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
