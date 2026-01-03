@@ -1,13 +1,15 @@
 // ============================================
-// SPEEDBALL 3D - MAIN GAME ENGINE (FIXED)
+// SPEEDBALL 3D - MAIN GAME ENGINE
 // ============================================
 
 class SpeedballGame {
     constructor() {
+        console.log('🎮 Creating game...');
+        
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         
-        this.gameState = 'menu'; // menu, playing, paused, gameover
+        this.gameState = 'menu';
         this.score = 0;
         this.trianglesPassed = 0;
         this.bestScore = 0;
@@ -22,26 +24,24 @@ class SpeedballGame {
         
         this.obstacles = [];
         this.particles = [];
-        
         this.animationId = null;
         
         this.initialize();
     }
 
     initialize() {
-        console.log('Initializing game...');
+        console.log('🔧 Initializing game...');
         this.setupCanvas();
         this.setupControls();
         this.loadBestScore();
         this.roadManager.initialize();
         
-        // Generate initial obstacles
         for (let i = 0; i < CONFIG.OBSTACLES.INITIAL_COUNT; i++) {
             this.addObstacle(-i * CONFIG.OBSTACLES.SPAWN_DISTANCE - 20);
         }
         
         this.render();
-        console.log('Game initialized successfully!');
+        console.log('✅ Game initialized!');
     }
 
     setupCanvas() {
@@ -54,11 +54,9 @@ class SpeedballGame {
     }
 
     setupControls() {
-        // Touch/Mouse controls
         this.canvas.addEventListener('mousedown', (e) => this.handleInput(e));
         this.canvas.addEventListener('touchstart', (e) => this.handleInput(e), { passive: false });
 
-        // Button controls
         const btnPlay = document.getElementById('btnPlay');
         const btnRoad = document.getElementById('btnRoad');
         const btnSphere = document.getElementById('btnSphere');
@@ -70,8 +68,6 @@ class SpeedballGame {
         if (btnSphere) btnSphere.addEventListener('click', () => this.showSphereModal());
         if (btnStats) btnStats.addEventListener('click', () => this.showStatsModal());
         if (btnSettings) btnSettings.addEventListener('click', () => this.showSettingsModal());
-
-        console.log('Controls setup complete');
     }
 
     handleInput(e) {
@@ -81,7 +77,6 @@ class SpeedballGame {
         const rect = this.canvas.getBoundingClientRect();
         const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
         
-        // Determine lane (0 = left, 1 = center, 2 = right)
         const third = this.canvas.width / 3;
         let lane;
         if (x < third) {
@@ -98,7 +93,7 @@ class SpeedballGame {
     }
 
     togglePlay() {
-        console.log('Toggle play, current state:', this.gameState);
+        console.log('🎯 Toggle play:', this.gameState);
         if (this.gameState === 'menu' || this.gameState === 'gameover') {
             this.startGame();
         } else if (this.gameState === 'playing') {
@@ -109,9 +104,8 @@ class SpeedballGame {
     }
 
     startGame() {
-        console.log('Starting game...');
+        console.log('🚀 Starting game...');
         
-        // Hide welcome screen
         const welcomeScreen = document.getElementById('welcomeScreen');
         if (welcomeScreen) {
             welcomeScreen.classList.add('hidden');
@@ -132,7 +126,6 @@ class SpeedballGame {
         
         this.roadManager.reset();
         
-        // Generate obstacles
         for (let i = 0; i < CONFIG.OBSTACLES.INITIAL_COUNT; i++) {
             this.addObstacle(-i * CONFIG.OBSTACLES.SPAWN_DISTANCE - 20);
         }
@@ -140,13 +133,12 @@ class SpeedballGame {
         this.updateUI();
         this.gameLoop();
         
-        // Update play button
         const playIcon = document.getElementById('playIcon');
         const pauseIcon = document.getElementById('pauseIcon');
         if (playIcon) playIcon.style.display = 'none';
         if (pauseIcon) pauseIcon.style.display = 'block';
         
-        console.log('Game started!');
+        console.log('✅ Game started!');
     }
 
     pauseGame() {
@@ -172,39 +164,8 @@ class SpeedballGame {
         if (pauseIcon) pauseIcon.style.display = 'block';
     }
 
-    gameOver() {
-        this.gameState = 'gameover';
-        
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-            this.animationId = null;
-        }
-        
-        // Update stats
-        this.statsManager.addGame(this.score, this.trianglesPassed);
-        this.gameData.save();
-        
-        // Check for new best score
-        if (this.score > this.bestScore) {
-            this.bestScore = this.score;
-            this.saveBestScore();
-        }
-        
-        // Check ball unlocks
-        this.ballManager.checkUnlocks(this.statsManager.getStats());
-        
-        const playIcon = document.getElementById('playIcon');
-        const pauseIcon = document.getElementById('pauseIcon');
-        if (playIcon) playIcon.style.display = 'block';
-        if (pauseIcon) pauseIcon.style.display = 'none';
-        
-        setTimeout(() => {
-            alert(`Game Over!\nScore: ${this.score}\nTriangles: ${this.trianglesPassed}`);
-        }, 500);
-    }
-
     addObstacle(z) {
-        const lane = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
+        const lane = Math.floor(Math.random() * 3) - 1;
         const size = CONFIG.OBSTACLES.MIN_SIZE + 
                     Math.random() * (CONFIG.OBSTACLES.MAX_SIZE - CONFIG.OBSTACLES.MIN_SIZE);
         
@@ -243,7 +204,6 @@ class SpeedballGame {
     update() {
         if (this.gameState !== 'playing') return;
 
-        // Update speed every 10 triangles
         if (this.trianglesPassed >= this.lastSpeedIncrease + CONFIG.GAME.SPEED_INCREMENT_INTERVAL) {
             const increments = Math.floor(this.trianglesPassed / CONFIG.GAME.SPEED_INCREMENT_INTERVAL);
             this.currentSpeed = CONFIG.GAME.BASE_SPEED * 
@@ -252,21 +212,13 @@ class SpeedballGame {
                                     CONFIG.GAME.SPEED_INCREMENT_INTERVAL;
         }
 
-        // Update ball
         if (this.ballManager.currentBall) {
             this.ballManager.currentBall.update();
         }
 
-        // Update road
         this.roadManager.update(this.currentSpeed);
-
-        // Update obstacles
         this.updateObstacles();
-
-        // Update particles
         this.updateParticles();
-
-        // Update UI
         this.updateUI();
     }
 
@@ -278,7 +230,6 @@ class SpeedballGame {
             obs.z += this.currentSpeed * 0.1;
             obs.rotation += obs.rotationSpeed;
 
-            // Check collision
             if (!obs.hit && obs.z > -1 && obs.z < 1) {
                 const dist = Math.sqrt(
                     Math.pow(obs.x - ball.x, 2) + 
@@ -290,13 +241,10 @@ class SpeedballGame {
                     this.trianglesPassed++;
                     this.score += obs.number;
                     this.createParticles(obs.x, obs.y, obs.z, obs.color);
-                    
-                    // Save progress
                     this.gameData.addScore(obs.number);
                 }
             }
 
-            // Remove if passed
             if (obs.z > 15) {
                 const lastZ = Math.min(...this.obstacles.map(o => o.z));
                 this.addObstacle(lastZ - CONFIG.OBSTACLES.SPAWN_DISTANCE);
@@ -322,22 +270,16 @@ class SpeedballGame {
         const w = this.canvas.width;
         const h = this.canvas.height;
 
-        // Clear with fade
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fillRect(0, 0, w, h);
 
-        // Render road
         this.roadManager.render(ctx, this.canvas);
-
-        // Render obstacles
         this.renderObstacles();
 
-        // Render ball
         if (this.ballManager.currentBall) {
             this.ballManager.currentBall.render(ctx, this.canvas);
         }
 
-        // Render particles
         this.renderParticles();
     }
 
@@ -358,18 +300,6 @@ class SpeedballGame {
             ctx.translate(screenX, screenY);
             ctx.rotate(obs.rotation);
 
-            // Shadow
-            if (CONFIG.GRAPHICS.SHADOWS) {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                ctx.beginPath();
-                ctx.moveTo(0, -size + 5);
-                ctx.lineTo(-size * 0.866 + 5, size * 0.5 + 5);
-                ctx.lineTo(size * 0.866 + 5, size * 0.5 + 5);
-                ctx.closePath();
-                ctx.fill();
-            }
-
-            // Glow
             if (CONFIG.GRAPHICS.GLOW_EFFECTS) {
                 const glowGradient = ctx.createRadialGradient(0, 0, size * 0.5, 0, 0, size * 1.5);
                 glowGradient.addColorStop(0, obs.color + '80');
@@ -380,7 +310,6 @@ class SpeedballGame {
                 ctx.fill();
             }
 
-            // Triangle
             const gradient = ctx.createLinearGradient(0, -size, 0, size);
             gradient.addColorStop(0, obs.color);
             gradient.addColorStop(1, obs.color + '80');
@@ -392,12 +321,10 @@ class SpeedballGame {
             ctx.closePath();
             ctx.fill();
 
-            // Outline
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Number
             ctx.fillStyle = '#000';
             ctx.font = `bold ${size * 0.6}px Arial`;
             ctx.textAlign = 'center';
@@ -453,9 +380,7 @@ class SpeedballGame {
     saveBestScore() {
         try {
             localStorage.setItem('speedballBestScore', this.bestScore.toString());
-        } catch (e) {
-            console.error('Failed to save best score:', e);
-        }
+        } catch (e) {}
     }
 
     loadBestScore() {
@@ -463,7 +388,6 @@ class SpeedballGame {
             const saved = localStorage.getItem('speedballBestScore');
             this.bestScore = saved ? parseInt(saved) : 0;
         } catch (e) {
-            console.error('Failed to load best score:', e);
             this.bestScore = 0;
         }
     }
@@ -494,39 +418,37 @@ class SpeedballGame {
     }
 }
 
-// Initialize game when page loads
+// Initialize
 let game;
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, creating game...');
+    console.log('🌐 DOM loaded');
     try {
         game = new SpeedballGame();
-        window.game = game; // Make it globally accessible
-        console.log('Game created successfully!');
+        window.game = game;
+        console.log('✅ Game ready!');
     } catch (error) {
-        console.error('Error creating game:', error);
+        console.error('❌ Error:', error);
     }
 });
 
-// Global functions for buttons
+// Global functions
 function startGame() {
-    console.log('startGame function called');
-    if (game) {
-        game.startGame();
+    console.log('🎮 startGame called');
+    if (window.game) {
+        window.game.startGame();
     } else {
-        console.error('Game not initialized!');
+        console.error('❌ Game not found!');
     }
 }
 
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('active');
-    }
+    if (modal) modal.classList.add('active');
 }
 
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('active');
-    }
+    if (modal) modal.classList.remove('active');
 }
+
+console.log('✅ GAME loaded');
