@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedBall 3D - OAuth Callback</title>
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .callback-container {
+            max-width: 500px;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+        
+        .logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        h1 {
+            color: #00ff88;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .message {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+        }
+        
+        .error {
+            color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .success {
+            color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .redirect-info {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 15px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #000;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s;
+            display: none;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="callback-container">
+        <div class="logo">⚽</div>
+        <h1>SpeedBall 3D</h1>
+        
+        <div id="loadingState">
+            <div class="spinner"></div>
+            <p class="message">جاري المصادقة...</p>
+            <p class="redirect-info">يرجى الانتظار...</p>
+        </div>
+        
+        <div id="successState" class="success">
+            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 10px;"></i>
+            <p>✅ تم تسجيل الدخول بنجاح!</p>
+        </div>
+        
+        <div id="errorState" class="error">
+            <i class="fas fa-times-circle" style="font-size: 48px; margin-bottom: 10px;"></i>
+            <p id="errorMessage">حدث خطأ أثناء المصادقة</p>
+        </div>
+        
+        <button id="manualRedirect" class="btn" onclick="manualRedirect()">
+            العودة إلى اللعبة
+        </button>
+    </div>
+    
+    <script>
+        // بيانات الاتصال بـ Supabase
+        const SUPABASE_URL = 'https://byxbwljcwevywrgjuvkn.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5eGJ3bGpjd2V2eXdyZ2p1dmtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYwMTI4MDAsImV4cCI6MjA1MTU4ODgwMH0.zWY6EAOczT_nhiscFxqHQA_hboO8gpf';
+        
+        let supabaseClient;
+        let redirectTimer;
+        
+        // تهيئة Supabase ومعالجة OAuth
+        async function initializeAuth() {
+            try {
+                console.log('🔐 Initializing OAuth callback...');
+                
+                // إنشاء عميل Supabase
+                if (window.supabase) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                } else {
+                    throw new Error('Supabase library not loaded');
+                }
+                
+                // الحصول على الجلسة من URL
+                const { data, error } = await supabaseClient.auth.getSession();
+                
+                if (error) throw error;
+                
+                if (data.session) {
+                    console.log('✅ OAuth successful:', data.session.user.email);
+                    
+                    // حفظ بيانات اللاعب
+                    await savePlayerData(data.session.user);
+                    
+                    // عرض رسالة النجاح
+                    showSuccess();
+                    
+                    // إعادة التوجيه التلقائي
+                    startRedirectTimer();
+                } else {
+                    throw new Error('No session found');
+                }
+                
+            } catch (error) {
+                console.error('❌ OAuth error:', error);
+                showError(error.message);
+            }
+        }
+        
+        // حفظ بيانات اللاعب
+        async function savePlayerData(user) {
+            try {
+                const username = user.user_metadata?.full_name || 
+                                user.user_metadata?.name || 
+                                user.email.split('@')[0];
+                
+                const { error } = await supabaseClient
+                    .from('players')
+                    .upsert({
+                        user_id: user.id,
+                        username: username,
+                        email: user.email,
+                        high_score: 0,
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'user_id'
+                    });
+                
+                if (error) {
+                    console.error('⚠️ Error saving player data:', error);
+                }
+            } catch (error) {
+                console.error('⚠️ Error in savePlayerData:', error);
+            }
+        }
+        
+        // عرض رسالة النجاح
+        function showSuccess() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('successState').style.display = 'block';
+            document.getElementById('manualRedirect').style.display = 'inline-block';
+        }
+        
+        // عرض رسالة الخطأ
+        function showError(message) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message || 'حدث خطأ غير متوقع';
+            document.getElementById('manualRedirect').style.display = 'inline-block';
+        }
+        
+        // بدء مؤقت إعادة التوجيه
+        function startRedirectTimer() {
+            let seconds = 3;
+            const redirectInfo = document.querySelector('.redirect-info');
+            
+            redirectTimer = setInterval(() => {
+                seconds--;
+                redirectInfo.textContent = `سيتم توجيهك خلال ${seconds} ثوانٍ...`;
+                
+                if (seconds <= 0) {
+                    clearInterval(redirectTimer);
+                    redirect();
+                }
+            }, 1000);
+        }
+        
+        // إعادة التوجيه إلى الصفحة الرئيسية
+        function redirect() {
+            // محاولة إغلاق النافذة المنبثقة أولاً
+            if (window.opener) {
+                window.opener.location.reload();
+                window.close();
+            } else {
+                // إعادة التوجيه العادي
+                window.location.href = '/';
+            }
+        }
+        
+        // إعادة التوجيه اليدوي
+        function manualRedirect() {
+            clearInterval(redirectTimer);
+            redirect();
+        }
+        
+        // بدء المصادقة عند تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', () => {
+            // انتظار تحميل مكتبة Supabase
+            const checkSupabase = setInterval(() => {
+                if (window.supabase) {
+                    clearInterval(checkSupabase);
+                    initializeAuth();
+                }
+            }, 100);
+            
+            // timeout بعد 10 ثوانٍ
+            setTimeout(() => {
+                clearInterval(checkSupabase);
+                if (!supabaseClient) {
+                    showError('فشل تحميل مكتبة المصادقة');
+                }
+            }, 10000);
+        });
+        
+        // معالجة حدث تغيير المصادقة
+        window.addEventListener('hashchange', () => {
+            console.log('🔄 Hash changed, reinitializing...');
+            initializeAuth();
+        });
+    </script>
+</body>
+</html>
