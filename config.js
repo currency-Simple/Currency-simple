@@ -54,7 +54,7 @@ const CONFIG = {
 
     // Graphics Settings
     GRAPHICS: {
-        QUALITY: 'medium', // low, medium, high, ultra
+        QUALITY: 'medium',
         PARTICLE_EFFECTS: true,
         GLOW_EFFECTS: true,
         SHADOWS: true,
@@ -76,63 +76,4 @@ const CONFIG = {
     }
 };
 
-// Color Schemes
-const COLOR_SCHEMES = {
-    neon: {
-        primary: '#00ffff',
-        secondary: '#ff00ff',
-        accent: '#00ff00',
-        background: '#000000'
-    },
-    sunset: {
-        primary: '#ff6b6b',
-        secondary: '#ffd93d',
-        accent: '#ff8c42',
-        background: '#1a1a2e'
-    },
-    ocean: {
-        primary: '#0077be',
-        secondary: '#00d9ff',
-        accent: '#00ffb3',
-        background: '#001219'
-    },
-    forest: {
-        primary: '#00ff00',
-        secondary: '#7fff00',
-        accent: '#00ff88',
-        background: '#0a2f0a'
-    }
-};
-
-// Export configuration
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { CONFIG, COLOR_SCHEMES };
-}FOG_DENSITY: 0.013,
-        ENABLE_BALL_GLOW: false
-    },
-
-    // Colors
-    COLORS: {
-        OBSTACLE: 0xffff00,
-        COIN: 0xffd700,
-        BACKGROUND: 0x0a0a0a,
-        CENTER_LINE: 0xffffff // خط أبيض في الوسط
-    },
-
-    // Input
-    INPUT: {
-        SWIPE_THRESHOLD: 45
-    },
-
-    // Storage Keys
-    STORAGE: {
-        HIGH_SCORE: 'rushHighScore',
-        GAME_DATA: 'rushGameData',
-        STATS: 'rushStats'
-    }
-};
-
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = CONFIG;
-}
+console.log('✅ CONFIG loaded');
