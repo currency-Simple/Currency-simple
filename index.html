@@ -13,6 +13,164 @@
     
     <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
+    
+    <style>
+        .hidden { display: none !important; }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background: #00ff88;
+            color: black;
+        }
+        
+        .social-login {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-canvas {
+            width: 100%;
+            height: 70vh;
+            background: linear-gradient(#1a1a2e, #16213e);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ball {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle at 30% 30%, #ff6b35, #ff4757);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.5);
+        }
+        
+        .road {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 200px;
+            background: #333;
+        }
+        
+        .road-line {
+            position: absolute;
+            width: 100%;
+            height: 10px;
+            background: yellow;
+        }
+        
+        .game-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+        }
+        
+        .game-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
     <!-- Loading Screen -->
@@ -61,7 +219,7 @@
     </div>
 
     <!-- Game Container -->
-    <div id="gameContainer">
+    <div id="gameContainer" class="hidden">
         <!-- Header -->
         <header class="game-header">
             <div class="logo">
@@ -82,26 +240,6 @@
                 </button>
             </div>
         </header>
-
-        <!-- Game Stats -->
-        <div class="game-stats">
-            <div class="stat-item">
-                <i class="fas fa-heart"></i>
-                <span id="lives">3</span>
-            </div>
-            <div class="stat-item">
-                <i class="fas fa-star"></i>
-                <span id="score">0</span>
-            </div>
-            <div class="stat-item">
-                <i class="fas fa-trophy"></i>
-                <span id="highScore">0</span>
-            </div>
-            <div class="stat-item">
-                <i class="fas fa-tachometer-alt"></i>
-                <span id="speed">1x</span>
-            </div>
-        </div>
 
         <!-- Game Canvas -->
         <div id="gameCanvas" class="game-canvas">
@@ -154,54 +292,32 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Instructions Screen -->
-            <div id="instructionsScreen" class="game-screen hidden">
-                <div class="screen-content">
-                    <h2>كيفية اللعب</h2>
-                    <div class="instructions">
-                        <p><i class="fas fa-mouse-pointer"></i> انقر في أي مكان للقفز</p>
-                        <p><i class="fas fa-exclamation-triangle"></i> تجنب العوائق الحمراء</p>
-                        <p><i class="fas fa-star"></i> اجمع النقاط لزيادة السرعة</p>
-                        <p><i class="fas fa-heart"></i> لديك 3 محاولات فقط</p>
-                    </div>
-                    <button class="btn btn-primary" onclick="hideInstructions()">
-                        <i class="fas fa-check"></i> فهمت
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Leaderboard Screen -->
-            <div id="leaderboardScreen" class="game-screen hidden">
-                <div class="screen-content">
-                    <h2><i class="fas fa-trophy"></i> المتصدرين</h2>
-                    <div id="leaderboardList" class="leaderboard-list">
-                        <p class="loading">جاري التحميل...</p>
-                    </div>
-                    <button class="btn btn-secondary" onclick="hideLeaderboard()">
-                        <i class="fas fa-arrow-right"></i> رجوع
-                    </button>
-                </div>
-            </div>
         </div>
 
         <!-- Control Buttons -->
         <div class="game-controls">
-            <button id="pauseBtn" class="btn btn-control hidden" onclick="togglePause()">
-                <i class="fas fa-pause"></i>
-            </button>
             <button id="soundBtn" class="btn btn-control" onclick="toggleSound()">
                 <i class="fas fa-volume-up"></i>
             </button>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts بالترتيب الصحيح -->
+    <script>
+        // تهيئة متغيرات عالمية
+        window.gameState = 'menu';
+        window.score = 0;
+        window.highScore = 0;
+        window.lives = 3;
+        window.speed = 1;
+        window.supabaseClient = null;
+    </script>
+    
+    <!-- ملف Supabase أولاً -->
     <script src="supabase-client.js"></script>
+    
+    <!-- ثم ملفات اللعبة -->
     <script src="auth.js"></script>
-    <script src="ball.js"></script>
-    <script src="obstacles.js"></script>
-    <script src="game.js"></script>
     <script src="main.js"></script>
 </body>
 </html>
