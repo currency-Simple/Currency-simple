@@ -8,16 +8,26 @@
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Stylesheet -->
-    <link rel="stylesheet" href="style.css">
-    
     <style>
-        .hidden { display: none !important; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        .loading-screen {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* شاشة التحميل */
+        #loadingScreen {
             position: fixed;
             top: 0;
             left: 0;
@@ -28,7 +38,6 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: white;
             z-index: 9999;
         }
         
@@ -46,44 +55,36 @@
             to { transform: rotate(360deg); }
         }
         
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+        /* شاشة اللعبة */
+        #gameContainer {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* الهيدر */
+        .game-header {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 30px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
             border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-            position: relative;
+            margin-bottom: 20px;
         }
         
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: bold;
         }
         
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .btn {
@@ -92,77 +93,253 @@
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn-login {
+            background: #00ff88;
+            color: black;
+        }
+        
+        #userProfile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 255, 136, 0.1);
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid #00ff88;
+        }
+        
+        /* نافذة المصادقة */
+        #authModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #1e1e2e, #2d2d44);
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            border: 2px solid #00ff88;
+            box-shadow: 0 20px 60px rgba(0, 255, 136, 0.3);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .modal-content h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #00ff88;
+        }
+        
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .modal-content input:focus {
+            outline: none;
+            border-color: #00ff88;
         }
         
         .btn-primary {
-            background: #00ff88;
+            width: 100%;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
             color: black;
+            font-size: 16px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: rgba(255, 255, 255, 0.5);
         }
         
         .social-login {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin: 20px 0;
         }
         
-        .game-header {
+        .social-login button {
             display: flex;
-            justify-content: space-between;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
         }
         
+        .btn-google {
+            background: white;
+            color: black;
+        }
+        
+        .btn-discord {
+            background: #5865F2;
+            color: white;
+        }
+        
+        .btn-github {
+            background: #333;
+            color: white;
+        }
+        
+        .toggle-auth {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .toggle-auth a {
+            color: #00ff88;
+            text-decoration: none;
+        }
+        
+        /* منطقة اللعبة */
         .game-canvas {
             width: 100%;
-            height: 70vh;
+            height: 500px;
             background: linear-gradient(#1a1a2e, #16213e);
             position: relative;
             overflow: hidden;
-        }
-        
-        .ball {
-            width: 50px;
-            height: 50px;
-            background: radial-gradient(circle at 30% 30%, #ff6b35, #ff4757);
-            border-radius: 50%;
-            position: absolute;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.5);
+            border-radius: 10px;
+            margin-bottom: 20px;
         }
         
         .road {
             position: absolute;
             bottom: 0;
             width: 100%;
-            height: 200px;
+            height: 150px;
             background: #333;
         }
         
         .road-line {
             position: absolute;
             width: 100%;
-            height: 10px;
+            height: 5px;
             background: yellow;
         }
         
+        .road-line-1 { top: 50px; }
+        .road-line-2 { top: 100px; }
+        
+        .ball {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 30% 30%, #ff6b35, #ff4757);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.5);
+            transition: bottom 0.3s;
+        }
+        
+        /* الشاشات */
         .game-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            color: white;
             text-align: center;
         }
         
+        .screen-content {
+            max-width: 500px;
+            padding: 40px;
+        }
+        
+        .game-title {
+            font-size: 48px;
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+        
+        .game-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+        }
+        
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .btn-play {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: black;
+            font-size: 20px;
+            padding: 15px;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .game-over-title {
+            font-size: 36px;
+            color: #ff4757;
+            margin-bottom: 30px;
+        }
+        
+        .final-stats {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .final-stats p {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+        
+        /* التحكم */
         .game-controls {
             position: fixed;
             bottom: 20px;
@@ -170,44 +347,54 @@
             display: flex;
             gap: 10px;
         }
+        
+        .btn-control {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div id="loadingScreen" class="loading-screen">
+    <!-- شاشة التحميل -->
+    <div id="loadingScreen">
         <div class="loading-spinner"></div>
         <p>جاري التحميل...</p>
     </div>
 
-    <!-- Auth Modal -->
-    <div id="authModal" class="modal hidden">
+    <!-- نافذة المصادقة -->
+    <div id="authModal" class="hidden">
         <div class="modal-content">
-            <button class="close-btn" onclick="closeAuthModal()">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="close-btn" onclick="closeAuthModal()">×</button>
             
             <h2 id="authTitle">تسجيل الدخول</h2>
             
             <div id="authForm">
                 <input type="text" id="username" placeholder="اسم المستخدم" class="hidden">
-                <input type="email" id="email" placeholder="البريد الإلكتروني" required>
-                <input type="password" id="password" placeholder="كلمة المرور" required>
+                <input type="email" id="email" placeholder="البريد الإلكتروني">
+                <input type="password" id="password" placeholder="كلمة المرور">
                 
                 <button id="authSubmitBtn" class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt"></i> دخول
+                    دخول
                 </button>
                 
                 <div class="divider">أو</div>
                 
                 <div class="social-login">
                     <button class="btn btn-github" onclick="signInWithProvider('github')">
-                        <i class="fab fa-github"></i> GitHub
+                        تسجيل الدخول بـ GitHub
                     </button>
                     <button class="btn btn-google" onclick="signInWithProvider('google')">
-                        <i class="fab fa-google"></i> Google
+                        تسجيل الدخول بـ Google
                     </button>
                     <button class="btn btn-discord" onclick="signInWithProvider('discord')">
-                        <i class="fab fa-discord"></i> Discord
+                        تسجيل الدخول بـ Discord
                     </button>
                 </div>
                 
@@ -218,62 +405,40 @@
         </div>
     </div>
 
-    <!-- Game Container -->
+    <!-- حاوية اللعبة -->
     <div id="gameContainer" class="hidden">
-        <!-- Header -->
+        <!-- الهيدر -->
         <header class="game-header">
             <div class="logo">
-                <i class="fas fa-circle"></i>
+                <span>⚽</span>
                 <span>SpeedBall 3D</span>
             </div>
             
             <div class="user-info">
                 <div id="userProfile" class="hidden">
-                    <i class="fas fa-user-circle"></i>
-                    <span id="userName"></span>
-                    <button class="btn-logout" onclick="signOut()">
-                        <i class="fas fa-sign-out-alt"></i>
+                    <span id="userName">مستخدم</span>
+                    <button class="btn btn-login" onclick="signOut()" style="background: #ff4757; color: white;">
+                        خروج
                     </button>
                 </div>
                 <button id="loginBtn" class="btn btn-login" onclick="showAuthModal()">
-                    <i class="fas fa-sign-in-alt"></i> دخول
+                    دخول
                 </button>
             </div>
         </header>
 
-        <!-- Game Canvas -->
+        <!-- منطقة اللعبة -->
         <div id="gameCanvas" class="game-canvas">
-            <!-- Road -->
+            <!-- الطريق -->
             <div class="road">
                 <div class="road-line road-line-1"></div>
                 <div class="road-line road-line-2"></div>
-                <div class="road-line road-line-3"></div>
             </div>
             
-            <!-- Ball -->
+            <!-- الكرة -->
             <div id="ball" class="ball"></div>
             
-            <!-- Obstacles Container -->
-            <div id="obstaclesContainer"></div>
-            
-            <!-- Game Over Screen -->
-            <div id="gameOverScreen" class="game-screen hidden">
-                <div class="screen-content">
-                    <h1 class="game-over-title">انتهت اللعبة!</h1>
-                    <div class="final-stats">
-                        <p>النتيجة: <span id="finalScore">0</span></p>
-                        <p>الأفضل: <span id="finalHighScore">0</span></p>
-                    </div>
-                    <button class="btn btn-primary" onclick="restartGame()">
-                        <i class="fas fa-redo"></i> لعب مرة أخرى
-                    </button>
-                    <button class="btn btn-secondary" onclick="showMenu()">
-                        <i class="fas fa-home"></i> القائمة
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Menu Screen -->
+            <!-- القائمة الرئيسية -->
             <div id="menuScreen" class="game-screen">
                 <div class="screen-content">
                     <h1 class="game-title">SpeedBall 3D</h1>
@@ -281,42 +446,43 @@
                     
                     <div class="menu-buttons">
                         <button class="btn btn-play" onclick="startGame()">
-                            <i class="fas fa-play"></i> ابدأ اللعبة
-                        </button>
-                        <button class="btn btn-secondary" onclick="showLeaderboard()">
-                            <i class="fas fa-trophy"></i> المتصدرين
+                            ابدأ اللعبة
                         </button>
                         <button class="btn btn-secondary" onclick="showInstructions()">
-                            <i class="fas fa-question-circle"></i> كيف تلعب
+                            كيف تلعب
                         </button>
                     </div>
                 </div>
             </div>
+            
+            <!-- شاشة نهاية اللعبة -->
+            <div id="gameOverScreen" class="game-screen hidden">
+                <div class="screen-content">
+                    <h1 class="game-over-title">انتهت اللعبة!</h1>
+                    <div class="final-stats">
+                        <p>النتيجة: <span id="finalScore">0</span></p>
+                        <p>الأفضل: <span id="finalHighScore">0</span></p>
+                    </div>
+                    <button class="btn btn-play" onclick="restartGame()">
+                        لعب مرة أخرى
+                    </button>
+                    <button class="btn btn-secondary" onclick="showMenu()">
+                        القائمة
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- Control Buttons -->
+        <!-- أزرار التحكم -->
         <div class="game-controls">
             <button id="soundBtn" class="btn btn-control" onclick="toggleSound()">
-                <i class="fas fa-volume-up"></i>
+                🔊
             </button>
         </div>
     </div>
 
-    <!-- Scripts بالترتيب الصحيح -->
-    <script>
-        // تهيئة متغيرات عالمية
-        window.gameState = 'menu';
-        window.score = 0;
-        window.highScore = 0;
-        window.lives = 3;
-        window.speed = 1;
-        window.supabaseClient = null;
-    </script>
-    
-    <!-- ملف Supabase أولاً -->
+    <!-- السكريبتات -->
     <script src="supabase-client.js"></script>
-    
-    <!-- ثم ملفات اللعبة -->
     <script src="auth.js"></script>
     <script src="main.js"></script>
 </body>
