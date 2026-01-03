@@ -1,333 +1,227 @@
-// ==================== PROFILE.JS - إدارة ملف اللاعب ====================
-
-class ProfileManager {
+// نظام الملف الشخصي
+class ProfileSystem {
     constructor() {
-        this.currentUser = null;
-        this.userStats = {
-            gamesPlayed: 0,
-            totalScore: 0,
-            highScore: 0,
-            totalPlayTime: 0,
-            achievements: [],
-            lastPlayed: null
-        };
+        this.supabase = supabase;
+        this.playerStats = null;
         
-        this.loadUserStats();
+        this.bindEvents();
+        this.setupProfileModal();
     }
     
-    // ==================== تحميل إحصائيات المستخدم ====================
-    loadUserStats() {
-        const savedStats = LocalStorage.get(STORAGE_KEYS.STATS);
-        if (savedStats) {
-            this.userStats = { ...this.userStats, ...savedStats };
-            console.log('✅ User stats loaded from localStorage');
-        }
-    }
-    
-    // ==================== حفظ إحصائيات المستخدم ====================
-    saveUserStats() {
-        LocalStorage.set(STORAGE_KEYS.STATS, this.userStats);
-        console.log('💾 User stats saved');
-    }
-    
-    // ==================== تحديث الإحصائيات بعد اللعبة ====================
-    updateStatsAfterGame(score, playTime) {
-        this.userStats.gamesPlayed++;
-        this.userStats.totalScore += score;
-        this.userStats.totalPlayTime += playTime;
-        this.userStats.lastPlayed = new Date().toISOString();
-        
-        if (score > this.userStats.highScore) {
-            this.userStats.highScore = score;
-            this.onNewHighScore(score);
-        }
-        
-        this.saveUserStats();
-        this.checkAchievements();
-        
-        console.log('📊 Stats updated:', this.userStats);
-    }
-    
-    // ==================== عند تحقيق رقم قياسي جديد ====================
-    onNewHighScore(score) {
-        console.log(`🎉 New high score: ${score}`);
-        
-        if (window.gameUI) {
-            window.gameUI.showMessage(
-                `🎉 ${MESSAGES.GAME.NEW_HIGH_SCORE} ${StringUtils.formatNumber(score)}`,
-                3000,
-                'success'
-            );
-        }
-        
-        // حفظ في Supabase إذا كان المستخدم مسجل دخول
-        if (this.currentUser && window.saveScore) {
-            window.saveScore(score);
-        }
-    }
-    
-    // ==================== فحص الإنجازات ====================
-    checkAchievements() {
-        Object.values(ACHIEVEMENTS).forEach(achievement => {
-            if (achievement.condition(this.userStats)) {
-                this.unlockAchievement(achievement);
-            }
+    bindEvents() {
+        // زر الملف الشخصي في القائمة السفلية
+        document.querySelector('[data-screen="profile"]').addEventListener('click', () => {
+            this.openProfileModal();
         });
+        
+        // أزرار نافذة الملف الشخصي
+        document.getElementById('edit-profile').addEventListener('click', () => this.editProfile());
+        document.getElementById('close-profile').addEventListener('click', () => this.closeProfileModal());
     }
     
-    // ==================== فتح إنجاز ====================
-    unlockAchievement(achievement) {
-        // التحقق إذا كان الإنجاز محققاً بالفعل
-        if (this.userStats.achievements.includes(achievement.id)) {
+    async openProfileModal() {
+        try {
+            // جلب بيانات اللاعب الحالي
+            const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+            
+            if (userError) throw userError;
+            
+            if (!user) {
+                alert('يجب تسجيل الدخول أولاً');
+                return;
+            }
+            
+            // جلب إحصائيات اللاعب
+            await this.loadPlayerStats(user.id);
+            
+            // عرض نافذة الملف الشخصي
+            document.getElementById('profile-modal').style.display = 'flex';
+            
+            // تحديث البيانات في النافذة
+            this.updateProfileDisplay(user);
+            
+        } catch (error) {
+            console.error('Error opening profile:', error);
+            alert('حدث خطأ في تحميل الملف الشخصي');
+        }
+    }
+    
+    async loadPlayerStats(userId) {
+        try {
+            // جلب بيانات اللاعب
+            const { data: playerData, error: playerError } = await this.supabase
+                .from('players')
+                .select('*')
+                .eq('id', userId)
+                .single();
+            
+            if (playerError) throw playerError;
+            
+            // جلب إحصائيات النتائج
+            const { data: scoresData, error: scoresError } = await this.supabase
+                .from('scores')
+                .select('*')
+                .eq('player_id', userId);
+            
+            if (scoresError) throw scoresError;
+            
+            // حساب الإحصائيات
+            this.playerStats = {
+                ...playerData,
+                totalGames: scoresData.length,
+                totalPlayTime: scoresData.reduce((sum, score) => sum + (score.time || 0), 0),
+                averageScore: scoresData.length > 0 ? 
+                    Math.round(scoresData.reduce((sum, score) => sum + score.score, 0) / scoresData.length) : 0,
+                scoresHistory: scoresData
+            };
+            
+        } catch (error) {
+            console.error('Error loading player stats:', error);
+        }
+    }
+    
+    updateProfileDisplay(user) {
+        if (!user || !this.playerStats) return;
+        
+        // المعلومات الأساسية
+        document.getElementById('profile-username').textContent = 
+            this.playerStats.username || user.email.split('@')[0];
+        
+        document.getElementById('profile-email').textContent = user.email;
+        
+        // الإحصائيات
+        document.getElementById('profile-best-score').textContent = 
+            this.playerStats.best_score || 0;
+        
+        document.getElementById('profile-games-played').textContent = 
+            this.playerStats.totalGames || 0;
+        
+        // حساب الوقت الكلي
+        const totalMinutes = Math.floor((this.playerStats.totalPlayTime || 0) / 60);
+        const totalHours = Math.floor(totalMinutes / 60);
+        const remainingMinutes = totalMinutes % 60;
+        
+        document.getElementById('profile-total-time').textContent = 
+            `${totalHours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
+        
+        // تحديث صورة الملف الشخصي
+        this.updateProfileAvatar(user);
+        
+        // تحديث الترتيب العالمي
+        this.updateGlobalRank(user.id);
+    }
+    
+    async updateGlobalRank(userId) {
+        try {
+            // جلب أفضل 100 لاعب
+            const { data: topPlayers, error } = await this.supabase
+                .from('players')
+                .select('id, best_score')
+                .order('best_score', { ascending: false })
+                .limit(100);
+            
+            if (error) throw error;
+            
+            // البحث عن ترتيب اللاعب
+            const playerIndex = topPlayers.findIndex(player => player.id === userId);
+            const rank = playerIndex !== -1 ? playerIndex + 1 : '-';
+            
+            document.getElementById('profile-global-rank').textContent = `#${rank}`;
+            
+        } catch (error) {
+            console.error('Error updating global rank:', error);
+            document.getElementById('profile-global-rank').textContent = '#-';
+        }
+    }
+    
+    updateProfileAvatar(user) {
+        const avatar = document.getElementById('profile-avatar');
+        
+        // استخدام صورة جوجل إذا كانت موجودة
+        if (user.user_metadata?.avatar_url) {
+            avatar.innerHTML = `<img src="${user.user_metadata.avatar_url}" alt="الصورة الشخصية">`;
+            avatar.style.backgroundImage = `url(${user.user_metadata.avatar_url})`;
+            avatar.style.backgroundSize = 'cover';
+        } else {
+            // استخدام الأحرف الأولى من الاسم
+            const initials = this.getInitials(user.email || 'اللاعب');
+            avatar.innerHTML = `<span>${initials}</span>`;
+            avatar.style.background = this.getRandomGradient();
+        }
+    }
+    
+    getInitials(name) {
+        return name
+            .split(' ')
+            .map(word => word.charAt(0))
+            .join('')
+            .toUpperCase()
+            .substring(0, 2);
+    }
+    
+    getRandomGradient() {
+        const gradients = [
+            'linear-gradient(45deg, #FF5722, #FF9800)',
+            'linear-gradient(45deg, #2196F3, #03A9F4)',
+            'linear-gradient(45deg, #4CAF50, #8BC34A)',
+            'linear-gradient(45deg, #9C27B0, #E91E63)',
+            'linear-gradient(45deg, #00BCD4, #0097A7)'
+        ];
+        return gradients[Math.floor(Math.random() * gradients.length)];
+    }
+    
+    async editProfile() {
+        const newUsername = prompt('أدخل اسم المستخدم الجديد:', this.playerStats?.username || '');
+        
+        if (!newUsername || newUsername.trim() === '') {
             return;
         }
         
-        this.userStats.achievements.push(achievement.id);
-        this.saveUserStats();
-        
-        console.log(`🏆 Achievement unlocked: ${achievement.name}`);
-        
-        this.showAchievementNotification(achievement);
-    }
-    
-    // ==================== عرض إشعار الإنجاز ====================
-    showAchievementNotification(achievement) {
-        const notification = document.createElement('div');
-        notification.className = 'achievement-notification';
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #000;
-            padding: 20px 30px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 10000;
-            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.5);
-            animation: achievementSlide 4s ease-in-out;
-        `;
-        
-        notification.innerHTML = `
-            <div style="font-size: 48px;">${achievement.icon}</div>
-            <div>
-                <div style="font-size: 20px; font-weight: bold;">إنجاز جديد!</div>
-                <div style="font-size: 16px; margin-top: 5px;">${achievement.name}</div>
-                <div style="font-size: 12px; opacity: 0.8; margin-top: 3px;">${achievement.description}</div>
-            </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // صوت الإنجاز
-        this.playAchievementSound();
-        
-        setTimeout(() => {
-            notification.remove();
-        }, 4000);
-    }
-    
-    // ==================== صوت الإنجاز ====================
-    playAchievementSound() {
-        if (!window.soundEnabled) return;
-        
         try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const { data: { user }, error: userError } = await this.supabase.auth.getUser();
             
-            // نغمة صاعدة
-            [400, 500, 600, 800].forEach((freq, index) => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = freq;
-                oscillator.type = 'sine';
-                
-                const startTime = audioContext.currentTime + (index * 0.1);
-                gainNode.gain.setValueAtTime(0.2, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
-                
-                oscillator.start(startTime);
-                oscillator.stop(startTime + 0.3);
-            });
+            if (userError) throw userError;
+            
+            // تحديث اسم المستخدم في جدول players
+            const { error: updateError } = await this.supabase
+                .from('players')
+                .update({ username: newUsername.trim() })
+                .eq('id', user.id);
+            
+            if (updateError) throw updateError;
+            
+            // تحديث البيانات المحلية
+            this.playerStats.username = newUsername.trim();
+            
+            // إعادة تحميل البيانات
+            this.updateProfileDisplay(user);
+            
+            // تحديث الاسم في الشريط العلوي
+            document.getElementById('player-name').textContent = newUsername.trim();
+            
+            alert('تم تحديث الملف الشخصي بنجاح!');
+            
         } catch (error) {
-            console.warn('⚠️ Audio not supported:', error);
+            console.error('Error updating profile:', error);
+            alert('حدث خطأ في تحديث الملف الشخصي');
         }
     }
     
-    // ==================== الحصول على الإحصائيات ====================
-    getStats() {
-        return {
-            ...this.userStats,
-            averageScore: this.userStats.gamesPlayed > 0 
-                ? Math.floor(this.userStats.totalScore / this.userStats.gamesPlayed) 
-                : 0,
-            averagePlayTime: this.userStats.gamesPlayed > 0
-                ? Math.floor(this.userStats.totalPlayTime / this.userStats.gamesPlayed)
-                : 0
-        };
+    closeProfileModal() {
+        document.getElementById('profile-modal').style.display = 'none';
     }
     
-    // ==================== عرض ملف اللاعب ====================
-    showProfile() {
-        const stats = this.getStats();
-        const user = this.currentUser || { email: 'ضيف', user_metadata: { username: 'ضيف' } };
-        
-        const content = `
-            <div style="text-align: right;">
-                <h3 style="color: ${COLORS.UI.PRIMARY}; margin-bottom: 20px;">
-                    <i class="fas fa-user-circle"></i> ${user.user_metadata?.username || user.email}
-                </h3>
-                
-                <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                    <h4 style="color: ${COLORS.UI.PRIMARY}; margin-bottom: 10px;">📊 الإحصائيات</h4>
-                    <p>🎮 الألعاب: ${stats.gamesPlayed}</p>
-                    <p>⭐ أفضل نتيجة: ${StringUtils.formatNumber(stats.highScore)}</p>
-                    <p>📈 متوسط النتيجة: ${StringUtils.formatNumber(stats.averageScore)}</p>
-                    <p>⏱️ وقت اللعب: ${TimeUtils.formatTime(stats.totalPlayTime)}</p>
-                    ${stats.lastPlayed ? `<p>📅 آخر لعبة: ${TimeUtils.timeAgo(stats.lastPlayed)}</p>` : ''}
-                </div>
-                
-                <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px;">
-                    <h4 style="color: ${COLORS.UI.PRIMARY}; margin-bottom: 10px;">🏆 الإنجازات (${stats.achievements.length})</h4>
-                    <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-                        ${this.renderAchievements()}
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        if (window.uiManager) {
-            window.uiManager.showModal('ملف اللاعب', content, [
-                { text: 'إغلاق', type: 'btn-secondary' }
-            ]);
-        }
-    }
-    
-    // ==================== عرض الإنجازات ====================
-    renderAchievements() {
-        let html = '';
-        
-        Object.values(ACHIEVEMENTS).forEach(achievement => {
-            const unlocked = this.userStats.achievements.includes(achievement.id);
-            
-            html += `
-                <div style="
-                    background: ${unlocked ? 'rgba(0, 255, 136, 0.2)' : 'rgba(255, 255, 255, 0.05)'};
-                    padding: 10px;
-                    border-radius: 10px;
-                    text-align: center;
-                    min-width: 80px;
-                    border: 2px solid ${unlocked ? COLORS.UI.PRIMARY : 'transparent'};
-                    opacity: ${unlocked ? '1' : '0.5'};
-                " title="${achievement.description}">
-                    <div style="font-size: 32px; margin-bottom: 5px;">${achievement.icon}</div>
-                    <div style="font-size: 10px;">${achievement.name}</div>
-                </div>
-            `;
-        });
-        
-        return html || '<p style="opacity: 0.5;">لا توجد إنجازات بعد</p>';
-    }
-    
-    // ==================== تعيين المستخدم الحالي ====================
-    setCurrentUser(user) {
-        this.currentUser = user;
-        
-        if (user) {
-            console.log(`👤 Current user set: ${user.email}`);
-            this.syncWithSupabase();
-        }
-    }
-    
-    // ==================== مزامنة مع Supabase ====================
-    async syncWithSupabase() {
-        if (!this.currentUser) return;
-        
-        try {
-            const playerData = await loadPlayerData(this.currentUser.id);
-            
-            if (playerData && playerData.high_score > this.userStats.highScore) {
-                this.userStats.highScore = playerData.high_score;
-                window.highScore = playerData.high_score;
-                this.saveUserStats();
-                
-                console.log('✅ Stats synced with Supabase');
+    setupProfileModal() {
+        // إغلاق النافذة عند النقر خارجها
+        document.getElementById('profile-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('profile-modal')) {
+                this.closeProfileModal();
             }
-        } catch (error) {
-            console.error('❌ Error syncing with Supabase:', error);
-        }
-    }
-    
-    // ==================== إعادة تعيين الإحصائيات ====================
-    resetStats() {
-        if (window.uiManager) {
-            window.uiManager.showConfirm(
-                'هل أنت متأكد من إعادة تعيين جميع الإحصائيات؟ لا يمكن التراجع عن هذا الإجراء!',
-                () => {
-                    this.userStats = {
-                        gamesPlayed: 0,
-                        totalScore: 0,
-                        highScore: 0,
-                        totalPlayTime: 0,
-                        achievements: [],
-                        lastPlayed: null
-                    };
-                    
-                    this.saveUserStats();
-                    console.log('🔄 Stats reset');
-                    
-                    if (window.uiManager) {
-                        window.uiManager.showAlert('تم إعادة تعيين الإحصائيات', 'success');
-                    }
-                }
-            );
-        }
-    }
-    
-    // ==================== تصدير الملف ====================
-    exportProfile() {
-        const profile = {
-            user: this.currentUser?.email || 'Guest',
-            stats: this.getStats(),
-            exportDate: new Date().toISOString()
-        };
-        
-        const dataStr = JSON.stringify(profile, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `speedball_profile_${Date.now()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        
-        console.log('✅ Profile exported');
+        });
     }
 }
 
-// ==================== إضافة أنيميشن CSS ====================
-const profileStyles = document.createElement('style');
-profileStyles.textContent = `
-    @keyframes achievementSlide {
-        0% { transform: translateX(-50%) translateY(-100px); opacity: 0; }
-        10% { transform: translateX(-50%) translateY(0); opacity: 1; }
-        90% { transform: translateX(-50%) translateY(0); opacity: 1; }
-        100% { transform: translateX(-50%) translateY(-100px); opacity: 0; }
-    }
-`;
-document.head.appendChild(profileStyles);
-
-// ==================== إنشاء نسخة عامة ====================
-const profileManager = new ProfileManager();
-
-// ==================== تصدير ====================
-window.ProfileManager = ProfileManager;
-window.profileManager = profileManager;
-
-console.log('✅ Profile.js loaded successfully');
+// بدء نظام الملف الشخصي
+document.addEventListener('DOMContentLoaded', () => {
+    window.profileSystem = new ProfileSystem();
+});
