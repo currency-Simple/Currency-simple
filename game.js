@@ -18,6 +18,8 @@ class SpeedballGame {
         this.roadManager = new RoadManager();
         this.gameData = new GameData();
         this.statsManager = new StatsManager();
+        this.coinManager = new CoinManager();
+        this.settingsManager = new SettingsManager();
         
         this.obstacles = [];
         this.particles = [];
@@ -104,6 +106,7 @@ class SpeedballGame {
         
         this.obstacles = [];
         this.particles = [];
+        this.coinManager.initialize();
         
         if (this.ballManager.currentBall) {
             this.ballManager.currentBall.reset();
@@ -218,6 +221,12 @@ class SpeedballGame {
         // Update road
         this.roadManager.update(this.currentSpeed);
 
+        // Update coins
+        if (this.coinManager) {
+            const ballPos = this.ballManager.currentBall?.getPosition() || { x: 0, y: 0, z: 0 };
+            this.coinManager.update(this.currentSpeed, ballPos);
+        }
+
         // Update obstacles
         this.updateObstacles();
 
@@ -290,6 +299,11 @@ class SpeedballGame {
         // Render obstacles
         this.renderObstacles();
 
+        // Render coins
+        if (this.coinManager) {
+            this.coinManager.render(ctx, this.canvas);
+        }
+
         // Render ball
         if (this.ballManager.currentBall) {
             this.ballManager.currentBall.render(ctx, this.canvas);
@@ -340,15 +354,15 @@ class SpeedballGame {
 
             // Triangle
             const gradient = ctx.createLinearGradient(0, -size, 0, size);
-            gradient.addColorStop(0, obs.color);
-            gradient.addColorStop(1, obs.color + '80');
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.moveTo(0, -size);
-            ctx.lineTo(-size * 0.866, size * 0.5);
-            ctx.lineTo(size * 0.866, size * 0.5);
-            ctx.closePath();
-            ctx.fill();
+                gradient.addColorStop(0, obs.color);
+                gradient.addColorStop(1, obs.color + '80');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.moveTo(0, -size);
+                ctx.lineTo(-size * 0.866, size * 0.5);
+                ctx.lineTo(size * 0.866, size * 0.5);
+                ctx.closePath();
+                ctx.fill();
 
             // Outline
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
@@ -413,21 +427,30 @@ class SpeedballGame {
 
     showRoadModal() {
         openModal('roadModal');
-        populateRoadList();
+        if (typeof populateRoadList === 'function') {
+            populateRoadList();
+        }
     }
 
     showSphereModal() {
         openModal('sphereModal');
-        populateSphereGrid();
+        if (typeof populateSphereGrid === 'function') {
+            populateSphereGrid();
+        }
     }
 
     showStatsModal() {
         openModal('statsModal');
-        updateStatsDisplay();
+        if (typeof updateStatsDisplay === 'function') {
+            updateStatsDisplay();
+        }
     }
 
     showSettingsModal() {
         openModal('settingsModal');
+        if (typeof initializeSettingsUI === 'function') {
+            initializeSettingsUI();
+        }
     }
 }
 
@@ -445,170 +468,15 @@ function startGame() {
 }
 
 function openModal(modalId) {
-    document.getElementById(modalId).classList.add('active');
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('active');
+    }
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
-} gameState.maxSpeedReached = gameState.speedMultiplier;
-        }
-        
-        uiSystem.updateSpeedDisplay(gameState.speedMultiplier);
-    }
-    
-    if (coinsSystem.onObstaclePassed()) {
-        const lane = Math.floor(Math.random() * 2);
-        coinsSystem.createCoin(scene, lane);
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
     }
 }
-
-// ============================================
-// GAME UPDATE LOOP
-// ============================================
-
-function updateGame() {
-    if (!gameState.isPlaying || gameState.isPaused) return;
-    
-    patternProgress += gameState.speed * 2.5;
-    
-    if (patternProgress >= CONFIG.ROAD.PATTERN_DISTANCE) {
-        currentPatternIndex = (currentPatternIndex + 1) % CONFIG.ROAD_PATTERNS.length;
-        patternProgress = 0;
-    }
-    
-    const currentPattern = CONFIG.ROAD_PATTERNS[currentPatternIndex];
-    
-    if (currentPattern.xDir !== 0 || currentPattern.yDir !== 0) {
-        const moveSpeed = 0.02;
-        currentRoadOffset.x += currentPattern.xDir * moveSpeed;
-        currentRoadOffset.y += currentPattern.yDir * moveSpeed;
-    }
-    
-    // تحديث الطريق
-    road.forEach(segment => {
-        segment.position.z += gameState.speed * 2.5;
-        segment.position.x = currentRoadOffset.x;
-        segment.position.y = currentRoadOffset.y;
-        
-        if (segment.position.z > 15) {
-            segment.position.z -= CONFIG.ROAD.TOTAL_LENGTH;
-        }
-    });
-    
-    // تحريك الكرة (ثابتة في الارتفاع، بدون جاذبية)
-    const targetX = CONFIG.ROAD.LANE_POSITIONS[targetLane];
-    ball.position.x += (targetX - ball.position.x) * CONFIG.BALL.LANE_CHANGE_SPEED;
-    ball.position.y = CONFIG.BALL.FIXED_HEIGHT + CONFIG.BALL.SIZE; // ثابتة تماماً
-    
-    ball.rotation.x += 0.1;
-    ball.rotation.z += 0.05;
-    
-    // إنشاء مثلثات
-    obstacleSpawnTimer++;
-    if (obstacleSpawnTimer > CONFIG.OBSTACLE.SPAWN_INTERVAL) {
-        const lane = Math.floor(Math.random() * 2);
-        createObstacle(lane, lastObstacleNumber);
-        lastObstacleNumber = lastObstacleNumber >= CONFIG.GAME.MAX_OBSTACLE_NUMBER ? 1 : lastObstacleNumber + 1;
-        obstacleSpawnTimer = 0;
-    }
-    
-    // تحديث المثلثات
-    obstacles.forEach((obstacle, index) => {
-        obstacle.position.z += gameState.speed * 2.5;
-        obstacle.position.x = CONFIG.ROAD.LANE_POSITIONS[obstacle.userData.lane] + currentRoadOffset.x;
-        obstacle.position.y = CONFIG.OBSTACLE.HEIGHT / 2 + currentRoadOffset.y;
-        
-        if (obstacle.position.z > 8) {
-            scene.remove(obstacle);
-            obstacles.splice(index, 1);
-            addScore(1);
-        }
-    });
-    
-    // تحديث النقاط
-    coinsSystem.activeCoins.forEach((coin, index) => {
-        if (coin.userData.collected) return;
-        
-        coin.position.z += gameState.speed * 2.5;
-        coin.position.x = CONFIG.ROAD.LANE_POSITIONS[coin.userData.lane] + currentRoadOffset.x;
-        coin.position.y = CONFIG.COIN.HEIGHT + currentRoadOffset.y;
-        
-        coin.rotation.y += 0.05;
-        
-        if (coin.position.z > 10) {
-            if (coin.parent) coin.parent.remove(coin);
-            coinsSystem.activeCoins.splice(index, 1);
-        }
-    });
-    
-    coinsSystem.checkCoinCollection(ball);
-    
-    // تحديث الجزيئات
-    particles.forEach((particle, index) => {
-        if (particle.userData.velocity) {
-            particle.position.add(particle.userData.velocity);
-            particle.userData.velocity.y -= 0.02;
-        }
-        
-        particle.userData.life -= particle.userData.decay || 0.025;
-        particle.material.opacity = particle.userData.life;
-        
-        if (particle.userData.life <= 0) {
-            scene.remove(particle);
-            particles.splice(index, 1);
-        }
-    });
-    
-    // تحديث النجوم
-    stars.forEach(star => {
-        star.position.z += gameState.speed * 0.6;
-        if (star.position.z > 15) star.position.z -= 300;
-    });
-    
-    // تحديث الكاميرا (تتبع الكرة يمين/يسار)
-    const cameraTargetX = ball.position.x * CONFIG.CAMERA.HORIZONTAL_FOLLOW;
-    const cameraTargetZ = ball.position.z + CONFIG.CAMERA.DISTANCE;
-    
-    camera.position.x += (cameraTargetX - camera.position.x) * CONFIG.CAMERA.FOLLOW_SPEED;
-    camera.position.z += (cameraTargetZ - camera.position.z) * CONFIG.CAMERA.FOLLOW_SPEED;
-    camera.position.y = CONFIG.CAMERA.HEIGHT;
-    
-    camera.lookAt(
-        ball.position.x,
-        ball.position.y,
-        ball.position.z - CONFIG.CAMERA.LOOK_AHEAD
-    );
-    
-    if (checkCollision()) gameOver();
-}
-
-// ============================================
-// ANIMATION LOOP
-// ============================================
-
-function animate() {
-    requestAnimationFrame(animate);
-    updateGame();
-    renderer.render(scene, camera);
-}
-
-// ============================================
-// UTILITIES
-// ============================================
-
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-function applyGraphicsSettings(quality) {
-    const pixelRatios = { low: 1, medium: 1.5, high: 2 };
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatios[quality] || 2));
-}
-
-// ============================================
-// START
-// ============================================
-
-window.addEventListener('load', init);
