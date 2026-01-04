@@ -2,56 +2,49 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Rush 3D Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rush 3D - Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- حاوية اللعبة -->
     <div id="game-container">
-        <!-- طبقة الرسم -->
+        <!-- طبقة اللعبة -->
         <canvas id="gameCanvas"></canvas>
         
-        <!-- واجهة النتائج أثناء اللعب -->
+        <!-- النتائج -->
         <div id="hud">
-            <div class="score-box">النقاط: <span id="score">0</span></div>
-            <div class="speed-box">السرعة: <span id="speed">200</span>%</div>
+            <div id="score">0</div>
+            <div id="speed">200%</div>
         </div>
 
-        <!-- التعليمات -->
-        <div id="tutorial">اضغط الشاشة لتغيير المسار</div>
+        <!-- رسالة البداية -->
+        <div id="tutorial-text">اضغط البداية ▶️</div>
 
-        <!-- واجهة المستخدم السفلية -->
-        <nav id="ui-nav">
-            <button class="nav-btn" onclick="UI.openModal('roads')">🛣️</button>
-            <button class="nav-btn" onclick="UI.openModal('balls')">⚪</button>
-            <button class="nav-btn main-play" onclick="Game.toggle()">▶️</button>
-            <button class="nav-btn" onclick="UI.openModal('leaderboard')">📊</button>
-            <button class="nav-btn" onclick="UI.openModal('settings')">⚙️</button>
-        </nav>
+        <!-- الأزرار السفلية -->
+        <div id="ui-nav">
+            <button class="btn" onclick="UI.openModal('roads')">🛣️</button>
+            <button class="btn" onclick="UI.openModal('balls')">⚪</button>
+            <button class="btn main-btn" onclick="Game.toggle()">▶️</button>
+            <button class="btn" onclick="UI.openModal('leaderboard')">📊</button>
+            <button class="btn" onclick="UI.openModal('settings')">⚙️</button>
+        </div>
     </div>
 
-    <!-- النوافذ المنبثقة (Modals) -->
-    <div id="modal-overlay" class="modal hidden">
-        <div class="modal-content">
+    <!-- النافذة المنبثقة -->
+    <div id="modal" class="hidden">
+        <div class="modal-box">
             <h2 id="modal-title">عنوان</h2>
-            <div id="modal-body"></div>
+            <div id="modal-content"></div>
             <button class="close-btn" onclick="UI.closeModal()">إغلاق</button>
         </div>
     </div>
 
-    <!-- تحميل الملفات البرمجية بالترتيب -->
-    <script src="game.js"></script>
+    <!-- تحميل الملفات: الترتيب مهم جداً -->
     <script src="roads.js"></script>
     <script src="balls.js"></script>
     <script src="ui.js"></script>
-
-    <!-- بدء التشغيل -->
-    <script>
-        window.onload = function() {
-            Game.init();
-        };
-    </script>
+    <script src="game.js"></script>
+    
 </body>
 </html>
