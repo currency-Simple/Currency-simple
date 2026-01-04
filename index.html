@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة الكرة 3D - 3D Ball Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- شاشة اللعبة -->
+    <div id="game-container"></div>
+    
+    <!-- واجهة المستخدم -->
+    <div id="ui-overlay">
+        <!-- معلومات اللعبة -->
+        <div id="game-info">
+            <div class="info-item">
+                <span class="label">النقاط:</span>
+                <span id="score">0</span>
+            </div>
+            <div class="info-item">
+                <span class="label">السرعة:</span>
+                <span id="speed">300%</span>
+            </div>
+        </div>
+
+        <!-- الأزرار التفاعلية -->
+        <div id="control-buttons">
+            <button id="btn-settings" class="control-btn">
+                <span>⚙️</span>
+                <span>إعدادات</span>
+            </button>
+            <button id="btn-balls" class="control-btn">
+                <span>⚽</span>
+                <span>كرات</span>
+            </button>
+            <button id="btn-roads" class="control-btn">
+                <span>🛣️</span>
+                <span>طرقات</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- نافذة الإعدادات -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" data-modal="settings">&times;</span>
+            <h2>الإعدادات</h2>
+            <div class="setting-item">
+                <label>السرعة الابتدائية:</label>
+                <input type="range" id="initial-speed" min="200" max="500" value="300">
+                <span id="speed-value">300%</span>
+            </div>
+            <div class="setting-item">
+                <label>الصوت:</label>
+                <input type="checkbox" id="sound-toggle" checked>
+            </div>
+            <button id="reset-game" class="action-btn">إعادة تشغيل اللعبة</button>
+        </div>
+    </div>
+
+    <!-- نافذة الكرات -->
+    <div id="balls-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" data-modal="balls">&times;</span>
+            <h2>اختر الكرة</h2>
+            <div id="ball-options" class="options-grid">
+                <div class="ball-option" data-color="#ff0066">
+                    <div class="ball-preview" style="background: #ff0066;"></div>
+                    <span>وردي</span>
+                </div>
+                <div class="ball-option" data-color="#00ff88">
+                    <div class="ball-preview" style="background: #00ff88;"></div>
+                    <span>أخضر</span>
+                </div>
+                <div class="ball-option" data-color="#ffaa00">
+                    <div class="ball-preview" style="background: #ffaa00;"></div>
+                    <span>برتقالي</span>
+                </div>
+                <div class="ball-option" data-color="#00aaff">
+                    <div class="ball-preview" style="background: #00aaff;"></div>
+                    <span>أزرق</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الطرقات -->
+    <div id="roads-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" data-modal="roads">&times;</span>
+            <h2>نوع الطريق</h2>
+            <div id="road-options" class="options-grid">
+                <div class="road-option" data-type="classic">
+                    <div class="road-preview road-classic"></div>
+                    <span>كلاسيكي</span>
+                </div>
+                <div class="road-option" data-type="neon">
+                    <div class="road-preview road-neon"></div>
+                    <span>نيون</span>
+                </div>
+                <div class="road-option" data-type="gradient">
+                    <div class="road-preview road-gradient"></div>
+                    <span>متدرج</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- رسالة البداية -->
+    <div id="start-screen">
+        <h1>لعبة الكرة 3D</h1>
+        <p>اضغط الأسهم لتحريك الكرة يميناً ويساراً</p>
+        <button id="start-btn" class="action-btn">ابدأ اللعب</button>
+    </div>
+
+    <!-- رسالة نهاية اللعبة -->
+    <div id="game-over-screen" style="display: none;">
+        <h1>انتهت اللعبة!</h1>
+        <p>نقاطك: <span id="final-score">0</span></p>
+        <button id="restart-btn" class="action-btn">العب مرة أخرى</button>
+    </div>
+
+    <!-- مكتبة Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- ملفات اللعبة -->
+    <script src="game.js"></script>
+    <script src="ball.js"></script>
+    <script src="road.js"></script>
+    <script src="ui.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>h2>
+                <button class="close-btn" onclick="closeModal('sphereModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sphere-grid" id="sphereGrid"></div>
+                <button class="btn-primary" onclick="closeModal('sphereModal')">Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Road Builder Modal -->
+    <div class="modal" id="roadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🛣️ Road Patterns</h2>
+                <button class="close-btn" onclick="closeModal('roadModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="road-list" id="roadList"></div>
+                <button class="btn-primary" onclick="closeModal('roadModal')">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal" id="statsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 Statistics</h2>
+                <button class="close-btn" onclick="closeModal('statsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalGames">0</div>
+                        <div class="stat-label">Total Games</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="highestScore">0</div>
+                        <div class="stat-label">Highest Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalTriangles">0</div>
+                        <div class="stat-label">Total Triangles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avgSpeed">300%</div>
+                        <div class="stat-label">Avg Speed</div>
+                    </div>
+                </div>
+                <button class="btn-danger" onclick="resetStats()">Reset Statistics</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-content">
+            <h1 class="game-title">SPEEDBALL</h1>
+            <p class="game-subtitle">3D Racing Challenge</p>
+            <div class="welcome-instructions">
+                <p>🎯 Tap screen to move left/right</p>
+                <p>🔺 Collect triangles to score</p>
+                <p>⚡ Speed increases every 10 triangles</p>
+            </div>
+            <button class="btn-start" onclick="startGame()">START GAME</button>
+        </div>
+    </div>
+
+    <!-- Load JavaScript Files -->
+    <script src="config.js"></script>
+    <script src="balls.js"></script>
+    <script src="roads.js"></script>
+    <script src="coins.js"></script>
+    <script src="game-data.js"></script>
+    <script src="stats.js"></script>
+    <script src="settings.js"></script>
+    <script src="ui.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
