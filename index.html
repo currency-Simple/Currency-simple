@@ -2,137 +2,56 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة الكرة 3D - 3D Ball Game</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Rush 3D Game</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- شاشة اللعبة -->
-    <div id="game-container"></div>
-    
-    <!-- واجهة المستخدم -->
-    <div id="ui-overlay">
-        <!-- معلومات اللعبة -->
-        <div id="game-info">
-            <div class="info-item">
-                <span class="label">النقاط:</span>
-                <span id="score">0</span>
-            </div>
-            <div class="info-item">
-                <span class="label">السرعة:</span>
-                <span id="speed">300%</span>
-            </div>
+
+    <!-- حاوية اللعبة -->
+    <div id="game-container">
+        <!-- طبقة الرسم -->
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- واجهة النتائج أثناء اللعب -->
+        <div id="hud">
+            <div class="score-box">النقاط: <span id="score">0</span></div>
+            <div class="speed-box">السرعة: <span id="speed">200</span>%</div>
         </div>
 
-        <!-- الأزرار التفاعلية -->
-        <div id="control-buttons">
-            <button id="btn-settings" class="control-btn">
-                <span>⚙️</span>
-                <span>إعدادات</span>
-            </button>
-            <button id="btn-balls" class="control-btn">
-                <span>⚽</span>
-                <span>كرات</span>
-            </button>
-            <button id="btn-roads" class="control-btn">
-                <span>🛣️</span>
-                <span>طرقات</span>
-            </button>
-        </div>
+        <!-- التعليمات -->
+        <div id="tutorial">اضغط الشاشة لتغيير المسار</div>
+
+        <!-- واجهة المستخدم السفلية -->
+        <nav id="ui-nav">
+            <button class="nav-btn" onclick="UI.openModal('roads')">🛣️</button>
+            <button class="nav-btn" onclick="UI.openModal('balls')">⚪</button>
+            <button class="nav-btn main-play" onclick="Game.toggle()">▶️</button>
+            <button class="nav-btn" onclick="UI.openModal('leaderboard')">📊</button>
+            <button class="nav-btn" onclick="UI.openModal('settings')">⚙️</button>
+        </nav>
     </div>
 
-    <!-- نافذة الإعدادات -->
-    <div id="settings-modal" class="modal">
+    <!-- النوافذ المنبثقة (Modals) -->
+    <div id="modal-overlay" class="modal hidden">
         <div class="modal-content">
-            <span class="close-btn" data-modal="settings">&times;</span>
-            <h2>الإعدادات</h2>
-            <div class="setting-item">
-                <label>السرعة الابتدائية:</label>
-                <input type="range" id="initial-speed" min="200" max="500" value="300" step="10">
-                <span id="speed-value">300%</span>
-            </div>
-            <div class="setting-item">
-                <label>الصوت:</label>
-                <input type="checkbox" id="sound-toggle" checked>
-            </div>
-            <button id="reset-game" class="action-btn">إعادة تشغيل اللعبة</button>
+            <h2 id="modal-title">عنوان</h2>
+            <div id="modal-body"></div>
+            <button class="close-btn" onclick="UI.closeModal()">إغلاق</button>
         </div>
     </div>
 
-    <!-- نافذة الكرات -->
-    <div id="balls-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" data-modal="balls">&times;</span>
-            <h2>اختر الكرة</h2>
-            <div id="ball-options" class="options-grid">
-                <div class="ball-option" data-color="#ff0066">
-                    <div class="ball-preview" style="background: #ff0066;"></div>
-                    <span>وردي</span>
-                </div>
-                <div class="ball-option" data-color="#00ff88">
-                    <div class="ball-preview" style="background: #00ff88;"></div>
-                    <span>أخضر</span>
-                </div>
-                <div class="ball-option" data-color="#ffaa00">
-                    <div class="ball-preview" style="background: #ffaa00;"></div>
-                    <span>برتقالي</span>
-                </div>
-                <div class="ball-option" data-color="#00aaff">
-                    <div class="ball-preview" style="background: #00aaff;"></div>
-                    <span>أزرق</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- نافذة الطرقات -->
-    <div id="roads-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" data-modal="roads">&times;</span>
-            <h2>نوع الطريق</h2>
-            <div id="road-options" class="options-grid">
-                <div class="road-option" data-type="classic">
-                    <div class="road-preview road-classic"></div>
-                    <span>كلاسيكي</span>
-                </div>
-                <div class="road-option" data-type="neon">
-                    <div class="road-preview road-neon"></div>
-                    <span>نيون</span>
-                </div>
-                <div class="road-option" data-type="gradient">
-                    <div class="road-preview road-gradient"></div>
-                    <span>متدرج</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- رسالة البداية -->
-    <div id="start-screen">
-        <h1>لعبة الكرة 3D</h1>
-        <p>اضغط الأسهم لتحريك الكرة يميناً ويساراً</p>
-        <button id="start-btn" class="action-btn">ابدأ اللعب</button>
-    </div>
-
-    <!-- رسالة نهاية اللعبة -->
-    <div id="game-over-screen" style="display: none;">
-        <h1>انتهت اللعبة!</h1>
-        <p>نقاطك: <span id="final-score">0</span></p>
-        <button id="restart-btn" class="action-btn">العب مرة أخرى</button>
-    </div>
-
-    <!-- ⚠️ IMPORTANT: الترتيب الصحيح للتحميل -->
-    
-    <!-- 1. أولاً: تحميل Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
-    <!-- 2. ثانياً: تحميل ملفات اللعبة بالترتيب الصحيح -->
-    <script src="ball.js"></script>
-    <script src="road.js"></script>
+    <!-- تحميل الملفات البرمجية بالترتيب -->
     <script src="game.js"></script>
+    <script src="roads.js"></script>
+    <script src="balls.js"></script>
     <script src="ui.js"></script>
-    
-    <!-- 3. أخيراً: تشغيل اللعبة -->
-    <script src="main.js"></script>
+
+    <!-- بدء التشغيل -->
+    <script>
+        window.onload = function() {
+            Game.init();
+        };
+    </script>
 </body>
 </html>
