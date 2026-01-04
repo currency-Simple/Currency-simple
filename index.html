@@ -48,7 +48,7 @@
             <h2>الإعدادات</h2>
             <div class="setting-item">
                 <label>السرعة الابتدائية:</label>
-                <input type="range" id="initial-speed" min="200" max="500" value="300">
+                <input type="range" id="initial-speed" min="200" max="500" value="300" step="10">
                 <span id="speed-value">300%</span>
             </div>
             <div class="setting-item">
@@ -121,94 +121,18 @@
         <button id="restart-btn" class="action-btn">العب مرة أخرى</button>
     </div>
 
-    <!-- مكتبة Three.js -->
+    <!-- ⚠️ IMPORTANT: الترتيب الصحيح للتحميل -->
+    
+    <!-- 1. أولاً: تحميل Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- ملفات اللعبة -->
-    <script src="game.js"></script>
+    <!-- 2. ثانياً: تحميل ملفات اللعبة بالترتيب الصحيح -->
     <script src="ball.js"></script>
     <script src="road.js"></script>
-    <script src="ui.js"></script>
-    <script src="main.js"></script>
-</body>
-</html>h2>
-                <button class="close-btn" onclick="closeModal('sphereModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="sphere-grid" id="sphereGrid"></div>
-                <button class="btn-primary" onclick="closeModal('sphereModal')">Start Game</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Road Builder Modal -->
-    <div class="modal" id="roadModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🛣️ Road Patterns</h2>
-                <button class="close-btn" onclick="closeModal('roadModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="road-list" id="roadList"></div>
-                <button class="btn-primary" onclick="closeModal('roadModal')">Apply</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Modal -->
-    <div class="modal" id="statsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>📊 Statistics</h2>
-                <button class="close-btn" onclick="closeModal('statsModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="totalGames">0</div>
-                        <div class="stat-label">Total Games</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="highestScore">0</div>
-                        <div class="stat-label">Highest Score</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="totalTriangles">0</div>
-                        <div class="stat-label">Total Triangles</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="avgSpeed">300%</div>
-                        <div class="stat-label">Avg Speed</div>
-                    </div>
-                </div>
-                <button class="btn-danger" onclick="resetStats()">Reset Statistics</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Welcome Screen -->
-    <div class="welcome-screen" id="welcomeScreen">
-        <div class="welcome-content">
-            <h1 class="game-title">SPEEDBALL</h1>
-            <p class="game-subtitle">3D Racing Challenge</p>
-            <div class="welcome-instructions">
-                <p>🎯 Tap screen to move left/right</p>
-                <p>🔺 Collect triangles to score</p>
-                <p>⚡ Speed increases every 10 triangles</p>
-            </div>
-            <button class="btn-start" onclick="startGame()">START GAME</button>
-        </div>
-    </div>
-
-    <!-- Load JavaScript Files -->
-    <script src="config.js"></script>
-    <script src="balls.js"></script>
-    <script src="roads.js"></script>
-    <script src="coins.js"></script>
-    <script src="game-data.js"></script>
-    <script src="stats.js"></script>
-    <script src="settings.js"></script>
-    <script src="ui.js"></script>
     <script src="game.js"></script>
+    <script src="ui.js"></script>
+    
+    <!-- 3. أخيراً: تشغيل اللعبة -->
+    <script src="main.js"></script>
 </body>
 </html>
