@@ -1,41 +1,36 @@
-/**
- * ملف game.js
- * المسؤول عن: إدارة حلقة اللعبة (Loop)، حساب الوقت، التعامل مع الاصطدامات، والنقاط.
- */
-
 const Game = (function() {
     let canvas, ctx;
-    let lastTime = 0;
-    let isRunning = false;
+    let isPlaying = false;
+    let animationId;
     
-    // إحصائيات اللعبة
-    let stats = {
-        score: 0,
-        obstaclesPassed: 0,
-        baseSpeed: 300,
-        currentSpeed: 300,
-        distance: 0
-    };
-
-    // كائنات خارجية سيتم ربطها
-    let roads = null;
-    let balls = null;
+    // ربط الأنظمة الفرعية
+    let roads, balls;
+    
+    // بيانات اللعبة
+    let speed = 300;
+    let score = 0;
+    let distance = 0;
 
     function init() {
+        // ربط الملفات الخارجية (الربط الحرج)
+        roads = window.Roads;
+        balls = window.Balls;
+        UI = window.UI;
+
         canvas = document.getElementById('gameCanvas');
         ctx = canvas.getContext('2d');
         
-        // ضبط الحجم
         resize();
         window.addEventListener('resize', resize);
-
-        // ربط الأحداث
+        
+        // تفعيل اللمس والضغط
         canvas.addEventListener('mousedown', handleInput);
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(); }, {passive: false});
-        window.addEventListener('keydown', (e) => { if(e.code === 'Space' || e.code === 'ArrowRight' || e.code === 'ArrowLeft') handleInput(); });
+        window.addEventListener('keydown', (e) => { if(e.code === 'Space') handleInput(); });
 
-        // بدء حلقة الرسم
-        requestAnimationFrame(loop);
+        // بدء حلقة الرسم حتى لو لم نلعب (للخلفية)
+        reset();
+        loop();
     }
 
     function resize() {
@@ -45,110 +40,92 @@ const Game = (function() {
     }
 
     function handleInput() {
-        if (!isRunning) return;
-        // طلب من ملف الكرات تحريك اللاعب
-        if (balls) balls.switchLane();
+        if (isPlaying && balls) balls.switchLane();
     }
 
     function toggle() {
-        isRunning = !isRunning;
-        const btn = document.querySelector('.main-play');
-        const tutorial = document.getElementById('tutorial');
+        isPlaying = !isPlaying;
+        const btn = document.querySelector('.main-btn');
+        const txt = document.getElementById('tutorial-text');
         
-        if (isRunning) {
+        if (isPlaying) {
             btn.innerHTML = '⏸️';
-            tutorial.style.display = 'none';
+            txt.style.display = 'none';
         } else {
             btn.innerHTML = '▶️';
-            tutorial.style.display = 'block';
-            if(stats.score === 0) tutorial.innerText = "اضغط للبدء";
-            else tutorial.innerText = "إيقاف مؤقت";
+            txt.style.display = 'block';
+            if(score === 0) txt.innerText = "اضغط البداية ▶️";
+            else txt.innerText = "إيقاف مؤقت";
         }
     }
 
     function reset() {
-        stats.score = 0;
-        stats.obstaclesPassed = 0;
-        stats.currentSpeed = stats.baseSpeed;
-        stats.distance = 0;
+        score = 0;
+        distance = 0;
+        speed = 300;
+        document.getElementById('score').innerText = score;
+        document.getElementById('speed').innerText = "200%";
         if (roads) roads.reset();
         if (balls) balls.reset();
-        UI.updateScore(0, stats.currentSpeed);
     }
 
-    function loop(timestamp) {
-        const dt = (timestamp - lastTime) / 1000;
-        lastTime = timestamp;
-
-        if (isRunning) {
-            update(dt);
-            draw();
-        } else if (stats.score === 0) {
-            // شاشة المينا (خلفية متحركة)
-            draw();
-        }
-
+    function loop() {
+        update();
+        draw();
         requestAnimationFrame(loop);
     }
 
-    function update(dt) {
-        // تحديث المسافة
-        stats.distance += stats.currentSpeed * dt;
+    function update() {
+        if (!isPlaying) return;
 
-        // تحديث الطريق والعقبات
-        if (roads) {
-            roads.update(dt, stats.distance, stats.currentSpeed);
-            
-            // فحص الاصطدام
-            const playerState = balls ? balls.getState() : {lane: 0, visualX: 0};
-            const collision = roads.checkCollision(playerState);
-            
-            if (collision) {
+        distance += speed * 0.016; // dt تقريبي
+
+        if (roads) roads.update(distance, speed);
+        if (balls) balls.update();
+
+        // التحقق من الاصطدام
+        if (roads && balls) {
+            const playerPos = balls.getPosition();
+            if (roads.checkCollision(playerPos)) {
                 gameOver();
             } else {
-                // احتساب النقاط
-                const points = roads.getPoints();
-                if (points > stats.score) {
-                    stats.score = points;
-                    stats.obstaclesPassed++;
-                    // زيادة السرعة كل 15 عقبة
-                    if (stats.obstaclesPassed % 15 === 0) {
-                        stats.currentSpeed += stats.currentSpeed * 0.15;
-                        // تأثير بصري بسيط
-                        document.querySelector('.speed-box').style.color = '#fff';
-                        setTimeout(() => document.querySelector('.speed-box').style.color = '#ffcc00', 200);
-                    }
-                    UI.updateScore(stats.score, stats.currentSpeed);
+                // تحديث النقاط
+                const currentScore = roads.getScore();
+                if (currentScore > score) {
+                    score = currentScore;
+                    // زيادة السرعة
+                    if (score % 15 === 0) speed += 30;
+                    
+                    document.getElementById('score').innerText = score;
+                    document.getElementById('speed').innerText = Math.floor(speed) + "%";
                 }
             }
         }
-
-        // تحديث حركة اللاعب
-        if (balls) balls.update(dt);
     }
 
     function draw() {
         // مسح الشاشة
-        ctx.fillStyle = "#001133";
+        ctx.fillStyle = "#000510";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // رسم الطريق
-        if (roads) roads.draw(ctx, stats.distance);
-
-        // رسم اللاعب
+        if (roads) roads.draw(ctx, distance);
         if (balls) balls.draw(ctx);
     }
 
     function gameOver() {
-        isRunning = false;
-        UI.showGameOver(stats.score);
-        document.querySelector('.main-play').innerHTML = '▶️';
+        isPlaying = false;
+        document.querySelector('.main-btn').innerHTML = '▶️';
+        UI.showGameOver(score);
     }
 
     return {
         init,
         toggle,
-        reset,
-        getSpeed: () => stats.currentSpeed
+        reset
     };
 })();
+
+// تشغيل اللعبة عند التحميل
+window.onload = function() {
+    Game.init();
+};
