@@ -1,7 +1,7 @@
 // نظام المصادقة باستخدام Supabase
 
 // تهيئة Supabase Client
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase.createClient(https://byxbwljcwevywrgjuvkn.supabase.co, sb_publishable_zWY6EAOczT_nhiscFxqHQA_hboO8gpf);
 
 const Auth = {
   currentUser: null,
