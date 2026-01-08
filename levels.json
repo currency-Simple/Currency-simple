@@ -1,0 +1,402 @@
+[
+  {
+    "level_number": 1,
+    "answer": "قطة",
+    "shuffled_letters": "قطتة",
+    "image_url": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400",
+    "hint": "حيوان أليف يموء",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 2,
+    "answer": "كتاب",
+    "shuffled_letters": "كاتبك",
+    "image_url": "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400",
+    "hint": "نقرأ منه المعلومات",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 3,
+    "answer": "شمس",
+    "shuffled_letters": "شسمم",
+    "image_url": "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400",
+    "hint": "نجم يضيء لنا النهار",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 4,
+    "answer": "قمر",
+    "shuffled_letters": "قمرر",
+    "image_url": "https://images.unsplash.com/photo-1509803874385-db7c23652552?w=400",
+    "hint": "يظهر في السماء ليلاً",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 5,
+    "answer": "سيارة",
+    "shuffled_letters": "سيارةة",
+    "image_url": "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400",
+    "hint": "وسيلة مواصلات بأربع عجلات",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 6,
+    "answer": "هاتف",
+    "shuffled_letters": "هاتفف",
+    "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400",
+    "hint": "جهاز نستخدمه للاتصال",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 7,
+    "answer": "حاسوب",
+    "shuffled_letters": "حاسوبب",
+    "image_url": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400",
+    "hint": "جهاز إلكتروني للعمل واللعب",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 8,
+    "answer": "طائرة",
+    "shuffled_letters": "طائرةة",
+    "image_url": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=400",
+    "hint": "تطير في السماء",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 9,
+    "answer": "زهرة",
+    "shuffled_letters": "زهرةة",
+    "image_url": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "hint": "نبات جميل وملون",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 10,
+    "answer": "شجرة",
+    "shuffled_letters": "شجرةة",
+    "image_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400",
+    "hint": "نبات كبير له جذع وأوراق",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 11,
+    "answer": "مدرسة",
+    "shuffled_letters": "مدرسةة",
+    "image_url": "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400",
+    "hint": "مكان نتعلم فيه",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 12,
+    "answer": "مستشفى",
+    "shuffled_letters": "مستشفىى",
+    "image_url": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400",
+    "hint": "مكان لعلاج المرضى",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 13,
+    "answer": "قلم",
+    "shuffled_letters": "قلمم",
+    "image_url": "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400",
+    "hint": "أداة للكتابة",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 14,
+    "answer": "دفتر",
+    "shuffled_letters": "دفترر",
+    "image_url": "https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=400",
+    "hint": "نكتب فيه الملاحظات",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 15,
+    "answer": "ساعة",
+    "shuffled_letters": "ساعةة",
+    "image_url": "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=400",
+    "hint": "تخبرنا بالوقت",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 16,
+    "answer": "نافذة",
+    "shuffled_letters": "نافذةة",
+    "image_url": "https://images.unsplash.com/photo-1545259741-2ea3ebf61fa3?w=400",
+    "hint": "فتحة في الجدار للنظر خارجاً",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 17,
+    "answer": "باب",
+    "shuffled_letters": "بابب",
+    "image_url": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400",
+    "hint": "ندخل من خلاله",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 18,
+    "answer": "مفتاح",
+    "shuffled_letters": "مفتاحح",
+    "image_url": "https://images.unsplash.com/photo-1582139329536-e7284fece509?w=400",
+    "hint": "نستخدمه لفتح الأبواب",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 19,
+    "answer": "كرسي",
+    "shuffled_letters": "كرسيي",
+    "image_url": "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400",
+    "hint": "نجلس عليه",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 20,
+    "answer": "طاولة",
+    "shuffled_letters": "طاولةة",
+    "image_url": "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=400",
+    "hint": "نضع عليها الأشياء",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 21,
+    "answer": "تلفاز",
+    "shuffled_letters": "تلفازز",
+    "image_url": "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400",
+    "hint": "نشاهد عليه البرامج",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 22,
+    "answer": "كاميرا",
+    "shuffled_letters": "كاميراا",
+    "image_url": "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400",
+    "hint": "نلتقط بها الصور",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 23,
+    "answer": "جبل",
+    "shuffled_letters": "جبلل",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400",
+    "hint": "ارتفاع طبيعي عالٍ",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 24,
+    "answer": "بحر",
+    "shuffled_letters": "بحرر",
+    "image_url": "https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400",
+    "hint": "ماء مالح واسع",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 25,
+    "answer": "نهر",
+    "shuffled_letters": "نهرر",
+    "image_url": "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=400",
+    "hint": "ماء عذب يجري",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 26,
+    "answer": "صحراء",
+    "shuffled_letters": "صحراءء",
+    "image_url": "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400",
+    "hint": "أرض رملية واسعة",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 27,
+    "answer": "غابة",
+    "shuffled_letters": "غابةة",
+    "image_url": "https://images.unsplash.com/photo-1511497584788-876760111969?w=400",
+    "hint": "مكان مليء بالأشجار",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 28,
+    "answer": "سحابة",
+    "shuffled_letters": "سحابةة",
+    "image_url": "https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=400",
+    "hint": "بخار ماء في السماء",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 29,
+    "answer": "مطر",
+    "shuffled_letters": "مطرر",
+    "image_url": "https://images.unsplash.com/photo-1428908728789-d2de25dbd4e2?w=400",
+    "hint": "ماء ينزل من السماء",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 30,
+    "answer": "ثلج",
+    "shuffled_letters": "ثلجج",
+    "image_url": "https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=400",
+    "hint": "ماء متجمد يسقط من السماء",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 31,
+    "answer": "قوس قزح",
+    "shuffled_letters": "قوسقزحح",
+    "image_url": "https://images.unsplash.com/photo-1508673010578-16f2e37c3d88?w=400",
+    "hint": "ألوان جميلة في السماء بعد المطر",
+    "difficulty": "hard"
+  },
+  {
+    "level_number": 32,
+    "answer": "برق",
+    "shuffled_letters": "برقق",
+    "image_url": "https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=400",
+    "hint": "ضوء ساطع في السماء أثناء العاصفة",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 33,
+    "answer": "رعد",
+    "shuffled_letters": "رعدد",
+    "image_url": "https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=400",
+    "hint": "صوت عالٍ في السماء",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 34,
+    "answer": "نجمة",
+    "shuffled_letters": "نجمةة",
+    "image_url": "https://images.unsplash.com/photo-1519810755548-39cd217da494?w=400",
+    "hint": "تلمع في السماء ليلاً",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 35,
+    "answer": "كوكب",
+    "shuffled_letters": "كوكبب",
+    "image_url": "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=400",
+    "hint": "جرم سماوي يدور حول الشمس",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 36,
+    "answer": "فراشة",
+    "shuffled_letters": "فراشةة",
+    "image_url": "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=400",
+    "hint": "حشرة ملونة تطير",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 37,
+    "answer": "نحلة",
+    "shuffled_letters": "نحلةة",
+    "image_url": "https://images.unsplash.com/photo-1558642084-fd07fae5282e?w=400",
+    "hint": "حشرة تصنع العسل",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 38,
+    "answer": "عصفور",
+    "shuffled_letters": "عصفورر",
+    "image_url": "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=400",
+    "hint": "طائر صغير يغرد",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 39,
+    "answer": "نسر",
+    "shuffled_letters": "نسرر",
+    "image_url": "https://images.unsplash.com/photo-1599839109026-ab76fb4bacf5?w=400",
+    "hint": "طائر جارح كبير",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 40,
+    "answer": "سمكة",
+    "shuffled_letters": "سمكةة",
+    "image_url": "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=400",
+    "hint": "حيوان يعيش في الماء",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 41,
+    "answer": "دلفين",
+    "shuffled_letters": "دلفينن",
+    "image_url": "https://images.unsplash.com/photo-1570481662006-a3a1374699e8?w=400",
+    "hint": "حيوان بحري ذكي",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 42,
+    "answer": "حوت",
+    "shuffled_letters": "حوتت",
+    "image_url": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400",
+    "hint": "أكبر حيوان في البحر",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 43,
+    "answer": "فيل",
+    "shuffled_letters": "فيلل",
+    "image_url": "https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=400",
+    "hint": "حيوان ضخم له خرطوم",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 44,
+    "answer": "أسد",
+    "shuffled_letters": "أسدد",
+    "image_url": "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=400",
+    "hint": "ملك الغابة",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 45,
+    "answer": "زرافة",
+    "shuffled_letters": "زرافةة",
+    "image_url": "https://images.unsplash.com/photo-1534567110243-e2c92e164e3a?w=400",
+    "hint": "حيوان طويل العنق",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 46,
+    "answer": "قرد",
+    "shuffled_letters": "قردد",
+    "image_url": "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400",
+    "hint": "حيوان يتسلق الأشجار",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 47,
+    "answer": "دب",
+    "shuffled_letters": "دبب",
+    "image_url": "https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=400",
+    "hint": "حيوان كبير يحب العسل",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 48,
+    "answer": "أرنب",
+    "shuffled_letters": "أرنبب",
+    "image_url": "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400",
+    "hint": "حيوان صغير يقفز",
+    "difficulty": "easy"
+  },
+  {
+    "level_number": 49,
+    "answer": "سلحفاة",
+    "shuffled_letters": "سلحفاةة",
+    "image_url": "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=400",
+    "hint": "حيوان بطيء له صدفة",
+    "difficulty": "medium"
+  },
+  {
+    "level_number": 50,
+    "answer": "تمساح",
+    "shuffled_letters": "تمساحح",
+    "image_url": "https://images.unsplash.com/photo-1549378840-b486a70e2a03?w=400",
+    "hint": "حيوان مفترس يعيش في الماء",
+    "difficulty": "medium"
+  }
+]

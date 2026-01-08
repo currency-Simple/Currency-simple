@@ -1,0 +1,142 @@
+[
+  {
+    "id": "first_level",
+    "title": "البداية",
+    "description": "أكمل أول مرحلة",
+    "icon": "fas fa-flag-checkered",
+    "category": "progress"
+  },
+  {
+    "id": "complete_10_levels",
+    "title": "مبتدئ",
+    "description": "أكمل 10 مراحل",
+    "icon": "fas fa-star",
+    "category": "progress"
+  },
+  {
+    "id": "complete_25_levels",
+    "title": "محترف",
+    "description": "أكمل 25 مرحلة",
+    "icon": "fas fa-trophy",
+    "category": "progress"
+  },
+  {
+    "id": "complete_50_levels",
+    "title": "خبير",
+    "description": "أكمل جميع المراحل (50 مرحلة)",
+    "icon": "fas fa-crown",
+    "category": "progress"
+  },
+  {
+    "id": "perfect_level",
+    "title": "إجابة مثالية",
+    "description": "احصل على 3 نجوم في مرحلة واحدة",
+    "icon": "fas fa-medal",
+    "category": "performance"
+  },
+  {
+    "id": "perfect_streak_5",
+    "title": "سلسلة الكمال",
+    "description": "احصل على 3 نجوم في 5 مراحل متتالية",
+    "icon": "fas fa-fire",
+    "category": "performance"
+  },
+  {
+    "id": "speed_master",
+    "title": "سريع كالبرق",
+    "description": "أكمل مرحلة في أقل من 30 ثانية",
+    "icon": "fas fa-bolt",
+    "category": "speed"
+  },
+  {
+    "id": "no_hints_10",
+    "title": "مستقل",
+    "description": "أكمل 10 مراحل بدون استخدام تلميحات",
+    "icon": "fas fa-brain",
+    "category": "skill"
+  },
+  {
+    "id": "score_500",
+    "title": "جامع النقاط",
+    "description": "اجمع 500 نقطة",
+    "icon": "fas fa-coins",
+    "category": "points"
+  },
+  {
+    "id": "score_1000",
+    "title": "ثروة",
+    "description": "اجمع 1000 نقطة",
+    "icon": "fas fa-gem",
+    "category": "points"
+  },
+  {
+    "id": "score_2000",
+    "title": "ملك النقاط",
+    "description": "اجمع 2000 نقطة",
+    "icon": "fas fa-chess-king",
+    "category": "points"
+  },
+  {
+    "id": "morning_player",
+    "title": "الطائر المبكر",
+    "description": "العب مرحلة قبل الساعة 8 صباحاً",
+    "icon": "fas fa-sun",
+    "category": "special"
+  },
+  {
+    "id": "night_owl",
+    "title": "بومة الليل",
+    "description": "العب مرحلة بعد منتصف الليل",
+    "icon": "fas fa-moon",
+    "category": "special"
+  },
+  {
+    "id": "daily_player_7",
+    "title": "ملتزم",
+    "description": "العب لمدة 7 أيام متتالية",
+    "icon": "fas fa-calendar-check",
+    "category": "dedication"
+  },
+  {
+    "id": "daily_player_30",
+    "title": "مثابر",
+    "description": "العب لمدة 30 يوماً متتالياً",
+    "icon": "fas fa-calendar-alt",
+    "category": "dedication"
+  },
+  {
+    "id": "comeback",
+    "title": "العودة القوية",
+    "description": "أكمل مرحلة بعد فشل محاولتين",
+    "icon": "fas fa-redo",
+    "category": "resilience"
+  },
+  {
+    "id": "perfectionist",
+    "title": "الكمالي",
+    "description": "احصل على 3 نجوم في 20 مرحلة",
+    "icon": "fas fa-award",
+    "category": "mastery"
+  },
+  {
+    "id": "word_master",
+    "title": "سيد الكلمات",
+    "description": "أكمل 30 مرحلة بنجاح",
+    "icon": "fas fa-book",
+    "category": "mastery"
+  },
+  {
+    "id": "challenge_accepted",
+    "title": "التحدي مقبول",
+    "description": "أكمل 5 مراحل بمستوى صعوبة عالي",
+    "icon": "fas fa-dumbbell",
+    "category": "difficulty"
+  },
+  {
+    "id": "explorer",
+    "title": "مستكشف",
+    "description": "جرب جميع مستويات الصعوبة",
+    "icon": "fas fa-compass",
+    "category": "variety"
+  }
+]

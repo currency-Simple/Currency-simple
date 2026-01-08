@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كلمات كراش - اللعب</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="game-page">
+    <!-- شريط العلوي -->
+    <header class="game-header">
+        <div class="header-content">
+            <!-- زر الرجوع -->
+            <button class="icon-btn back-btn" id="backBtn">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+
+            <!-- معلومات المرحلة -->
+            <div class="level-info">
+                <h2>المرحلة <span id="currentLevel">1</span></h2>
+                <div class="stars-display" id="starsDisplay">
+                    <i class="far fa-star"></i>
+                    <i class="far fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+            </div>
+
+            <!-- النقاط والمحاولات -->
+            <div class="game-stats">
+                <div class="stat-item">
+                    <i class="fas fa-trophy"></i>
+                    <span id="currentScore">0</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-heart"></i>
+                    <span id="attemptsLeft">3</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- محتوى اللعبة -->
+    <main class="game-main">
+        <!-- منطقة الصورة -->
+        <div class="image-section">
+            <div class="image-container">
+                <img src="" alt="صورة المرحلة" id="levelImage" class="level-image">
+                <div class="image-overlay" id="imageOverlay">
+                    <button class="hint-btn" id="hintBtn">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>تلميح</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- منطقة اللعب -->
+        <div class="play-section">
+            <!-- منطقة الإجابة -->
+            <div class="answer-area">
+                <div class="answer-slots" id="answerSlots">
+                    <!-- سيتم إنشاؤها ديناميكياً -->
+                </div>
+            </div>
+
+            <!-- منطقة الحروف -->
+            <div class="letters-area">
+                <div class="letters-container" id="lettersContainer">
+                    <!-- سيتم إنشاؤها ديناميكياً -->
+                </div>
+            </div>
+
+            <!-- أزرار التحكم -->
+            <div class="game-actions">
+                <button class="action-btn clear-btn" id="clearBtn">
+                    <i class="fas fa-eraser"></i>
+                    <span>مسح</span>
+                </button>
+                <button class="action-btn check-btn" id="checkBtn">
+                    <i class="fas fa-check"></i>
+                    <span>تحقق</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- نافذة النجاح -->
+    <div class="modal success-modal" id="successModal">
+        <div class="modal-content success-content">
+            <div class="success-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h2>أحسنت!</h2>
+            <p class="success-message">لقد أكملت المرحلة بنجاح</p>
+            
+            <div class="success-stars" id="successStars">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+            </div>
+
+            <div class="success-stats">
+                <div class="stat">
+                    <span class="stat-label">النقاط</span>
+                    <span class="stat-value" id="successScore">100</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">المحاولات</span>
+                    <span class="stat-value" id="successAttempts">1</span>
+                </div>
+            </div>
+
+            <div class="success-actions">
+                <button class="action-btn secondary-btn" id="replayBtn">
+                    <i class="fas fa-redo"></i>
+                    <span>إعادة اللعب</span>
+                </button>
+                <button class="action-btn primary-btn" id="nextLevelBtn">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>المرحلة التالية</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الفشل -->
+    <div class="modal fail-modal" id="failModal">
+        <div class="modal-content fail-content">
+            <div class="fail-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <h2>للأسف!</h2>
+            <p class="fail-message">لم تتمكن من حل المرحلة</p>
+            
+            <div class="correct-answer">
+                <span>الإجابة الصحيحة:</span>
+                <strong id="correctAnswerText"></strong>
+            </div>
+
+            <div class="fail-actions">
+                <button class="action-btn secondary-btn" id="retryBtn">
+                    <i class="fas fa-redo"></i>
+                    <span>حاول مرة أخرى</span>
+                </button>
+                <button class="action-btn primary-btn" id="backToDashboardBtn">
+                    <i class="fas fa-home"></i>
+                    <span>العودة للخريطة</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة التلميح -->
+    <div class="modal hint-modal" id="hintModal">
+        <div class="modal-content hint-content">
+            <button class="modal-close" id="closeHint">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="hint-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <h3>تلميح</h3>
+            <p class="hint-text" id="hintText"></p>
+            <p class="hint-penalty">
+                <i class="fas fa-info-circle"></i>
+                سيتم خصم 10 نقاط
+            </p>
+            <button class="action-btn primary-btn" id="acceptHintBtn">حسناً</button>
+        </div>
+    </div>
+
+    <!-- السكريبتات -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/drag-drop.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
