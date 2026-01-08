@@ -1,6 +1,4 @@
-// إعدادات Supabase
-const SUPABASE_URL = 'https://byxbwljcwevywrgjuvkn.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5eGJ3bGpjd2V2eXdyZ2p1dmtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY5NjY0MDAsImV4cCI6MjA1MjU0MjQwMH0.zWY6EAOczT_nhiscFxqHQA_hboO8gpf';
+NoneQwMH0.zWY6EAOczT_nhiscFxqHQA_hboO8gpf';
 
 // إعدادات اللعبة
 const GAME_CONFIG = {
