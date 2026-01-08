@@ -1,282 +1,413 @@
 // نظام المصادقة باستخدام Supabase
 
-// تهيئة Supabase Client
-const supabase = window.supabase.createClient(https://byxbwljcwevywrgjuvkn.supabase.co, sb_publishable_zWY6EAOczT_nhiscFxqHQA_hboO8gpf);
+// انتظر حتى يتم تحميل Supabase SDK
+document.addEventListener('DOMContentLoaded', () => {
+  initAuth();
+});
 
-const Auth = {
-  currentUser: null,
-
-  // تهيئة المصادقة
-  async init() {
-    try {
-      // الحصول على الجلسة الحالية
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) throw error;
-      
-      if (session) {
-        this.currentUser = session.user;
-        return this.currentUser;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('Error initializing auth:', error);
-      return null;
+async function initAuth() {
+  try {
+    // تحقق من أن Supabase محمل
+    if (!window.supabase) {
+      console.error('Supabase SDK not loaded!');
+      await loadSupabaseSDK();
     }
-  },
+    
+    // تهيئة Supabase Client
+    const { createClient } = window.supabase;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // تهيئة نظام المصادقة
+    window.Auth = {
+      supabase: supabase,
+      currentUser: null,
 
-  // التحقق من حالة المصادقة
-  async checkAuth() {
-    try {
-      const user = await this.init();
-      
-      if (user) {
-        // تحديث أو إنشاء سجل المستخدم في قاعدة البيانات
-        await this.upsertUser(user);
-      }
-      
-      return user;
-    } catch (error) {
-      console.error('Error checking auth:', error);
-      return null;
-    }
-  },
+      // تهيئة المصادقة
+      async init() {
+        try {
+          // معالجة OAuth callback أولاً إذا كان موجوداً
+          if (window.location.hash && window.location.hash.includes('access_token')) {
+            await this.handleOAuthCallback();
+          }
 
-  // تسجيل الدخول بـ Google
-  async signInWithGoogle() {
-    try {
-      Utils.showLoading();
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard.html`
+          // الحصول على الجلسة الحالية
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Get session error:', error);
+            throw error;
+          }
+          
+          if (session) {
+            this.currentUser = session.user;
+            console.log('User authenticated:', this.currentUser.email);
+            return this.currentUser;
+          }
+          
+          return null;
+        } catch (error) {
+          console.error('Error initializing auth:', error);
+          return null;
         }
-      });
+      },
 
-      if (error) throw error;
-
-      // سيتم إعادة التوجيه تلقائياً
-    } catch (error) {
-      console.error('Google sign in error:', error);
-      Utils.hideLoading();
-      Utils.showError(ERROR_MESSAGES.AUTH_FAILED);
-    }
-  },
-
-  // تسجيل الدخول بـ Discord
-  async signInWithDiscord() {
-    try {
-      Utils.showLoading();
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'discord',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard.html`
+      // معالجة OAuth callback
+      async handleOAuthCallback() {
+        try {
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('OAuth callback error:', error);
+            throw error;
+          }
+          
+          if (data.session) {
+            // تنظيف URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // إعادة التوجيه إلى لوحة التحكم بعد تأكيد الجلسة
+            setTimeout(() => {
+              window.location.href = 'dashboard.html';
+            }, 100);
+          }
+        } catch (error) {
+          console.error('OAuth callback processing failed:', error);
+          throw error;
         }
-      });
+      },
 
-      if (error) throw error;
+      // التحقق من حالة المصادقة
+      async checkAuth() {
+        try {
+          const user = await this.init();
+          
+          if (user) {
+            // تحديث أو إنشاء سجل المستخدم في قاعدة البيانات
+            await this.upsertUser(user);
+          }
+          
+          return user;
+        } catch (error) {
+          console.error('Error checking auth:', error);
+          return null;
+        }
+      },
 
-      // سيتم إعادة التوجيه تلقائياً
-    } catch (error) {
-      console.error('Discord sign in error:', error);
-      Utils.hideLoading();
-      Utils.showError(ERROR_MESSAGES.AUTH_FAILED);
-    }
-  },
+      // تسجيل الدخول بـ Google
+      async signInWithGoogle() {
+        try {
+          this.showLoading();
+          
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: `${window.location.origin}${window.location.pathname}`,
+              queryParams: {
+                access_type: 'offline',
+                prompt: 'consent'
+              }
+            }
+          });
 
-  // اللعب كضيف
-  continueAsGuest() {
-    try {
-      // تخزين حالة الضيف
-      const guestData = {
-        isGuest: true,
-        id: Utils.generateUUID(),
-        username: 'ضيف',
-        created_at: new Date().toISOString()
-      };
-      
-      Utils.setLocalStorage('guest_user', guestData);
-      this.currentUser = guestData;
-      
-      // الانتقال إلى لوحة التحكم
-      window.location.href = 'dashboard.html';
-    } catch (error) {
-      console.error('Guest mode error:', error);
-      Utils.showError('حدث خطأ. حاول مرة أخرى.');
-    }
-  },
+          if (error) throw error;
 
-  // تسجيل الخروج
-  async signOut() {
-    try {
-      Utils.showLoading();
-      
-      // التحقق إذا كان ضيف
-      const guestUser = Utils.getLocalStorage('guest_user');
-      
-      if (guestUser) {
-        // حذف بيانات الضيف
-        Utils.removeLocalStorage('guest_user');
-        Utils.removeLocalStorage('guest_progress');
-      } else {
-        // تسجيل خروج Supabase
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-      }
+        } catch (error) {
+          console.error('Google sign in error:', error);
+          this.hideLoading();
+          this.showError('فشل تسجيل الدخول باستخدام Google');
+        }
+      },
 
-      this.currentUser = null;
-      
-      // العودة إلى صفحة تسجيل الدخول
-      window.location.href = 'index.html';
-    } catch (error) {
-      console.error('Sign out error:', error);
-      Utils.hideLoading();
-      Utils.showError('فشل تسجيل الخروج');
-    }
-  },
+      // تسجيل الدخول بـ Discord
+      async signInWithDiscord() {
+        try {
+          this.showLoading();
+          
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'discord',
+            options: {
+              redirectTo: `${window.location.origin}${window.location.pathname}`,
+              scopes: 'identify email'
+            }
+          });
 
-  // تحديث أو إنشاء مستخدم في قاعدة البيانات
-  async upsertUser(user) {
-    try {
-      const userData = {
-        id: user.id,
-        username: user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم',
-        email: user.email,
-        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture,
-        updated_at: new Date().toISOString()
-      };
+          if (error) throw error;
 
-      const { data, error } = await supabase
-        .from('users')
-        .upsert(userData, { onConflict: 'id' })
-        .select()
-        .single();
+        } catch (error) {
+          console.error('Discord sign in error:', error);
+          this.hideLoading();
+          this.showError('فشل تسجيل الدخول باستخدام Discord');
+        }
+      },
 
-      if (error) throw error;
-      
-      return data;
-    } catch (error) {
-      console.error('Error upserting user:', error);
-      throw error;
-    }
-  },
+      // اللعب كضيف
+      continueAsGuest() {
+        try {
+          // تخزين حالة الضيف
+          const guestData = {
+            isGuest: true,
+            id: this.generateUUID(),
+            username: 'ضيف',
+            email: null,
+            created_at: new Date().toISOString()
+          };
+          
+          localStorage.setItem('guest_user', JSON.stringify(guestData));
+          this.currentUser = guestData;
+          
+          // الانتقال إلى لوحة التحكم
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 300);
+        } catch (error) {
+          console.error('Guest mode error:', error);
+          this.showError('حدث خطأ في وضع الضيف');
+        }
+      },
 
-  // الحصول على بيانات المستخدم الحالي
-  async getCurrentUser() {
-    try {
-      // التحقق من وضع الضيف
-      const guestUser = Utils.getLocalStorage('guest_user');
-      if (guestUser) {
-        return guestUser;
-      }
+      // تسجيل الخروج
+      async signOut() {
+        try {
+          this.showLoading();
+          
+          // التحقق إذا كان ضيف
+          const guestUser = localStorage.getItem('guest_user');
+          
+          if (guestUser) {
+            // حذف بيانات الضيف
+            localStorage.removeItem('guest_user');
+            localStorage.removeItem('guest_progress');
+            this.currentUser = null;
+          } else {
+            // تسجيل خروج Supabase
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            this.currentUser = null;
+          }
+          
+          this.hideLoading();
+          
+          // العودة إلى صفحة تسجيل الدخول
+          window.location.href = 'index.html';
+        } catch (error) {
+          console.error('Sign out error:', error);
+          this.hideLoading();
+          this.showError('فشل تسجيل الخروج');
+        }
+      },
 
-      // الحصول على المستخدم من Supabase
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error) throw error;
-      
-      if (user) {
-        // جلب البيانات الإضافية من قاعدة البيانات
-        const { data: userData, error: dbError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+      // تحديث أو إنشاء مستخدم في قاعدة البيانات
+      async upsertUser(user) {
+        try {
+          const userData = {
+            id: user.id,
+            username: user.user_metadata?.full_name || 
+                     user.user_metadata?.name || 
+                     user.email?.split('@')[0] || 
+                     'مستخدم',
+            email: user.email,
+            avatar_url: user.user_metadata?.avatar_url || 
+                       user.user_metadata?.picture ||
+                       user.user_metadata?.image_url,
+            provider: user.app_metadata?.provider,
+            updated_at: new Date().toISOString()
+          };
 
-        if (dbError) {
-          console.error('Error fetching user data:', dbError);
+          const { data, error } = await supabase
+            .from('users')
+            .upsert(userData, { onConflict: 'id' })
+            .select()
+            .single();
+
+          if (error) {
+            console.warn('Could not upsert user (table might not exist):', error);
+            return user;
+          }
+          
+          return data;
+        } catch (error) {
+          console.error('Error upserting user:', error);
           return user;
         }
+      },
 
-        return userData || user;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('Error getting current user:', error);
-      return null;
-    }
-  },
+      // الحصول على بيانات المستخدم الحالي
+      async getCurrentUser() {
+        try {
+          // التحقق من وضع الضيف
+          const guestUser = localStorage.getItem('guest_user');
+          if (guestUser) {
+            return JSON.parse(guestUser);
+          }
 
-  // التحقق من الجلسة والتوجيه
-  async requireAuth() {
-    const user = await this.checkAuth();
-    
-    if (!user) {
-      // التحقق من وضع الضيف
-      const guestUser = Utils.getLocalStorage('guest_user');
-      if (!guestUser) {
-        window.location.href = 'index.html';
-        return null;
-      }
-      return guestUser;
-    }
-    
-    return user;
-  },
+          // الحصول على المستخدم من Supabase
+          const { data: { user }, error } = await supabase.auth.getUser();
+          
+          if (error) throw error;
+          
+          if (user) {
+            // محاولة جلب البيانات الإضافية من قاعدة البيانات
+            try {
+              const { data: userData, error: dbError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
 
-  // الاستماع لتغييرات المصادقة
-  onAuthStateChange(callback) {
-    return supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth event:', event);
-      
-      if (event === 'SIGNED_IN') {
-        this.currentUser = session.user;
-      } else if (event === 'SIGNED_OUT') {
-        this.currentUser = null;
-      }
-      
-      if (callback) {
-        callback(event, session);
-      }
-    });
-  },
+              if (!dbError && userData) {
+                return userData;
+              }
+            } catch (dbError) {
+              console.warn('Using basic user data:', dbError);
+            }
 
-  // التحقق من وضع الضيف
-  isGuest() {
-    return !!Utils.getLocalStorage('guest_user');
-  },
+            return user;
+          }
+          
+          return null;
+        } catch (error) {
+          console.error('Error getting current user:', error);
+          return null;
+        }
+      },
 
-  // الحصول على ID المستخدم
-  getUserId() {
-    const guestUser = Utils.getLocalStorage('guest_user');
-    if (guestUser) {
-      return guestUser.id;
-    }
-    return this.currentUser?.id || null;
-  }
-};
-
-// معالجة إعادة التوجيه بعد OAuth
-if (window.location.hash && window.location.hash.includes('access_token')) {
-  (async () => {
-    try {
-      Utils.showLoading();
-      
-      // Supabase سيعالج التوكن تلقائياً
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) throw error;
-      
-      if (data.session) {
-        // تنظيف الـ URL
-        window.history.replaceState({}, document.title, window.location.pathname);
+      // التحقق من الجلسة والتوجيه
+      async requireAuth() {
+        const user = await this.checkAuth();
         
-        // إعادة التوجيه إلى لوحة التحكم
-        window.location.href = 'dashboard.html';
+        if (!user) {
+          // التحقق من وضع الضيف
+          const guestUser = localStorage.getItem('guest_user');
+          if (!guestUser) {
+            window.location.href = 'index.html';
+            return null;
+          }
+          return JSON.parse(guestUser);
+        }
+        
+        return user;
+      },
+
+      // الاستماع لتغييرات المصادقة
+      onAuthStateChange(callback) {
+        return supabase.auth.onAuthStateChange((event, session) => {
+          console.log('Auth state changed:', event);
+          
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            this.currentUser = session?.user || null;
+            if (this.currentUser) {
+              this.upsertUser(this.currentUser);
+            }
+          } else if (event === 'SIGNED_OUT') {
+            this.currentUser = null;
+          }
+          
+          if (callback) {
+            callback(event, session);
+          }
+        });
+      },
+
+      // التحقق من وضع الضيف
+      isGuest() {
+        return !!localStorage.getItem('guest_user');
+      },
+
+      // الحصول على ID المستخدم
+      getUserId() {
+        const guestUser = localStorage.getItem('guest_user');
+        if (guestUser) {
+          const parsed = JSON.parse(guestUser);
+          return parsed.id;
+        }
+        return this.currentUser?.id || null;
+      },
+
+      // أدوات مساعدة
+      showLoading() {
+        if (window.Utils && window.Utils.showLoading) {
+          window.Utils.showLoading();
+        } else {
+          // تنفيذ بسيط إذا لم يكن Utils موجوداً
+          const loader = document.createElement('div');
+          loader.id = 'auth-loader';
+          loader.innerHTML = 'جاري التحميل...';
+          document.body.appendChild(loader);
+        }
+      },
+
+      hideLoading() {
+        if (window.Utils && window.Utils.hideLoading) {
+          window.Utils.hideLoading();
+        } else {
+          const loader = document.getElementById('auth-loader');
+          if (loader) loader.remove();
+        }
+      },
+
+      showError(message) {
+        if (window.Utils && window.Utils.showError) {
+          window.Utils.showError(message);
+        } else {
+          alert('خطأ: ' + message);
+        }
+      },
+
+      generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      }
+    };
+
+    // تشغيل الاستماع لتغييرات المصادقة
+    Auth.onAuthStateChange((event, session) => {
+      console.log('Auth event detected:', event);
+    });
+
+    // اختبار الاتصال بـ Supabase
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Supabase connection test failed:', error);
+      } else {
+        console.log('Supabase connected successfully');
       }
     } catch (error) {
-      console.error('OAuth callback error:', error);
-      Utils.hideLoading();
-      Utils.showError(ERROR_MESSAGES.AUTH_FAILED);
+      console.error('Supabase test error:', error);
     }
-  })();
+
+  } catch (error) {
+    console.error('Failed to initialize auth system:', error);
+  }
 }
 
-// تصدير
+// دالة لتحميل Supabase SDK ديناميكياً
+async function loadSupabaseSDK() {
+  return new Promise((resolve, reject) => {
+    if (window.supabase) {
+      resolve(window.supabase);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    script.onload = () => {
+      console.log('Supabase SDK loaded');
+      resolve(window.supabase);
+    };
+    script.onerror = () => {
+      console.error('Failed to load Supabase SDK');
+      reject(new Error('Failed to load Supabase SDK'));
+    };
+    
+    document.head.appendChild(script);
+  });
+}
+
+// تصدير للاستخدام في الوحدات
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = Auth;
+  module.exports = { initAuth };
 }
