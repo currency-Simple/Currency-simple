@@ -1,4 +1,4 @@
-NoneQwMH0.zWY6EAOczT_nhiscFxqHQA_hboO8gpf';
+NoneQwMH0.byxbwljcwevywrgjuvkn';
 
 // إعدادات اللعبة
 const GAME_CONFIG = {
