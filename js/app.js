@@ -24,7 +24,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // إعداد مستمعات لوحة المفاتيح
 function setupKeyboardListeners() {
-    // للمتصفحات الحديثة
     if ('visualViewport' in window) {
         const viewport = window.visualViewport;
         
@@ -38,7 +37,6 @@ function setupKeyboardListeners() {
             }
         });
     } else {
-        // للمتصفحات القديمة
         window.addEventListener('resize', () => {
             setTimeout(() => {
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -376,38 +374,33 @@ async function downloadImage() {
         }
         
         // انتظار قصير لضمان الرسم
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // إنشاء رابط التنزيل
         const link = document.createElement('a');
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         link.download = `صورة-مع-نص-${timestamp}.png`;
         
-        // تحويل Canvas إلى صورة
-        canvas.toBlob((blob) => {
-            if (!blob) {
-                hideLoadingIndicator();
-                showAlert('فشل في إنشاء الصورة', 'error');
-                return;
-            }
-            
-            const url = URL.createObjectURL(blob);
-            link.href = url;
+        // تحويل Canvas إلى data URL مباشرة
+        try {
+            const dataURL = canvas.toDataURL('image/png', 1.0);
+            link.href = dataURL;
             
             // محاكاة النقر على الرابط
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            // تحرير الذاكرة
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-            
             hideLoadingIndicator();
             showAlert('تم تنزيل الصورة بنجاح!', 'success');
             
             console.log('تم التنزيل بنجاح');
             
-        }, 'image/png', 1.0);
+        } catch (dataError) {
+            console.error('خطأ في تحويل Canvas:', dataError);
+            hideLoadingIndicator();
+            showAlert('فشل في إنشاء الصورة', 'error');
+        }
         
     } catch (error) {
         console.error('خطأ في التنزيل:', error);
@@ -431,7 +424,7 @@ async function shareImage() {
         // التحقق من دعم المشاركة
         if (!navigator.share) {
             showAlert('المشاركة غير مدعومة في هذا المتصفح', 'info');
-            return downloadImage(); // استدعاء التنزيل كبديل
+            return downloadImage();
         }
         
         // إظهار مؤشر تحميل
@@ -458,7 +451,7 @@ async function shareImage() {
         }
         
         // انتظار قصير لضمان الرسم
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // تحويل Canvas إلى Blob
         canvas.toBlob(async (blob) => {
@@ -496,7 +489,7 @@ async function shareImage() {
             } catch (shareError) {
                 hideLoadingIndicator();
                 
-                // إذا كان الخطأ بسبب إلغاء المستخدم، لا نعرض رسالة
+                // إذا كان الخطأ بسبب إلغاء المستخدم
                 if (shareError.name === 'AbortError') {
                     console.log('تم إلغاء المشاركة من قبل المستخدم');
                     return;
