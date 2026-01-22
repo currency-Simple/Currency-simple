@@ -3,6 +3,7 @@ let categories = [];
 let currentCategory = null;
 let currentImages = [];
 let keyboardOpen = false;
+let textCardVisible = false;
 
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
@@ -12,671 +13,168 @@ window.addEventListener('DOMContentLoaded', () => {
     
     setupKeyboardListeners();
     
-    // إضافة مستمع للتركيز على حقل النص
-    const textOverlay = document.getElementById('textOverlay');
-    if (textOverlay) {
-        textOverlay.addEventListener('focus', handleTextFocus);
-        textOverlay.addEventListener('blur', handleTextBlur);
-        textOverlay.addEventListener('input', handleTextInput);
-    }
+    // إعداد بطاقة النص
+    setupTextCard();
 });
 
-// إعداد مستمعات لوحة المفاتيح
-function setupKeyboardListeners() {
-    if ('visualViewport' in window) {
-        const viewport = window.visualViewport;
-        viewport.addEventListener('resize', () => {
-            const keyboardHeight = window.innerHeight - viewport.height;
-            if (keyboardHeight > 100) {
-                handleKeyboardOpen(keyboardHeight);
-            } else {
-                handleKeyboardClose();
-            }
-        });
-    } else {
-        window.addEventListener('resize', () => {
-            setTimeout(() => {
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (isMobile && window.innerHeight < window.outerHeight * 0.7) {
-                    handleKeyboardOpen(200);
-                } else {
-                    handleKeyboardClose();
-                }
-            }, 100);
-        });
+// إعداد بطاقة النص الجديدة
+function setupTextCard() {
+    // حذف عنصر النص القديم
+    const oldTextOverlay = document.getElementById('textOverlay');
+    if (oldTextOverlay) {
+        oldTextOverlay.remove();
     }
-}
-
-// التعامل مع فتح لوحة المفاتيح
-function handleKeyboardOpen(keyboardHeight) {
-    if (keyboardOpen) return;
-    keyboardOpen = true;
-    console.log('Keyboard opened, height:', keyboardHeight);
     
-    document.documentElement.classList.add('keyboard-open');
-    document.body.classList.add('keyboard-open');
-    
-    const editorPage = document.getElementById('editorPage');
-    if (editorPage) editorPage.classList.add('keyboard-open');
-    
-    adjustCanvasForKeyboard(keyboardHeight);
-    
-    const bottomNav = document.querySelector('.bottom-nav');
-    const editorToolbar = document.querySelector('.editor-toolbar');
-    const toolPanels = document.querySelectorAll('.tool-panel.active');
-    
-    if (bottomNav) bottomNav.classList.add('keyboard-open');
-    if (editorToolbar) editorToolbar.classList.add('keyboard-open');
-    
-    toolPanels.forEach(panel => {
-        panel.classList.add('keyboard-open');
-    });
-}
-
-// التعامل مع إغلاق لوحة المفاتيح
-function handleKeyboardClose() {
-    if (!keyboardOpen) return;
-    keyboardOpen = false;
-    console.log('Keyboard closed');
-    
-    document.documentElement.classList.remove('keyboard-open');
-    document.body.classList.remove('keyboard-open');
-    
-    const editorPage = document.getElementById('editorPage');
-    if (editorPage) editorPage.classList.remove('keyboard-open');
-    
-    restoreCanvasAfterKeyboard();
-    
-    const bottomNav = document.querySelector('.bottom-nav');
-    const editorToolbar = document.querySelector('.editor-toolbar');
-    const toolPanels = document.querySelectorAll('.tool-panel.active');
-    
-    if (bottomNav) bottomNav.classList.remove('keyboard-open');
-    if (editorToolbar) editorToolbar.classList.remove('keyboard-open');
-    
-    toolPanels.forEach(panel => {
-        panel.classList.remove('keyboard-open');
-    });
-}
-
-// ضبط Canvas عند فتح لوحة المفاتيح
-function adjustCanvasForKeyboard(keyboardHeight) {
+    // إنشاء عنصر بطاقة النص
     const canvasWrapper = document.getElementById('canvasWrapperFixed');
-    const canvas = document.getElementById('canvas');
-    const textOverlay = document.getElementById('textOverlay');
+    if (!canvasWrapper) return;
     
-    if (canvasWrapper && canvas && textOverlay) {
-        canvasWrapper.dataset.originalHeight = canvasWrapper.style.height;
-        canvas.dataset.originalMaxHeight = canvas.style.maxHeight;
-        
-        const totalFixedHeight = 71 + 70 + 70 + 50;
-        const availableHeight = window.innerHeight - totalFixedHeight - keyboardHeight;
-        
-        canvasWrapper.style.height = availableHeight + 'px';
-        canvas.style.maxHeight = availableHeight + 'px';
-        canvas.style.maxWidth = '100%';
-        canvas.style.objectFit = 'contain';
-        
-        textOverlay.style.fontSize = 'calc(min(48px, 5vw))';
-        textOverlay.style.maxHeight = (availableHeight - 40) + 'px';
-        textOverlay.style.overflowY = 'auto';
-        
-        canvasWrapper.style.justifyContent = 'flex-start';
-        canvasWrapper.style.paddingTop = '10px';
-    }
-}
-
-// استعادة Canvas بعد إغلاق لوحة المفاتيح
-function restoreCanvasAfterKeyboard() {
-    const canvasWrapper = document.getElementById('canvasWrapperFixed');
-    const canvas = document.getElementById('canvas');
-    const textOverlay = document.getElementById('textOverlay');
-    
-    if (canvasWrapper && canvas && textOverlay) {
-        canvasWrapper.style.height = '';
-        canvasWrapper.style.paddingTop = '';
-        canvasWrapper.style.justifyContent = '';
-        
-        canvas.style.maxHeight = '';
-        canvas.style.objectFit = 'contain';
-        
-        textOverlay.style.fontSize = '';
-        textOverlay.style.maxHeight = '';
-        textOverlay.style.overflowY = '';
-    }
-}
-
-// التعامل مع التركيز على حقل النص
-function handleTextFocus() {
-    console.log('Text field focused');
-    
-    // المشكلة 2: إخفاء النص الافتراضي عند التركيز
-    const textOverlay = document.getElementById('textOverlay');
-    if (textOverlay) {
-        const text = textOverlay.textContent;
-        if (text === 'اكتب هنا...' || text === 'Type here...' || text === 'Écrivez ici...') {
-            textOverlay.textContent = '';
-        }
-    }
-}
-
-function handleTextBlur() {
-    setTimeout(() => {
-        if (!document.activeElement || document.activeElement.id !== 'textOverlay') {
-            handleKeyboardClose();
-            
-            // إعادة النص الافتراضي إذا كان فارغاً
-            const textOverlay = document.getElementById('textOverlay');
-            if (textOverlay && textOverlay.textContent.trim() === '') {
-                const lang = localStorage.getItem('language') || 'ar';
-                const placeholders = {
-                    ar: 'اكتب هنا...',
-                    en: 'Type here...',
-                    fr: 'Écrivez ici...'
-                };
-                textOverlay.textContent = placeholders[lang];
-            }
-        }
-    }, 300);
-}
-
-function handleTextInput() {
-    setTimeout(() => {
-        if (typeof autoAdjustFontSize === 'function') {
-            autoAdjustFontSize();
-        }
-        if (typeof updateTextStyle === 'function') {
-            updateTextStyle();
-        }
-    }, 50);
-}
-
-// تحميل الفئات
-async function loadCategories() {
-    categories = [];
-    console.log('Loading categories...');
-    
-    const promises = [];
-    for (let i = 1; i <= 100; i++) {
-        promises.push(
-            fetch(`data/images${i}.json`)
-                .then(res => res.ok ? res.json() : null)
-                .then(data => {
-                    if (data && data.images && data.images.length > 0) {
-                        categories.push({
-                            id: i,
-                            name: data.name || `فئة ${i}`,
-                            coverImage: data.images[0].url,
-                            images: data.images
-                        });
-                    }
-                })
-                .catch(() => null)
-        );
-    }
-    
-    await Promise.allSettled(promises);
-    
-    if (categories.length === 0) {
-        loadDemoCategories();
-    } else {
-        categories.sort((a, b) => a.id - b.id);
-        displayCategories();
-    }
-    
-    console.log('Categories loaded:', categories.length);
-}
-
-// فئات تجريبية
-function loadDemoCategories() {
-    for (let i = 1; i <= 10; i++) {
-        const images = [];
-        for (let j = 1; j <= 100; j++) {
-            const id = (i - 1) * 100 + j;
-            images.push({
-                id: id,
-                url: `https://picsum.photos/400/500?random=${id}`,
-                title: `صورة ${id}`
-            });
-        }
-        categories.push({
-            id: i,
-            name: `فئة ${i}`,
-            coverImage: images[0].url,
-            images: images
-        });
-    }
-    displayCategories();
-}
-
-// عرض الفئات
-function displayCategories() {
-    const grid = document.getElementById('categoriesGrid');
-    if (!grid) return;
-    
-    grid.innerHTML = '';
-    
-    categories.forEach(cat => {
-        const item = document.createElement('div');
-        item.className = 'category-item';
-        item.onclick = () => openCategory(cat);
-        item.innerHTML = `
-            <img src="${cat.coverImage}" alt="${cat.name}" loading="lazy">
-            <div class="category-overlay">
-                <div class="category-title">${cat.name}</div>
+    // إنشاء عنصر div لبطاقة النص
+    const textCard = document.createElement('div');
+    textCard.id = 'textCard';
+    textCard.className = 'text-card';
+    textCard.style.display = 'none';
+    textCard.innerHTML = `
+        <div class="text-card-header">
+            <span>إضافة نص إلى الصورة</span>
+            <button class="close-card-btn" onclick="closeTextCard()">×</button>
+        </div>
+        <div class="text-card-content">
+            <textarea id="textCardInput" placeholder="اكتب النص هنا..." rows="4"></textarea>
+            <div class="text-card-buttons">
+                <button class="text-card-btn cancel-btn" onclick="closeTextCard()">إلغاء</button>
+                <button class="text-card-btn ok-btn" onclick="applyTextToImage()">موافق</button>
             </div>
-        `;
-        grid.appendChild(item);
-    });
-}
-
-// فتح فئة
-function openCategory(cat) {
-    currentCategory = cat;
-    currentImages = cat.images;
-    document.getElementById('categoryTitle').textContent = cat.name;
-    displayImages();
-    showPage('images');
-}
-
-// عرض الصور
-function displayImages() {
-    const grid = document.getElementById('imageGrid');
-    if (!grid) return;
-    
-    grid.innerHTML = '';
-    
-    currentImages.forEach(img => {
-        const item = document.createElement('div');
-        item.className = 'image-item';
-        item.onclick = () => selectImage(img);
-        
-        const imgEl = document.createElement('img');
-        imgEl.src = img.url;
-        imgEl.alt = img.title || 'صورة';
-        imgEl.loading = 'lazy';
-        
-        item.appendChild(imgEl);
-        grid.appendChild(item);
-    });
-}
-
-// اختيار صورة
-function selectImage(img) {
-    localStorage.setItem('selectedImage', JSON.stringify(img));
-    showPage('editor');
-    
-    setTimeout(() => {
-        if (typeof loadImageToEditor === 'function') {
-            loadImageToEditor(img.url);
-        }
-    }, 100);
-}
-
-// التنقل بين الصفحات
-function showPage(pageName) {
-    console.log('Navigating to:', pageName);
-    
-    const pages = document.querySelectorAll('.page');
-    pages.forEach(p => p.classList.remove('active'));
-    
-    const navBtns = document.querySelectorAll('.nav-btn');
-    navBtns.forEach(b => b.classList.remove('active'));
-    
-    const pageMap = {
-        'categories': 'categoriesPage',
-        'images': 'imagesPage',
-        'editor': 'editorPage',
-        'settings': 'settingsPage'
-    };
-    
-    const page = document.getElementById(pageMap[pageName]);
-    if (page) page.classList.add('active');
-    
-    const navMap = {
-        'categories': 'navCategories',
-        'editor': 'navEditor',
-        'settings': 'navSettings'
-    };
-    
-    const btn = document.getElementById(navMap[pageName]);
-    if (btn) btn.classList.add('active');
-    
-    if (pageName !== 'editor') {
-        handleKeyboardClose();
-    }
-}
-
-// العودة
-function goBackToImages() {
-    if (currentCategory) {
-        showPage('images');
-    } else {
-        showPage('categories');
-    }
-}
-
-// ============== دالة التنزيل المحسنة ==============
-async function downloadImage() {
-    try {
-        console.log('بدء عملية التنزيل...');
-        
-        // التحقق من وجود صورة
-        const canvas = document.getElementById('canvas');
-        if (!canvas || !canvas.width || !canvas.width > 0) {
-            showAlert('يرجى اختيار صورة أولاً', 'error');
-            return;
-        }
-        
-        // إظهار مؤشر تحميل
-        showLoadingIndicator('جاري إنشاء الصورة النهائية...');
-        
-        // المشكلة 2: استخدام دالة التصدير الخاصة
-        let exportCanvas;
-        if (typeof prepareImageForExport === 'function') {
-            exportCanvas = prepareImageForExport();
-            if (!exportCanvas) {
-                hideLoadingIndicator();
-                showAlert('فشل في تحضير الصورة', 'error');
-                return;
-            }
-        } else {
-            hideLoadingIndicator();
-            showAlert('دالة الرسم غير متوفرة', 'error');
-            return;
-        }
-        
-        // انتظار الرسم
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // إنشاء ملف للتنزيل
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `صورة-مع-نص-${timestamp}.png`;
-        
-        // محاولة التنزيل بالطريقة العادية
-        try {
-            const link = document.createElement('a');
-            link.download = filename;
-            
-            // تحويل Canvas إلى صورة عالية الجودة
-            exportCanvas.toBlob((blob) => {
-                if (!blob) {
-                    hideLoadingIndicator();
-                    showAlert('فشل في إنشاء الصورة', 'error');
-                    return;
-                }
-                
-                const url = URL.createObjectURL(blob);
-                link.href = url;
-                
-                // إضافة الرابط والنقر عليه
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                // تحرير الذاكرة بعد ثانية
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-                
-                hideLoadingIndicator();
-                showAlert('تم تنزيل الصورة بنجاح!', 'success');
-                
-                console.log('تم التنزيل بنجاح');
-                
-            }, 'image/png', 1.0);
-            
-        } catch (error) {
-            console.error('خطأ في التنزيل:', error);
-            hideLoadingIndicator();
-            
-            // طريقة بديلة: فتح الصورة في نافذة جديدة
-            try {
-                const dataURL = exportCanvas.toDataURL('image/png', 1.0);
-                const newWindow = window.open();
-                if (newWindow) {
-                    newWindow.document.write(`
-                        <html>
-                        <head>
-                            <title>حفظ الصورة</title>
-                            <style>
-                                body { 
-                                    margin: 0; 
-                                    padding: 20px; 
-                                    text-align: center; 
-                                    font-family: Arial, sans-serif; 
-                                    background: #f5f5f7;
-                                }
-                                .container { 
-                                    max-width: 800px; 
-                                    margin: 0 auto; 
-                                    background: white; 
-                                    padding: 20px; 
-                                    border-radius: 10px; 
-                                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                                }
-                                img { 
-                                    max-width: 100%; 
-                                    height: auto; 
-                                    border: 1px solid #ddd; 
-                                    border-radius: 5px; 
-                                    margin: 20px 0;
-                                }
-                                .instructions {
-                                    background: #f8f9fa;
-                                    padding: 15px;
-                                    border-radius: 5px;
-                                    margin: 20px 0;
-                                    text-align: right;
-                                }
-                                .instructions h3 {
-                                    margin-top: 0;
-                                }
-                                .instructions ol {
-                                    text-align: right;
-                                    padding-right: 20px;
-                                }
-                                button {
-                                    background: #007aff;
-                                    color: white;
-                                    border: none;
-                                    padding: 10px 20px;
-                                    border-radius: 5px;
-                                    font-size: 16px;
-                                    cursor: pointer;
-                                    margin: 10px;
-                                }
-                                .close-btn {
-                                    background: #f44336;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="container">
-                                <h2>حفظ الصورة</h2>
-                                <div class="instructions">
-                                    <h3>طريقة الحفظ:</h3>
-                                    <ol>
-                                        <li>اضغط مع الاستمرار على الصورة</li>
-                                        <li>اختر "حفظ الصورة" أو "تنزيل الصورة"</li>
-                                        <li>اختر الموقع المناسب لحفظ الصورة</li>
-                                    </ol>
-                                </div>
-                                <img src="${dataURL}" alt="الصورة المحفوظة" />
-                                <p>اسم الملف: ${filename}</p>
-                                <button onclick="window.print()">طباعة</button>
-                                <button onclick="window.close()" class="close-btn">إغلاق</button>
-                            </div>
-                        </body>
-                        </html>
-                    `);
-                    newWindow.document.close();
-                    showAlert('افتح نافذة الحفظ لحفظ الصورة', 'info');
-                }
-            } catch (windowError) {
-                console.error('خطأ في فتح النافذة:', windowError);
-                showAlert('حدث خطأ. حاول استخدام متصفح مختلف.', 'error');
-            }
-        }
-        
-    } catch (error) {
-        console.error('خطأ عام في التنزيل:', error);
-        hideLoadingIndicator();
-        showAlert('حدث خطأ أثناء التنزيل: ' + error.message, 'error');
-    }
-}
-
-// ============== دالة المشاركة ==============
-async function shareImage() {
-    try {
-        console.log('بدء عملية المشاركة...');
-        
-        // التحقق من وجود صورة
-        const canvas = document.getElementById('canvas');
-        if (!canvas || !canvas.width || !canvas.width > 0) {
-            showAlert('يرجى اختيار صورة أولاً', 'error');
-            return;
-        }
-        
-        // التحقق من دعم المشاركة
-        if (!navigator.share) {
-            showAlert('المشاركة غير مدعومة في هذا المتصفح', 'info');
-            return downloadImage();
-        }
-        
-        // إظهار مؤشر تحميل
-        showLoadingIndicator('جاري تحضير الصورة للمشاركة...');
-        
-        // المشكلة 2: استخدام دالة التصدير الخاصة
-        let exportCanvas;
-        if (typeof prepareImageForExport === 'function') {
-            exportCanvas = prepareImageForExport();
-            if (!exportCanvas) {
-                hideLoadingIndicator();
-                showAlert('فشل في تحضير الصورة', 'error');
-                return;
-            }
-        } else {
-            hideLoadingIndicator();
-            showAlert('دالة الرسم غير متوفرة', 'error');
-            return;
-        }
-        
-        // انتظار الرسم
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // تحويل Canvas إلى Blob
-        exportCanvas.toBlob(async (blob) => {
-            if (!blob) {
-                hideLoadingIndicator();
-                showAlert('فشل في إنشاء الصورة', 'error');
-                return;
-            }
-            
-            // إنشاء ملف من Blob
-            const file = new File([blob], 'صورة-مع-نص.png', { 
-                type: 'image/png',
-                lastModified: Date.now()
-            });
-            
-            try {
-                // التحقق من إمكانية المشاركة
-                if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
-                    hideLoadingIndicator();
-                    showAlert('لا يمكن مشاركة الملف في هذا الجهاز', 'info');
-                    return downloadImage();
-                }
-                
-                // مشاركة الملف
-                await navigator.share({
-                    files: [file],
-                    title: 'صورة مع نص',
-                    text: 'شاهد هذه الصورة الرائعة مع نص مكتوب عليها!'
-                });
-                
-                hideLoadingIndicator();
-                showAlert('تم المشاركة بنجاح!', 'success');
-                console.log('تمت المشاركة بنجاح');
-                
-            } catch (shareError) {
-                hideLoadingIndicator();
-                
-                // إذا كان الخطأ بسبب إلغاء المستخدم
-                if (shareError.name === 'AbortError') {
-                    console.log('تم إلغاء المشاركة من قبل المستخدم');
-                    return;
-                }
-                
-                console.error('خطأ في المشاركة:', shareError);
-                showAlert('فشلت المشاركة: ' + shareError.message, 'error');
-                
-                // محاولة التنزيل كبديل
-                downloadImage();
-            }
-            
-        }, 'image/png', 1.0);
-        
-    } catch (error) {
-        console.error('خطأ في المشاركة:', error);
-        hideLoadingIndicator();
-        showAlert('حدث خطأ أثناء المشاركة: ' + error.message, 'error');
-    }
-}
-
-// ============== دوال مساعدة ==============
-function showAlert(message, type = 'info') {
-    // إزالة أي رسالة سابقة
-    const existingAlert = document.querySelector('.custom-alert');
-    if (existingAlert) {
-        existingAlert.remove();
-    }
-    
-    // إنشاء عنصر الرسالة
-    const alert = document.createElement('div');
-    alert.className = `custom-alert ${type}`;
-    alert.innerHTML = `
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()" style="
-            background: none;
-            border: none;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 0 10px;
-        ">×</button>
-    `;
-    
-    document.body.appendChild(alert);
-    
-    // إزالة الرسالة تلقائياً بعد 5 ثواني
-    setTimeout(() => {
-        if (alert.parentElement) {
-            alert.remove();
-        }
-    }, 5000);
-}
-
-function showLoadingIndicator(message = 'جاري المعالجة...') {
-    // إزالة أي مؤشر سابق
-    const existingLoader = document.querySelector('.custom-loader');
-    if (existingLoader) {
-        existingLoader.remove();
-    }
-    
-    // إنشاء عنصر التحميل
-    const loader = document.createElement('div');
-    loader.className = 'custom-loader';
-    loader.innerHTML = `
-        <div class="loader-content">
-            <div class="loader-spinner"></div>
-            <div class="loader-text">${message}</div>
         </div>
     `;
     
-    document.body.appendChild(loader);
+    canvasWrapper.appendChild(textCard);
+    
+    // إضافة زر فتح بطاقة النص في شريط الأدوات
+    addTextCardButton();
 }
 
-function hideLoadingIndicator() {
-    const loader = document.querySelector('.custom-loader');
-    if (loader) {
-        loader.remove();
+// إضافة زر بطاقة النص إلى شريط الأدوات
+function addTextCardButton() {
+    // إزالة زر النص القديم إذا كان موجوداً
+    const oldTextBtn = document.querySelector('.tool-btn[onclick*="textPanel"]');
+    if (oldTextBtn) {
+        oldTextBtn.remove();
+    }
+    
+    const editorToolbar = document.querySelector('.editor-toolbar');
+    if (!editorToolbar) return;
+    
+    // إنشاء زر جديد
+    const textBtn = document.createElement('button');
+    textBtn.className = 'tool-btn';
+    textBtn.innerHTML = `
+        <span class="material-symbols-outlined">text_fields</span>
+        <span>نص</span>
+    `;
+    textBtn.onclick = () => toggleTextCard();
+    
+    // إدراج الزر بعد زر الخط مباشرة
+    const fontBtn = document.querySelector('.tool-btn[onclick*="fontPanel"]');
+    if (fontBtn) {
+        fontBtn.insertAdjacentElement('afterend', textBtn);
+    } else {
+        editorToolbar.insertAdjacentElement('afterbegin', textBtn);
     }
 }
+
+// فتح/إغلاق بطاقة النص
+function toggleTextCard() {
+    const textCard = document.getElementById('textCard');
+    if (!textCard) return;
+    
+    if (textCard.style.display === 'none') {
+        openTextCard();
+    } else {
+        closeTextCard();
+    }
+}
+
+function openTextCard() {
+    const textCard = document.getElementById('textCard');
+    const textInput = document.getElementById('textCardInput');
+    
+    if (textCard && textInput) {
+        textCard.style.display = 'block';
+        textCardVisible = true;
+        
+        // التركيز على حقل النص بعد تأخير بسيط
+        setTimeout(() => {
+            textInput.focus();
+            handleKeyboardOpen(300); // محاكاة فتح لوحة المفاتيح
+        }, 100);
+    }
+}
+
+function closeTextCard() {
+    const textCard = document.getElementById('textCard');
+    const textInput = document.getElementById('textCardInput');
+    
+    if (textCard && textInput) {
+        textCard.style.display = 'none';
+        textInput.value = '';
+        textCardVisible = false;
+        
+        handleKeyboardClose(); // محاكاة إغلاق لوحة المفاتيح
+    }
+}
+
+// تطبيق النص على الصورة
+function applyTextToImage() {
+    const textInput = document.getElementById('textCardInput');
+    if (!textInput) return;
+    
+    const text = textInput.value.trim();
+    if (!text) {
+        showAlert('يرجى كتابة نص', 'error');
+        return;
+    }
+    
+    // تخزين النص في متغير لتستخدمه دالة الرسم
+    window.currentText = text;
+    
+    // تحديث الصورة بالنص الجديد
+    if (typeof renderTextOnCanvas === 'function') {
+        renderTextOnCanvas(false);
+        showAlert('تم إضافة النص إلى الصورة', 'success');
+    }
+    
+    closeTextCard();
+}
+
+// حذف النص من الصورة
+function clearTextFromImage() {
+    window.currentText = '';
+    
+    // إعادة رسم الصورة بدون نص
+    if (typeof renderTextOnCanvas === 'function') {
+        renderTextOnCanvas(false);
+        showAlert('تم حذف النص من الصورة', 'success');
+    }
+}
+
+// إضافة زر حذف النص
+function addDeleteTextButton() {
+    const effectsPanel = document.getElementById('effectsPanel');
+    if (!effectsPanel) return;
+    
+    // التحقق من عدم وجود الزر مسبقاً
+    if (document.getElementById('deleteTextBtn')) return;
+    
+    const deleteBtnHtml = `
+        <button class="effect-option delete-text-btn" id="deleteTextBtn" onclick="clearTextFromImage()">
+            <span class="material-symbols-outlined">delete</span>
+            <span>حذف النص</span>
+        </button>
+    `;
+    
+    effectsPanel.innerHTML += deleteBtnHtml;
+}
+
+// بقية الكود بدون تغيير...
+// [يبقى باقي الكود كما هو مع إزالة دوال handleTextFocus و handleTextBlur و handleTextInput]
