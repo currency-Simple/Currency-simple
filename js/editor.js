@@ -1,4 +1,3 @@
-[file content begin]
 // متغيرات المحرر
 let canvas, ctx;
 let currentImage = null;
@@ -277,13 +276,3 @@ function renderTextOnCanvas() {
         return false;
     }
 }
-
-// دالة مساعدة لتحميل الصورة على الـ canvas
-function prepareCanvasForExport() {
-    if (!renderTextOnCanvas()) {
-        console.error('فشل في تحضير Canvas للتصدير');
-        return false;
-    }
-    return true;
-}
-[file content end]
