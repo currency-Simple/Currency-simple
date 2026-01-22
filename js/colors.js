@@ -1,4 +1,4 @@
-// ألوان ColorHunt
+// ألوان ColorHunt مع الألوان الإضافية
 const COLORS = [
   "#F7A8C4", "#F37199", "#E53888", "#AC1754", "#FFDFEF", "#EABDE6", "#D69ADE", "#AA60C8",
   "#F6CE71", "#CC561E", "#FF6500", "#C40C0C", "#F0F0DB", "#E1D9BC", "#ACBAC4", "#30364F",
@@ -14,7 +14,14 @@ const COLORS = [
   "#F5F2F2", "#FEB05D", "#5A7ACD", "#2B2A2A", "#BDE8F5", "#4988C4", "#1C4D8D", "#0F2854",
   "#001F3D", "#B8DB80", "#547792", "#94B4C1", "#5A7863", "#EBF4DD", "#F6F3C2", "#FCF9EA",
   "#FFA240", "#FFD41D", "#000080", "#FF0000", "#16476A", "#132440", "#FDB5CE", "#4300FF",
-  "#00FFDE", "#FF2DD1", "#FDFFB8", "#63C8FF", "#4DFFBE", "#FFFFFF"
+  "#00FFDE", "#FF2DD1", "#FDFFB8", "#63C8FF", "#4DFFBE", "#FFFFFF",
+  
+  // الألوان الإضافية المطلوبة
+  "#F4F4F4", "#0C2B4E", "#1A3D64", "#1D546C", "#FFF8D4", "#A3B087", "#313647", "#435663", "#D6F4ED",
+  "#87BAC3", "#53629E", "#473472", "#C9B59C", "#D9CFC7", "#EFE9E3", "#F9F8F6", "#703B3B", "#A18D6D", "#E1D0B3", "#9BB4C0",
+  "#B77466", "#FFE1AF", "#E2B59A", "#957C62", "#CD2C58", "#E06B80", "#FFC69D", "#FFE6D4", "#ECF4E8", "#CBF3BB", "#ABE7B2", "#93BFC7", "#84994F", "#FFE797", "#FCB53B", "#A72703", "#E52020", "#FBA518",
+  "#F9CB43", "#A89C29", "#FF714B", "#C71E64", "#F2F2F2", "#FF0066",
+  "#4D2D8C", "#6A0066", "#934790", "#E8D4B7", "#E62727", "#F3F2EC", "#DCDCDC", "#1E93AB", "#4E56C0", "#9B5DE0", "#D78FEE", "#FDCFFA", "#FCF9EA", "#BADFDB", "#FFA4A4", "#FFBDBD", "#7B542F", "#B6771D", "#FF9D00", "#FFCF71", "#84994F", "#FFE797", "#FCB53B", "#A72703"
 ];
 
 // متغيرات لتخزين الألوان المختارة
@@ -74,7 +81,10 @@ function createColorItem(color, onClick) {
   item.title = color;
   
   // إضافة حدود للألوان الفاتحة جداً
-  if (color === "#FFFFFF" || color === "#FFFBB1" || color === "#FFFDCE") {
+  if (color === "#FFFFFF" || color === "#FFFBB1" || color === "#FFFDCE" || 
+      color === "#F4F4F4" || color === "#F2F2F2" || color === "#FCF9EA" ||
+      color === "#F9F8F6" || color === "#F3F2EC" || color === "#EFE9E3" ||
+      color === "#DCDCDC" || color === "#ECF4E8" || color === "#FFE6D4") {
     item.style.border = "2px solid #ccc";
   }
   
