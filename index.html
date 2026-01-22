@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, height=device-height">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>محرر النصوص على الصور</title>
+    
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    
+    <style>
+        /* منع resize عند ظهور لوحة المفاتيح */
+        html {
+            height: 100vh;
+            height: -webkit-fill-available;
+        }
+        
+        body {
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
+    </style>
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- صفحة الفئات -->
+    <div id="categoriesPage" class="page active">
+        <div class="header">
+            <h1>اختر فئة</h1>
+        </div>
+        <div class="categories-grid" id="categoriesGrid"></div>
+    </div>
+
+    <!-- صفحة الصور -->
+    <div id="imagesPage" class="page">
+        <div class="header">
+            <button onclick="showPage('categories')" class="icon-btn back-btn">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h1 id="categoryTitle">الصور</h1>
+        </div>
+        <div class="image-grid" id="imageGrid"></div>
+    </div>
+
+    <!-- صفحة المحرر -->
+    <div id="editorPage" class="page">
+        <div class="header">
+            <button onclick="goBackToImages()" class="icon-btn back-btn">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h1 data-lang="edit">تحرير</h1>
+            <div class="header-actions">
+                <button onclick="shareImage()" class="icon-btn" title="مشاركة">
+                    <span class="material-symbols-outlined">share</span>
+                </button>
+                <button onclick="downloadImage()" class="icon-btn" title="تنزيل">
+                    <span class="material-symbols-outlined">download</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="editor-container">
+            <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
+                <canvas id="canvas"></canvas>
+                <div class="text-overlay" id="textOverlay" contenteditable="true" spellcheck="false"></div>
+            </div>
+
+            <!-- أدوات التحرير -->
+            <div class="editor-toolbar">
+                <button class="tool-btn" onclick="toggleToolPanel('fontPanel')">
+                    <span class="material-symbols-outlined">brand_family</span>
+                    <span data-lang="font">الخط</span>
+                </button>
+
+                <button class="tool-btn" onclick="toggleToolPanel('sizePanel')">
+                    <span class="material-symbols-outlined">format_size</span>
+                    <span data-lang="size">الحجم</span>
+                </button>
+
+                <button class="tool-btn" onclick="toggleToolPanel('colorPanel')">
+                    <span class="material-symbols-outlined">colors</span>
+                    <span data-lang="color">اللون</span>
+                </button>
+
+                <button class="tool-btn" onclick="toggleToolPanel('strokePanel')">
+                    <span class="material-symbols-outlined">format_color_text</span>
+                    <span data-lang="stroke">الحواف</span>
+                </button>
+
+                <button class="tool-btn" onclick="toggleToolPanel('effectsPanel')">
+                    <span class="material-symbols-outlined">bedtime</span>
+                    <span data-lang="effects">تأثيرات</span>
+                </button>
+            </div>
+
+            <!-- لوحات الأدوات المنبثقة -->
+            <div id="fontPanel" class="tool-panel">
+                <select id="fontFamily" class="tool-select"></select>
+            </div>
+
+            <div id="sizePanel" class="tool-panel">
+                <input type="range" id="fontSize" min="20" max="120" value="48" class="size-slider">
+                <span id="fontSizeDisplay">48</span>
+            </div>
+
+            <div id="colorPanel" class="tool-panel">
+                <div class="color-grid" id="colorGrid"></div>
+            </div>
+
+            <div id="strokePanel" class="tool-panel">
+                <div class="color-grid" id="strokeColorGrid"></div>
+                <input type="range" id="strokeWidth" min="0" max="10" value="3" class="stroke-slider">
+                <span id="strokeWidthDisplay">3</span>
+            </div>
+
+            <div id="effectsPanel" class="tool-panel">
+                <label class="effect-option">
+                    <input type="checkbox" id="shadowEnabled" checked>
+                    <span data-lang="shadow">ظل</span>
+                </label>
+                <label class="effect-option">
+                    <input type="checkbox" id="cardEnabled">
+                    <span data-lang="background">خلفية</span>
+                </label>
+                <div class="color-grid" id="cardColorGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- صفحة الإعدادات -->
+    <div id="settingsPage" class="page">
+        <div class="header">
+            <h1 data-lang="settings">الإعدادات</h1>
+        </div>
+        <div class="settings-content">
+            <div class="setting-card">
+                <h3 data-lang="theme">السمة</h3>
+                <div class="theme-options">
+                    <button class="theme-btn active" onclick="changeTheme('light')" data-theme="light">
+                        <span data-lang="light">فاتح</span>
+                    </button>
+                    <button class="theme-btn" onclick="changeTheme('dark')" data-theme="dark">
+                        <span data-lang="dark">داكن</span>
+                    </button>
+                    <button class="theme-btn" onclick="changeTheme('blue')" data-theme="blue">
+                        <span data-lang="blue">أزرق</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="setting-card">
+                <h3 data-lang="language">اللغة</h3>
+                <div class="language-options">
+                    <button class="lang-btn active" onclick="changeLanguage('ar')" data-lang-btn="ar">
+                        العربية
+                    </button>
+                    <button class="lang-btn" onclick="changeLanguage('en')" data-lang-btn="en">
+                        English
+                    </button>
+                    <button class="lang-btn" onclick="changeLanguage('fr')" data-lang-btn="fr">
+                        Français
+                    </button>
+                </div>
+            </div>
+
+            <div class="setting-card">
+                <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
+                    <span class="material-symbols-outlined">shield</span>
+                    <span data-lang="privacy">سياسة الخصوصية</span>
+                </a>
+                <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
+                    <span class="material-symbols-outlined">info</span>
+                    <span data-lang="about">معلومات حول</span>
+                </a>
+                <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
+                    <span class="material-symbols-outlined">help</span>
+                    <span data-lang="help">مركز المساعدة</span>
+                </a>
+                <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
+                    <span class="material-symbols-outlined">mail</span>
+                    <span data-lang="contact">اتصل بنا</span>
+                </a>
+            </div>
+
+            <div class="setting-card">
+                <p style="text-align: center; color: #86868b; font-size: 14px;">
+                    <span data-lang="version">الإصدار</span> 2.0
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- القائمة السفلية -->
+    <div class="bottom-nav">
+        <button onclick="showPage('categories')" class="nav-btn active" id="navCategories">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span data-lang="categories">الفئات</span>
+        </button>
+        <button onclick="showPage('editor')" class="nav-btn" id="navEditor">
+            <span class="material-symbols-outlined">edit</span>
+            <span data-lang="editor">التحرير</span>
+        </button>
+        <button onclick="showPage('settings')" class="nav-btn" id="navSettings">
+            <span class="material-symbols-outlined">settings</span>
+            <span data-lang="settings">الإعدادات</span>
+        </button>
+    </div>
+
+    <script src="js/fonts.js"></script>
+    <script src="js/colors.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/settings.js"></script>
+    
+    <script>
+        // منع resize الصفحة عند ظهور لوحة المفاتيح
+        window.addEventListener('resize', function() {
+            document.body.style.height = window.innerHeight + 'px';
+        });
+        
+        // تطبيق الارتفاع الأولي
+        document.body.style.height = window.innerHeight + 'px';
+    </script>
+</body>
+</html>
