@@ -11,11 +11,6 @@ window.addEventListener('DOMContentLoaded', () => {
     showPage('categories');
     
     setupKeyboardListeners();
-    
-    // إضافة PWA capabilities
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(console.error);
-    }
 });
 
 // إعداد مستمعات لوحة المفاتيح
@@ -209,28 +204,30 @@ function goBackToImages() {
     }
 }
 
-// ============== دالة التنزيل المحسنة ==============
+// ============== دالة التنزيل المحسنة (المشكلة 1) ==============
 async function downloadImage() {
     try {
         console.log('بدء عملية التنزيل...');
         
         const canvas = document.getElementById('canvas');
         if (!canvas || !canvas.width) {
-            alert('يرجى اختيار صورة أولاً');
+            showAlert('يرجى اختيار صورة أولاً', 'error');
             return;
         }
         
         // عرض تحميل
-        showLoadingIndicator('جاري تحضير الصورة للتنزيل...');
+        showLoadingIndicator('جاري إنشاء الصورة النهائية...');
         
-        // رسم النص على Canvas أولاً
-        if (typeof renderTextOnCanvas === 'function') {
-            const success = renderTextOnCanvas();
-            if (!success) {
-                hideLoadingIndicator();
-                alert('فشل في تحضير الصورة');
-                return;
-            }
+        // المشكلة 1: استخدام دالة التصدير الخاصة
+        let exportCanvas;
+        if (typeof prepareImageForExport === 'function') {
+            exportCanvas = prepareImageForExport();
+        } else if (typeof renderTextOnCanvas === 'function') {
+            // استخدام الطريقة القديمة كبديل
+            renderTextOnCanvas();
+            exportCanvas = canvas;
+        } else {
+            exportCanvas = canvas;
         }
         
         // انتظار الرسم
@@ -240,16 +237,16 @@ async function downloadImage() {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const filename = `صورة-مع-نص-${timestamp}.png`;
         
-        // محاولة التنزيل بالطريقة العادية
+        // محاولة التنزيل
         try {
             const link = document.createElement('a');
             link.download = filename;
             
-            // تحويل Canvas إلى صورة عالية الجودة
-            canvas.toBlob((blob) => {
+            // تحويل Canvas إلى صورة
+            exportCanvas.toBlob((blob) => {
                 if (!blob) {
                     hideLoadingIndicator();
-                    alert('فشل في إنشاء الصورة');
+                    showAlert('فشل في إنشاء الصورة', 'error');
                     return;
                 }
                 
@@ -266,6 +263,7 @@ async function downloadImage() {
                 
                 hideLoadingIndicator();
                 showAlert('تم تنزيل الصورة بنجاح!', 'success');
+                console.log('تم التنزيل بنجاح');
                 
             }, 'image/png', 1.0);
             
@@ -273,8 +271,8 @@ async function downloadImage() {
             console.error('خطأ في التنزيل:', error);
             hideLoadingIndicator();
             
-            // محاولة طريقة بديلة
-            const dataURL = canvas.toDataURL('image/png', 1.0);
+            // طريقة بديلة
+            const dataURL = exportCanvas.toDataURL('image/png', 1.0);
             const newWindow = window.open();
             if (newWindow) {
                 newWindow.document.write(`
@@ -288,14 +286,13 @@ async function downloadImage() {
                     </html>
                 `);
                 newWindow.document.close();
-                showAlert('افتح نافذة الحفظ لحفظ الصورة', 'info');
             }
         }
         
     } catch (error) {
         console.error('خطأ عام في التنزيل:', error);
         hideLoadingIndicator();
-        alert('حدث خطأ أثناء التنزيل: ' + error.message);
+        showAlert('حدث خطأ أثناء التنزيل', 'error');
     }
 }
 
@@ -304,27 +301,34 @@ async function shareImage() {
     try {
         const canvas = document.getElementById('canvas');
         if (!canvas || !canvas.width) {
-            alert('يرجى اختيار صورة أولاً');
+            showAlert('يرجى اختيار صورة أولاً', 'error');
             return;
         }
         
         if (!navigator.share) {
-            alert('المشاركة غير مدعومة في هذا المتصفح');
+            showAlert('المشاركة غير مدعومة في هذا المتصفح', 'info');
             return downloadImage();
         }
         
         showLoadingIndicator('جاري تحضير الصورة للمشاركة...');
         
-        if (typeof renderTextOnCanvas === 'function') {
-            renderTextOnCanvas();
+        // استخدام دالة التصدير
+        let exportCanvas;
+        if (typeof prepareImageForExport === 'function') {
+            exportCanvas = prepareImageForExport();
+        } else {
+            if (typeof renderTextOnCanvas === 'function') {
+                renderTextOnCanvas();
+            }
+            exportCanvas = canvas;
         }
         
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        canvas.toBlob(async (blob) => {
+        exportCanvas.toBlob(async (blob) => {
             if (!blob) {
                 hideLoadingIndicator();
-                alert('فشل في إنشاء الصورة');
+                showAlert('فشل في إنشاء الصورة', 'error');
                 return;
             }
             
@@ -344,13 +348,13 @@ async function shareImage() {
                     showAlert('تم المشاركة بنجاح!', 'success');
                 } else {
                     hideLoadingIndicator();
-                    alert('لا يمكن مشاركة الملف في هذا الجهاز');
+                    showAlert('لا يمكن مشاركة الملف في هذا الجهاز', 'info');
                 }
             } catch (shareError) {
                 hideLoadingIndicator();
                 if (shareError.name !== 'AbortError') {
                     console.error('خطأ في المشاركة:', shareError);
-                    alert('فشلت المشاركة');
+                    showAlert('فشلت المشاركة', 'error');
                 }
             }
         }, 'image/png', 1.0);
@@ -358,7 +362,7 @@ async function shareImage() {
     } catch (error) {
         console.error('خطأ في المشاركة:', error);
         hideLoadingIndicator();
-        alert('حدث خطأ أثناء المشاركة');
+        showAlert('حدث خطأ أثناء المشاركة', 'error');
     }
 }
 
