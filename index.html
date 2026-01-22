@@ -28,6 +28,18 @@
             position: fixed !important;
             transform: none !important;
         }
+        
+        /* إخفاء قائمة السياق عند النقر الطويل */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .text-overlay {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+        }
     </style>
     
     <link rel="stylesheet" href="css/style.css">
@@ -60,10 +72,10 @@
             </button>
             <h1 data-lang="edit">تحرير</h1>
             <div class="header-actions">
-                <button onclick="shareImage()" class="icon-btn" title="مشاركة">
+                <button onclick="shareImage()" class="icon-btn" title="مشاركة" id="shareBtn">
                     <span class="material-symbols-outlined">share</span>
                 </button>
-                <button onclick="downloadImage()" class="icon-btn" title="تنزيل">
+                <button onclick="downloadImage()" class="icon-btn" title="تنزيل" id="downloadBtn">
                     <span class="material-symbols-outlined">download</span>
                 </button>
             </div>
@@ -194,7 +206,7 @@
 
             <div class="setting-card">
                 <p style="text-align: center; color: #86868b; font-size: 14px;">
-                    <span data-lang="version">الإصدار</span> 2.0
+                    <span data-lang="version">الإصدار</span> 2.1
                 </p>
             </div>
         </div>
@@ -224,6 +236,8 @@
     <script src="js/app.js"></script>
     
     <script>
+        // ============== إصلاحات رئيسية ==============
+        
         // منع resize الصفحة عند ظهور لوحة المفاتيح
         window.addEventListener('resize', function() {
             document.body.style.height = window.innerHeight + 'px';
@@ -246,6 +260,331 @@
                 setTimeout(initializeColors, 100);
             }
         });
+        
+        // ============== إصلاح مشكلة التنزيل ==============
+        
+        // منع السلوك الافتراضي لأزرار التنزيل والمشاركة
+        document.addEventListener('DOMContentLoaded', function() {
+            // إصلاح زر التنزيل
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    return false;
+                }, true);
+                
+                // إضافة مستمع آخر للتأكد
+                downloadBtn.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    return false;
+                }, true);
+                
+                downloadBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    return false;
+                }, true);
+            }
+            
+            // إصلاح زر المشاركة
+            const shareBtn = document.getElementById('shareBtn');
+            if (shareBtn) {
+                shareBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    return false;
+                }, true);
+                
+                shareBtn.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    return false;
+                }, true);
+                
+                shareBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    return false;
+                }, true);
+            }
+        });
+        
+        // ============== حلول بديلة للتنزيل ==============
+        
+        // دالة تنزيل محسنة تعمل في جميع المتصفحات
+        function enhancedDownload(dataURL, filename) {
+            try {
+                // الطريقة الأولى: إنشاء رابط وتنزيله
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataURL;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                
+                // محاولة النقر برمجياً
+                const clickEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                // إرسال الحدث
+                link.dispatchEvent(clickEvent);
+                
+                // محاولة النقر المباشر
+                try {
+                    link.click();
+                } catch (clickError) {
+                    console.log('النقر المباشر فشل، جرب طريقة أخرى:', clickError);
+                }
+                
+                // تنظيف
+                setTimeout(() => {
+                    if (link.parentNode) {
+                        document.body.removeChild(link);
+                    }
+                    
+                    // تحرير الذاكرة لروابط blob
+                    if (link.href && link.href.startsWith('blob:')) {
+                        URL.revokeObjectURL(link.href);
+                    }
+                }, 1000);
+                
+                return true;
+                
+            } catch (error) {
+                console.error('خطأ في الطريقة الأولى:', error);
+                
+                // الطريقة الثانية: فتح في نافذة جديدة
+                try {
+                    const newWindow = window.open();
+                    if (newWindow) {
+                        newWindow.document.write('<img src="' + dataURL + '" />');
+                        setTimeout(() => {
+                            newWindow.document.close();
+                            newWindow.print();
+                        }, 500);
+                    }
+                } catch (windowError) {
+                    console.error('خطأ في الطريقة الثانية:', windowError);
+                    
+                    // الطريقة الثالثة: عرض رسالة للمستخدم
+                    alert('لتنزيل الصورة:\n1. اضغط مع الاستمرار على الصورة\n2. اختر "حفظ الصورة" أو "تنزيل الصورة"');
+                    
+                    // عرض الصورة في صفحة جديدة للمستخدم
+                    const imgWindow = window.open('', '_blank');
+                    imgWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>حفظ الصورة</title>
+                            <style>
+                                body { 
+                                    margin: 0; 
+                                    padding: 20px; 
+                                    text-align: center; 
+                                    font-family: Arial, sans-serif; 
+                                    background: #f5f5f7;
+                                }
+                                .container { 
+                                    max-width: 800px; 
+                                    margin: 0 auto; 
+                                    background: white; 
+                                    padding: 20px; 
+                                    border-radius: 10px; 
+                                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                                }
+                                img { 
+                                    max-width: 100%; 
+                                    height: auto; 
+                                    border: 1px solid #ddd; 
+                                    border-radius: 5px; 
+                                    margin: 20px 0;
+                                }
+                                .instructions {
+                                    background: #f8f9fa;
+                                    padding: 15px;
+                                    border-radius: 5px;
+                                    margin: 20px 0;
+                                    text-align: right;
+                                }
+                                .instructions h3 {
+                                    margin-top: 0;
+                                }
+                                .instructions ol {
+                                    text-align: right;
+                                    padding-right: 20px;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <h2>حفظ الصورة</h2>
+                                <div class="instructions">
+                                    <h3>طريقة الحفظ:</h3>
+                                    <ol>
+                                        <li>اضغط مع الاستمرار على الصورة</li>
+                                        <li>اختر "حفظ الصورة" أو "تنزيل الصورة"</li>
+                                        <li>اختر الموقع المناسب لحفظ الصورة</li>
+                                    </ol>
+                                </div>
+                                <img src="${dataURL}" alt="الصورة المحفوظة" />
+                                <p>اسم الملف: ${filename}</p>
+                                <button onclick="window.print()" style="
+                                    background: #007aff;
+                                    color: white;
+                                    border: none;
+                                    padding: 10px 20px;
+                                    border-radius: 5px;
+                                    font-size: 16px;
+                                    cursor: pointer;
+                                    margin: 10px;
+                                ">طباعة</button>
+                                <button onclick="window.close()" style="
+                                    background: #f44336;
+                                    color: white;
+                                    border: none;
+                                    padding: 10px 20px;
+                                    border-radius: 5px;
+                                    font-size: 16px;
+                                    cursor: pointer;
+                                    margin: 10px;
+                                ">إغلاق</button>
+                            </div>
+                        </body>
+                        </html>
+                    `);
+                    imgWindow.document.close();
+                }
+                
+                return false;
+            }
+        }
+        
+        // ============== تحسينات للمستخدم ==============
+        
+        // إضافة إشعار للمستخدم عند أول استخدام
+        let downloadHelpShown = localStorage.getItem('downloadHelpShown');
+        if (!downloadHelpShown) {
+            setTimeout(() => {
+                if (document.getElementById('editorPage').classList.contains('active')) {
+                    const helpDiv = document.createElement('div');
+                    helpDiv.id = 'firstTimeHelp';
+                    helpDiv.style.cssText = `
+                        position: fixed;
+                        top: 100px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: #007aff;
+                        color: white;
+                        padding: 15px 20px;
+                        border-radius: 10px;
+                        z-index: 100000;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                        max-width: 90%;
+                        text-align: center;
+                        animation: fadeIn 0.5s ease-out;
+                    `;
+                    helpDiv.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 8px;">💡 تلميح سريع</div>
+                        <div>اضغط على زر التنزيل <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">download</span> لحفظ الصورة مع النص</div>
+                        <button onclick="this.parentElement.remove(); localStorage.setItem('downloadHelpShown', 'true');" 
+                            style="
+                                background: white;
+                                color: #007aff;
+                                border: none;
+                                padding: 5px 15px;
+                                border-radius: 5px;
+                                margin-top: 10px;
+                                font-weight: bold;
+                                cursor: pointer;
+                            ">حسناً</button>
+                    `;
+                    document.body.appendChild(helpDiv);
+                    
+                    // إزالة التلميح بعد 10 ثواني
+                    setTimeout(() => {
+                        const help = document.getElementById('firstTimeHelp');
+                        if (help && help.parentElement) {
+                            help.remove();
+                            localStorage.setItem('downloadHelpShown', 'true');
+                        }
+                    }, 10000);
+                }
+            }, 3000);
+        }
+        
+        // ============== تحسين أداء الكتابة ==============
+        
+        // تحسين الكتابة على الهواتف
+        const textOverlay = document.getElementById('textOverlay');
+        if (textOverlay) {
+            textOverlay.addEventListener('touchstart', function(e) {
+                // السماح باللمس للنص
+                e.stopPropagation();
+            }, { passive: true });
+            
+            textOverlay.addEventListener('input', function() {
+                // حفظ النص مؤقتاً
+                localStorage.setItem('textDraft', this.innerText);
+            });
+            
+            // استعادة النص المحفوظ
+            const savedText = localStorage.getItem('textDraft');
+            if (savedText && textOverlay.innerText === 'اكتب هنا...') {
+                textOverlay.innerText = savedText;
+            }
+        }
+        
+        // ============== حل مشكلة النص المكرر ==============
+        
+        // إعادة تعيين canvas بشكل دوري لمنع التكرار
+        function resetCanvasContext() {
+            const canvas = document.getElementById('canvas');
+            if (canvas && canvas.getContext) {
+                const ctx = canvas.getContext('2d');
+                // مسح أي رسومات قديمة
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+        
+        // تشغيل إعادة التعيين قبل أي عملية رسم
+        if (window.renderTextOnCanvas) {
+            const originalRenderText = window.renderTextOnCanvas;
+            window.renderTextOnCanvas = function() {
+                resetCanvasContext();
+                return originalRenderText.apply(this, arguments);
+            };
+        }
+        
+        // ============== تحسينات نهائية ==============
+        
+        // إضافة أنميشن للفيديو
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .pulse {
+                animation: pulse 2s infinite;
+            }
+            
+            @keyframes pulse {
+                0% { opacity: 1; }
+                50% { opacity: 0.7; }
+                100% { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        console.log('All enhancements loaded successfully!');
     </script>
 </body>
 </html>
