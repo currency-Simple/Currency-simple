@@ -43,6 +43,9 @@ function setupTextCard() {
             <textarea id="textCardInput" placeholder="اكتب النص هنا..." rows="4"></textarea>
             <div class="text-card-buttons">
                 <button class="text-card-btn cancel-btn" onclick="closeTextCard()">إلغاء</button>
+                <button class="text-card-btn delete-btn" onclick="clearTextFromCard()" id="deleteTextFromCardBtn" style="display: none;">
+                    حذف
+                </button>
                 <button class="text-card-btn ok-btn" onclick="applyTextToImage()">موافق</button>
             </div>
         </div>
@@ -59,9 +62,14 @@ function addTextCardButton() {
     const editorToolbar = document.querySelector('.editor-toolbar');
     if (!editorToolbar) return;
     
+    // التحقق من عدم وجود الزر مسبقاً
+    const existingBtn = document.querySelector('.tool-btn[data-tool="text"]');
+    if (existingBtn) return;
+    
     // إنشاء زر جديد للنص
     const textBtn = document.createElement('button');
     textBtn.className = 'tool-btn';
+    textBtn.setAttribute('data-tool', 'text');
     textBtn.innerHTML = `
         <span class="material-symbols-outlined">text_fields</span>
         <span>نص</span>
@@ -94,13 +102,20 @@ function openTextCard() {
     const textInput = document.getElementById('textCardInput');
     
     if (textCard && textInput) {
+        // تعبئة الحقل بالنص الحالي إذا كان موجوداً
+        if (window.currentText) {
+            textInput.value = window.currentText;
+        }
+        
         textCard.style.display = 'block';
         textCardVisible = true;
+        
+        // تحديث حالة زر الحذف
+        updateDeleteButtonState();
         
         // التركيز على حقل النص بعد تأخير بسيط
         setTimeout(() => {
             textInput.focus();
-            handleKeyboardOpen(300);
         }, 100);
     }
 }
@@ -111,11 +126,40 @@ function closeTextCard() {
     
     if (textCard && textInput) {
         textCard.style.display = 'none';
-        textInput.value = '';
         textCardVisible = false;
-        
-        handleKeyboardClose();
     }
+}
+
+// تحديث حالة زر الحذف
+function updateDeleteButtonState() {
+    const deleteBtn = document.getElementById('deleteTextFromCardBtn');
+    const textInput = document.getElementById('textCardInput');
+    
+    if (deleteBtn && textInput) {
+        if (textInput.value.trim() !== '' || window.currentText) {
+            deleteBtn.style.display = 'inline-block';
+        } else {
+            deleteBtn.style.display = 'none';
+        }
+    }
+}
+
+// حذف النص من بطاقة النص
+function clearTextFromCard() {
+    const textInput = document.getElementById('textCardInput');
+    if (!textInput) return;
+    
+    // مسح النص من الحقل
+    textInput.value = '';
+    
+    // حذف النص من الصورة
+    clearTextFromImage();
+    
+    // تحديث حالة زر الحذف
+    updateDeleteButtonState();
+    
+    // التركيز على حقل النص
+    textInput.focus();
 }
 
 // تطبيق النص على الصورة
@@ -124,10 +168,6 @@ function applyTextToImage() {
     if (!textInput) return;
     
     const text = textInput.value.trim();
-    if (!text) {
-        showAlert('يرجى كتابة نص', 'error');
-        return;
-    }
     
     // تخزين النص في متغير لتستخدمه دالة الرسم
     window.currentText = text;
@@ -135,10 +175,20 @@ function applyTextToImage() {
     // تحديث الصورة بالنص الجديد
     if (typeof renderTextOnCanvas === 'function') {
         renderTextOnCanvas(false);
-        showAlert('تم إضافة النص إلى الصورة', 'success');
     }
     
+    // تحديث حالة زر الحذف
+    updateDeleteButtonState();
+    
+    // إغلاق بطاقة النص
     closeTextCard();
+    
+    // عرض رسالة نجاح
+    if (text) {
+        showAlert('تم إضافة النص إلى الصورة', 'success');
+    } else {
+        showAlert('تم حذف النص من الصورة', 'success');
+    }
 }
 
 // حذف النص من الصورة
@@ -148,11 +198,10 @@ function clearTextFromImage() {
     // إعادة رسم الصورة بدون نص
     if (typeof renderTextOnCanvas === 'function') {
         renderTextOnCanvas(false);
-        showAlert('تم حذف النص من الصورة', 'success');
     }
 }
 
-// إضافة زر حذف النص
+// إضافة زر حذف النص في لوحة التأثيرات
 function addDeleteTextButton() {
     const effectsPanel = document.getElementById('effectsPanel');
     if (!effectsPanel) return;
@@ -172,54 +221,34 @@ function addDeleteTextButton() {
 
 // إعداد مستمعات لوحة المفاتيح
 function setupKeyboardListeners() {
-    if ('visualViewport' in window) {
-        const viewport = window.visualViewport;
-        viewport.addEventListener('resize', () => {
-            const keyboardHeight = window.innerHeight - viewport.height;
-            if (keyboardHeight > 100) {
-                handleKeyboardOpen(keyboardHeight);
+    // إزالة جميع المستمعات القديمة للوحة المفاتيح
+    // سنستخدم أسلوباً أبسط لمنع ارتفاع العناصر
+    
+    window.addEventListener('resize', () => {
+        setTimeout(() => {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const windowHeight = window.innerHeight;
+            const screenHeight = window.screen.height;
+            
+            // إذا كان الارتفاع الحالي أقل من 70% من ارتفاع الشاشة،
+            // فهذا يعني أن لوحة المفاتيح مفتوحة
+            if (isMobile && windowHeight < screenHeight * 0.7) {
+                handleKeyboardOpen();
             } else {
                 handleKeyboardClose();
             }
-        });
-    } else {
-        window.addEventListener('resize', () => {
-            setTimeout(() => {
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (isMobile && window.innerHeight < window.outerHeight * 0.7) {
-                    handleKeyboardOpen(200);
-                } else {
-                    handleKeyboardClose();
-                }
-            }, 100);
-        });
-    }
+        }, 100);
+    });
 }
 
 // التعامل مع فتح لوحة المفاتيح
-function handleKeyboardOpen(keyboardHeight) {
+function handleKeyboardOpen() {
     if (keyboardOpen) return;
     keyboardOpen = true;
-    console.log('Keyboard opened, height:', keyboardHeight);
+    console.log('Keyboard opened');
     
-    document.documentElement.classList.add('keyboard-open');
+    // فقط إضافة كلاس للجسم لمنع التمرير
     document.body.classList.add('keyboard-open');
-    
-    const editorPage = document.getElementById('editorPage');
-    if (editorPage) editorPage.classList.add('keyboard-open');
-    
-    adjustCanvasForKeyboard(keyboardHeight);
-    
-    const bottomNav = document.querySelector('.bottom-nav');
-    const editorToolbar = document.querySelector('.editor-toolbar');
-    const toolPanels = document.querySelectorAll('.tool-panel.active');
-    
-    if (bottomNav) bottomNav.classList.add('keyboard-open');
-    if (editorToolbar) editorToolbar.classList.add('keyboard-open');
-    
-    toolPanels.forEach(panel => {
-        panel.classList.add('keyboard-open');
-    });
 }
 
 // التعامل مع إغلاق لوحة المفاتيح
@@ -228,70 +257,8 @@ function handleKeyboardClose() {
     keyboardOpen = false;
     console.log('Keyboard closed');
     
-    document.documentElement.classList.remove('keyboard-open');
+    // إزالة كلاس لوحة المفاتيح
     document.body.classList.remove('keyboard-open');
-    
-    const editorPage = document.getElementById('editorPage');
-    if (editorPage) editorPage.classList.remove('keyboard-open');
-    
-    restoreCanvasAfterKeyboard();
-    
-    const bottomNav = document.querySelector('.bottom-nav');
-    const editorToolbar = document.querySelector('.editor-toolbar');
-    const toolPanels = document.querySelectorAll('.tool-panel.active');
-    
-    if (bottomNav) bottomNav.classList.remove('keyboard-open');
-    if (editorToolbar) editorToolbar.classList.remove('keyboard-open');
-    
-    toolPanels.forEach(panel => {
-        panel.classList.remove('keyboard-open');
-    });
-}
-
-// ضبط Canvas عند فتح لوحة المفاتيح
-function adjustCanvasForKeyboard(keyboardHeight) {
-    const canvasWrapper = document.getElementById('canvasWrapperFixed');
-    const canvas = document.getElementById('canvas');
-    const textCard = document.getElementById('textCard');
-    
-    if (canvasWrapper && canvas && textCard) {
-        canvasWrapper.dataset.originalHeight = canvasWrapper.style.height;
-        canvas.dataset.originalMaxHeight = canvas.style.maxHeight;
-        
-        const totalFixedHeight = 71 + 70 + 70 + 50;
-        const availableHeight = window.innerHeight - totalFixedHeight - keyboardHeight;
-        
-        canvasWrapper.style.height = availableHeight + 'px';
-        canvas.style.maxHeight = availableHeight + 'px';
-        canvas.style.maxWidth = '100%';
-        canvas.style.objectFit = 'contain';
-        
-        canvasWrapper.style.justifyContent = 'flex-start';
-        canvasWrapper.style.paddingTop = '10px';
-        
-        // تعديل وضع بطاقة النص
-        textCard.style.maxHeight = (availableHeight - 100) + 'px';
-        textCard.style.overflowY = 'auto';
-    }
-}
-
-// استعادة Canvas بعد إغلاق لوحة المفاتيح
-function restoreCanvasAfterKeyboard() {
-    const canvasWrapper = document.getElementById('canvasWrapperFixed');
-    const canvas = document.getElementById('canvas');
-    const textCard = document.getElementById('textCard');
-    
-    if (canvasWrapper && canvas && textCard) {
-        canvasWrapper.style.height = '';
-        canvasWrapper.style.paddingTop = '';
-        canvasWrapper.style.justifyContent = '';
-        
-        canvas.style.maxHeight = '';
-        canvas.style.objectFit = 'contain';
-        
-        textCard.style.maxHeight = '';
-        textCard.style.overflowY = '';
-    }
 }
 
 // تحميل الفئات
