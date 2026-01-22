@@ -12,30 +12,73 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     
     <style>
+        /* تحسينات جديدة */
+        * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
         /* منع resize عند ظهور لوحة المفاتيح */
         html {
             height: 100vh;
             height: -webkit-fill-available;
+            overscroll-behavior: none;
         }
         
         body {
             min-height: 100vh;
             min-height: -webkit-fill-available;
+            overscroll-behavior: none;
         }
         
-        /* تحسين النص */
+        /* تحسينات للنص */
         .text-overlay {
             cursor: text;
             min-height: 60px;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         
         .text-overlay:empty::before {
             content: attr(data-placeholder);
             color: rgba(255,255,255,0.6);
+            pointer-events: none;
         }
         
         .text-overlay:focus {
             outline: none;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* تحسينات للصور */
+        .image-item img,
+        .category-item img {
+            filter: saturate(1.1) contrast(1.05) brightness(1.05);
+            transition: all 0.3s ease;
+        }
+        
+        .image-item:hover img,
+        .category-item:hover img {
+            filter: saturate(1.2) contrast(1.1) brightness(1.1);
+            transform: scale(1.03);
+        }
+        
+        /* تحسينات عامة للوحة المفاتيح */
+        .keyboard-open body {
+            height: 100vh !important;
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
+        }
+        
+        .keyboard-open #editorPage {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            overflow: hidden !important;
+            height: 100vh !important;
         }
     </style>
     
@@ -78,11 +121,19 @@
             </div>
         </div>
         
+        <!-- إضافة مساحة إضافية في الأسفل لتوسيع الشاشة -->
         <div class="editor-container">
             <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
                 <canvas id="canvas"></canvas>
                 <div class="text-overlay" id="textOverlay" contenteditable="true" spellcheck="false" data-placeholder="اكتب هنا..."></div>
             </div>
+            
+            <!-- المساحة الإضافية للوحة المفاتيح -->
+            <div class="keyboard-space" style="
+                height: 300px;
+                background: transparent;
+                pointer-events: none;
+            "></div>
 
             <!-- أدوات التحرير -->
             <div class="editor-toolbar">
@@ -203,7 +254,7 @@
 
             <div class="setting-card">
                 <p style="text-align: center; color: #86868b; font-size: 14px;">
-                    <span data-lang="version">الإصدار</span> 3.0
+                    <span data-lang="version">الإصدار</span> 4.0
                 </p>
             </div>
         </div>
@@ -233,38 +284,206 @@
     <script src="js/app.js"></script>
     
     <script>
-        // ============== المشكلة 2: إخفاء "اكتب هنا..." عند الكتابة ==============
+        // ============== تحسينات إضافية ==============
         
-        document.addEventListener('DOMContentLoaded', function() {
-            const textOverlay = document.getElementById('textOverlay');
-            
-            if (textOverlay) {
-                // إخفاء النص الافتراضي عند التركيز
-                textOverlay.addEventListener('focus', function() {
-                    if (this.textContent === 'اكتب هنا...' || 
-                        this.textContent === 'Type here...' || 
-                        this.textContent === 'Écrivez ici...') {
-                        this.textContent = '';
+        // المشكلة 1: تحسين ألوان الصور في المحرر
+        function enhanceImageColors(imageUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                
+                img.onload = function() {
+                    try {
+                        // إنشاء Canvas مؤقت لتحسين الألوان
+                        const tempCanvas = document.createElement('canvas');
+                        const tempCtx = tempCanvas.getContext('2d');
+                        
+                        tempCanvas.width = img.width;
+                        tempCanvas.height = img.height;
+                        
+                        // رسم الصورة
+                        tempCtx.drawImage(img, 0, 0);
+                        
+                        // تحسين الألوان (زيادة التشبع والتباين)
+                        const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                        const data = imageData.data;
+                        
+                        for (let i = 0; i < data.length; i += 4) {
+                            // زيادة التشبع
+                            let r = data[i];
+                            let g = data[i + 1];
+                            let b = data[i + 2];
+                            
+                            // زيادة الإضاءة قليلاً
+                            r = Math.min(255, r * 1.05);
+                            g = Math.min(255, g * 1.05);
+                            b = Math.min(255, b * 1.05);
+                            
+                            // زيادة التباين
+                            const avg = (r + g + b) / 3;
+                            const contrast = 1.1;
+                            r = avg + contrast * (r - avg);
+                            g = avg + contrast * (g - avg);
+                            b = avg + contrast * (b - avg);
+                            
+                            data[i] = r;
+                            data[i + 1] = g;
+                            data[i + 2] = b;
+                        }
+                        
+                        tempCtx.putImageData(imageData, 0, 0);
+                        
+                        // تحويل إلى URL
+                        const enhancedUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
+                        resolve(enhancedUrl);
+                        
+                    } catch (error) {
+                        console.error('خطأ في تحسين الألوان:', error);
+                        resolve(imageUrl); // الرجوع للصورة الأصلية في حالة الخطأ
                     }
+                };
+                
+                img.onerror = reject;
+                img.src = imageUrl;
+            });
+        }
+        
+        // استبدال دالة loadImageToEditor الأصلية
+        const originalLoadImageToEditor = window.loadImageToEditor;
+        if (originalLoadImageToEditor) {
+            window.loadImageToEditor = async function(imageUrl) {
+                try {
+                    // تحسين ألوان الصورة قبل التحميل
+                    showLoadingIndicator('جاري تحسين جودة الصورة...');
+                    const enhancedUrl = await enhanceImageColors(imageUrl);
+                    hideLoadingIndicator();
+                    
+                    // تحميل الصورة المحسنة
+                    return originalLoadImageToEditor.call(this, enhancedUrl);
+                } catch (error) {
+                    console.error('خطأ في تحسين الصورة:', error);
+                    hideLoadingIndicator();
+                    // استخدام الصورة الأصلية في حالة الخطأ
+                    return originalLoadImageToEditor.call(this, imageUrl);
+                }
+            };
+        }
+        
+        // المشكلة 2: تحسين سلوك لوحة المفاتيح
+        let originalBodyHeight = '100vh';
+        let originalEditorHeight = '';
+        
+        // دالة لرفع الشاشة عند ظهور لوحة المفاتيح
+        function liftScreenForKeyboard() {
+            const textOverlay = document.getElementById('textOverlay');
+            if (!textOverlay) return;
+            
+            // حفظ الأبعاد الأصلية
+            originalBodyHeight = document.body.style.height;
+            originalEditorHeight = document.querySelector('.editor-container').style.height;
+            
+            // حساب ارتفاع لوحة المفاتيح
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.clientHeight;
+            const keyboardHeight = Math.max(0, windowHeight - documentHeight);
+            
+            if (keyboardHeight > 100) {
+                // إضافة كلاس للمؤشر
+                document.body.classList.add('keyboard-open');
+                document.getElementById('editorPage').classList.add('keyboard-open');
+                
+                // رفع المحتوى للأعلى
+                document.body.style.height = (windowHeight + keyboardHeight) + 'px';
+                document.body.style.overflow = 'hidden';
+                
+                // رفع منطقة المحرر
+                const editorContainer = document.querySelector('.editor-container');
+                editorContainer.style.height = (windowHeight + keyboardHeight - 140) + 'px';
+                editorContainer.style.overflowY = 'auto';
+                
+                // التركيز على النص ونقله للأعلى
+                setTimeout(() => {
+                    textOverlay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+                
+                console.log('رفع الشاشة لارتفاع لوحة المفاتيح:', keyboardHeight);
+            }
+        }
+        
+        // دالة لاستعادة الشاشة بعد إغلاق لوحة المفاتيح
+        function restoreScreenFromKeyboard() {
+            document.body.classList.remove('keyboard-open');
+            document.getElementById('editorPage').classList.remove('keyboard-open');
+            
+            // استعادة الأبعاد الأصلية
+            document.body.style.height = originalBodyHeight;
+            document.body.style.overflow = '';
+            
+            const editorContainer = document.querySelector('.editor-container');
+            if (originalEditorHeight) {
+                editorContainer.style.height = originalEditorHeight;
+            } else {
+                editorContainer.style.height = '';
+            }
+            editorContainer.style.overflowY = '';
+        }
+        
+        // إضافة مستمعات لوحة المفاتيح المحسنة
+        function setupEnhancedKeyboardListeners() {
+            const textOverlay = document.getElementById('textOverlay');
+            if (textOverlay) {
+                // عند التركيز على النص
+                textOverlay.addEventListener('focus', () => {
+                    setTimeout(liftScreenForKeyboard, 300);
                 });
                 
-                // إعادة عرض النص الافتراضي إذا ترك فارغاً
-                textOverlay.addEventListener('blur', function() {
-                    if (this.textContent.trim() === '') {
-                        const lang = localStorage.getItem('language') || 'ar';
-                        const placeholders = {
-                            ar: 'اكتب هنا...',
-                            en: 'Type here...',
-                            fr: 'Écrivez ici...'
-                        };
-                        this.textContent = placeholders[lang];
-                    }
+                // عند إلغاء التركيز
+                textOverlay.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        if (document.activeElement !== textOverlay) {
+                            restoreScreenFromKeyboard();
+                        }
+                    }, 100);
                 });
             }
+            
+            // مستمع للنافذة
+            window.addEventListener('resize', () => {
+                setTimeout(() => {
+                    const isFocused = document.activeElement === document.getElementById('textOverlay');
+                    if (isFocused) {
+                        liftScreenForKeyboard();
+                    } else {
+                        restoreScreenFromKeyboard();
+                    }
+                }, 100);
+            });
+        }
+        
+        // تشغيل المستمعات بعد تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', setupEnhancedKeyboardListeners);
+        
+        // تحميل الصفحة
+        window.addEventListener('load', function() {
+            console.log('تطبيق محرر الصور المميز جاهز');
+            
+            // ضبط حجم الصفحة
+            document.body.style.height = window.innerHeight + 'px';
+            
+            // تحميل الألوان
+            if (typeof initializeColors === 'function') {
+                setTimeout(initializeColors, 500);
+            }
+            
+            // تحسين تجربة اللمس
+            document.addEventListener('touchmove', function(e) {
+                if (document.body.classList.contains('keyboard-open')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
         });
         
-        // ============== منع السلوك الافتراضي لأزرار التنزيل ==============
-        
+        // منع السلوك الافتراضي لأزرار التنزيل
         document.addEventListener('DOMContentLoaded', function() {
             const downloadBtn = document.getElementById('downloadBtn');
             const shareBtn = document.getElementById('shareBtn');
@@ -283,120 +502,6 @@
                     e.stopPropagation();
                     return false;
                 }, true);
-            }
-        });
-        
-        // ============== دالة تنزيل محسنة للجميع ==============
-        
-        function downloadImageUniversal() {
-            try {
-                const canvas = document.getElementById('canvas');
-                if (!canvas || !canvas.width) {
-                    alert('يرجى اختيار صورة أولاً');
-                    return;
-                }
-                
-                // تأكد من رسم النص أولاً
-                if (typeof renderTextOnCanvas === 'function') {
-                    renderTextOnCanvas();
-                }
-                
-                // تحويل Canvas إلى صورة
-                const dataURL = canvas.toDataURL('image/png', 1.0);
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const filename = `صورة-مع-نص-${timestamp}.png`;
-                
-                // محاولة التنزيل بالطريقة العادية
-                try {
-                    const link = document.createElement('a');
-                    link.download = filename;
-                    link.href = dataURL;
-                    link.style.display = 'none';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    
-                    console.log('تم التنزيل بالطريقة العادية');
-                    return true;
-                } catch (error) {
-                    console.log('الطريقة العادية فشلت، جرب طريقة PWA:', error);
-                    
-                    // إذا كان التطبيق يعمل كـ PWA، استخدم Filesystem API
-                    if (window.showSaveFilePicker) {
-                        try {
-                            const handle = await window.showSaveFilePicker({
-                                suggestedName: filename,
-                                types: [{
-                                    description: 'صورة PNG',
-                                    accept: {'image/png': ['.png']},
-                                }],
-                            });
-                            
-                            const writable = await handle.createWritable();
-                            const blob = await fetch(dataURL).then(r => r.blob());
-                            await writable.write(blob);
-                            await writable.close();
-                            
-                            console.log('تم الحفظ باستخدام Filesystem API');
-                            return true;
-                        } catch (fsError) {
-                            console.log('Filesystem API فشل:', fsError);
-                        }
-                    }
-                    
-                    // الطريقة البديلة: فتح الصورة في نافذة جديدة
-                    const newWindow = window.open();
-                    newWindow.document.write(`
-                        <html>
-                        <head><title>حفظ الصورة</title></head>
-                        <body style="margin:0; padding:20px; text-align:center;">
-                            <h3>لحفظ الصورة:</h3>
-                            <p>1. اضغط مع الاستمرار على الصورة<br>
-                            2. اختر "حفظ الصورة"<br>
-                            3. اختر الموقع المناسب</p>
-                            <img src="${dataURL}" style="max-width:100%; height:auto; border:1px solid #ccc;" />
-                            <br><br>
-                            <button onclick="window.print()" style="padding:10px 20px;">طباعة</button>
-                            <button onclick="window.close()" style="padding:10px 20px;">إغلاق</button>
-                        </body>
-                        </html>
-                    `);
-                    newWindow.document.close();
-                    
-                    return false;
-                }
-            } catch (error) {
-                console.error('خطأ في التنزيل:', error);
-                alert('حدث خطأ أثناء التنزيل. حاول مرة أخرى.');
-                return false;
-            }
-        }
-        
-        // استبدال دالة التنزيل الأصلية
-        if (window.downloadImage) {
-            const originalDownload = window.downloadImage;
-            window.downloadImage = function() {
-                // استدعاء الدالة الأصلية أولاً
-                originalDownload();
-                
-                // ثم استدعاء الدالة المحسنة كبديل
-                setTimeout(() => {
-                    downloadImageUniversal();
-                }, 100);
-            };
-        }
-        
-        // ============== تحميل الصفحة ==============
-        
-        window.addEventListener('load', function() {
-            console.log('تطبيق محرر الصور جاهز');
-            
-            // ضبط حجم الصفحة
-            document.body.style.height = window.innerHeight + 'px';
-            
-            // تحميل الألوان إذا كانت الدالة موجودة
-            if (typeof initializeColors === 'function') {
-                setTimeout(initializeColors, 500);
             }
         });
     </script>
