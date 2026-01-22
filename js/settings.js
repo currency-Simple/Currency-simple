@@ -13,7 +13,6 @@ const translations = {
         theme: "السمة",
         light: "فاتح",
         dark: "داكن",
-        blue: "أزرق",
         language: "اللغة",
         privacy: "سياسة الخصوصية",
         about: "معلومات حول",
@@ -36,7 +35,6 @@ const translations = {
         theme: "Theme",
         light: "Light",
         dark: "Dark",
-        blue: "Blue",
         language: "Language",
         privacy: "Privacy Policy",
         about: "About",
@@ -59,7 +57,6 @@ const translations = {
         theme: "Thème",
         light: "Clair",
         dark: "Sombre",
-        blue: "Bleu",
         language: "Langue",
         privacy: "Politique de confidentialité",
         about: "À propos",
@@ -82,6 +79,12 @@ function loadSettings() {
 
 // تطبيق السمة
 function applyTheme(theme) {
+    // فقط السمات المتاحة: light, dark
+    if (theme !== 'light' && theme !== 'dark') {
+        theme = 'light';
+        localStorage.setItem('theme', theme);
+    }
+    
     document.body.setAttribute('data-theme', theme);
     
     document.querySelectorAll('.theme-btn').forEach(btn => {
@@ -94,6 +97,11 @@ function applyTheme(theme) {
 
 // تغيير السمة
 function changeTheme(theme) {
+    // فقط السمات المتاحة: light, dark
+    if (theme !== 'light' && theme !== 'dark') {
+        theme = 'light';
+    }
+    
     localStorage.setItem('theme', theme);
     applyTheme(theme);
 }
