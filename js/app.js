@@ -1,4 +1,3 @@
-[file content begin]
 // متغيرات عامة
 let categories = [];
 let currentCategory = null;
@@ -39,6 +38,7 @@ function setupKeyboardListeners() {
             }
         });
     } else {
+        // للمتصفحات القديمة
         window.addEventListener('resize', () => {
             setTimeout(() => {
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -362,14 +362,7 @@ async function downloadImage() {
         }
         
         // رسم النص على Canvas
-        if (typeof prepareCanvasForExport === 'function') {
-            const success = prepareCanvasForExport();
-            if (!success) {
-                hideLoadingIndicator();
-                showAlert('فشل في تحضير الصورة', 'error');
-                return;
-            }
-        } else if (typeof renderTextOnCanvas === 'function') {
+        if (typeof renderTextOnCanvas === 'function') {
             const success = renderTextOnCanvas();
             if (!success) {
                 hideLoadingIndicator();
@@ -451,14 +444,7 @@ async function shareImage() {
         }
         
         // رسم النص على Canvas
-        if (typeof prepareCanvasForExport === 'function') {
-            const success = prepareCanvasForExport();
-            if (!success) {
-                hideLoadingIndicator();
-                showAlert('فشل في تحضير الصورة', 'error');
-                return;
-            }
-        } else if (typeof renderTextOnCanvas === 'function') {
+        if (typeof renderTextOnCanvas === 'function') {
             const success = renderTextOnCanvas();
             if (!success) {
                 hideLoadingIndicator();
@@ -555,41 +541,6 @@ function showAlert(message, type = 'info') {
         ">×</button>
     `;
     
-    // إضافة الأنماط إذا لم تكن موجودة
-    if (!document.getElementById('alert-styles')) {
-        const style = document.createElement('style');
-        style.id = 'alert-styles';
-        style.textContent = `
-            .custom-alert {
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                padding: 12px 20px;
-                border-radius: 8px;
-                color: white;
-                font-weight: bold;
-                z-index: 100000;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                min-width: 300px;
-                max-width: 90%;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                animation: slideIn 0.3s ease-out;
-            }
-            @keyframes slideIn {
-                from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-                to { transform: translateX(-50%) translateY(0); opacity: 1; }
-            }
-            .custom-alert.success { background: #4CAF50; }
-            .custom-alert.error { background: #f44336; }
-            .custom-alert.info { background: #2196F3; }
-            .custom-alert.warning { background: #ff9800; }
-        `;
-        document.head.appendChild(style);
-    }
-    
     document.body.appendChild(alert);
     
     // إزالة الرسالة تلقائياً بعد 5 ثواني
@@ -617,54 +568,6 @@ function showLoadingIndicator(message = 'جاري المعالجة...') {
         </div>
     `;
     
-    // إضافة الأنماط إذا لم تكن موجودة
-    if (!document.getElementById('loader-styles')) {
-        const style = document.createElement('style');
-        style.id = 'loader-styles';
-        style.textContent = `
-            .custom-loader {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0,0,0,0.7);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 100001;
-                backdrop-filter: blur(4px);
-            }
-            .loader-content {
-                background: white;
-                padding: 30px;
-                border-radius: 12px;
-                text-align: center;
-                min-width: 250px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            }
-            .loader-spinner {
-                width: 50px;
-                height: 50px;
-                border: 4px solid #f3f3f3;
-                border-top: 4px solid #007aff;
-                border-radius: 50%;
-                margin: 0 auto 20px;
-                animation: spin 1s linear infinite;
-            }
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-            .loader-text {
-                color: #333;
-                font-weight: bold;
-                font-size: 16px;
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
     document.body.appendChild(loader);
 }
 
@@ -674,4 +577,3 @@ function hideLoadingIndicator() {
         loader.remove();
     }
 }
-[file content end]
