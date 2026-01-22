@@ -16,15 +16,6 @@
     --border-color: #333333;
 }
 
-[data-theme="blue"] {
-    --primary-color: #0066ff;
-    --bg-color: #0047b3;
-    --card-bg: #0055cc;
-    --text-color: #ffffff;
-    --text-secondary: #99ccff;
-    --border-color: #0080ff;
-}
-
 * {
     margin: 0;
     padding: 0;
@@ -305,22 +296,28 @@ body[dir="ltr"] {
 .text-card-buttons {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 8px;
     margin-top: 15px;
 }
 
 .text-card-btn {
-    padding: 10px 20px;
+    padding: 10px 16px;
     border: none;
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s;
+    font-size: 14px;
 }
 
 .cancel-btn {
     background: var(--border-color);
     color: var(--text-color);
+}
+
+.delete-btn {
+    background: #f44336;
+    color: white;
 }
 
 .ok-btn {
@@ -333,7 +330,7 @@ body[dir="ltr"] {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* زر حذف النص */
+/* زر حذف النص في لوحة التأثيرات */
 .delete-text-btn {
     display: flex;
     align-items: center;
@@ -599,149 +596,67 @@ body[dir="ltr"] {
     font-size: 24px;
 }
 
-/* إصلاح مشكلة لوحة المفاتيح */
-html.keyboard-open {
-    height: 100vh !important;
-    overflow: hidden !important;
-    position: fixed !important;
-    width: 100% !important;
-    touch-action: manipulation !important;
-}
-
+/* منع ارتفاع العناصر عند فتح لوحة المفاتيح */
 body.keyboard-open {
     height: 100vh !important;
     overflow: hidden !important;
     position: fixed !important;
     width: 100% !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    touch-action: manipulation !important;
 }
 
-#editorPage.keyboard-open {
+/* إبقاء جميع الأزرار في مكانها عند ظهور لوحة المفاتيح */
+.keyboard-open .bottom-nav,
+.keyboard-open .editor-toolbar,
+.keyboard-open .tool-panel.active {
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    overflow: hidden !important;
-    height: 100vh !important;
-}
-
-.editor-container.keyboard-open {
-    position: absolute !important;
-    top: 71px !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 140px !important;
-    background: transparent !important;
-    overflow: hidden !important;
-    z-index: 1 !important;
-    height: calc(100vh - 211px) !important;
-}
-
-.canvas-wrapper-fixed.keyboard-open {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: center !important;
-    background: transparent !important;
-    padding: 5px !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    overflow: hidden !important;
-}
-
-#canvas.keyboard-open {
-    max-height: calc(100vh - 280px) !important;
-    max-width: 100% !important;
-    width: auto !important;
-    height: auto !important;
-    object-fit: contain !important;
-    display: block !important;
-    margin: 5px auto !important;
-    aspect-ratio: 4/5 !important;
-    background: transparent !important;
-}
-
-.text-card.keyboard-open {
-    max-height: calc(100vh - 300px) !important;
-    overflow-y: auto !important;
-}
-
-.bottom-nav.keyboard-open {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 10002 !important;
-    background: var(--card-bg) !important;
-    transform: translateY(0) !important;
+    transform: none !important;
     animation: none !important;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.2) !important;
-    height: 70px !important;
+    transition: none !important;
 }
 
-.editor-toolbar.keyboard-open {
-    position: fixed !important;
+.keyboard-open .bottom-nav {
+    bottom: 0 !important;
+}
+
+.keyboard-open .editor-toolbar {
     bottom: 70px !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 10001 !important;
-    background: var(--card-bg) !important;
-    transform: translateY(0) !important;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
-    height: 70px !important;
 }
 
-.tool-panel.active.keyboard-open {
-    position: fixed !important;
+.keyboard-open .tool-panel.active {
     bottom: 140px !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 10000 !important;
-    background: var(--card-bg) !important;
-    transform: translateY(0) !important;
-    max-height: 200px !important;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.15) !important;
 }
 
+/* إخفاء لوحات الأدوات عند فتح لوحة المفاتيح */
+.keyboard-open .tool-panel.active {
+    display: none !important;
+}
+
+/* تعديلات للهواتف الصغيرة */
 @media (max-height: 700px) {
     .editor-container {
         bottom: 130px !important;
         height: calc(100vh - 201px) !important;
     }
     
-    .editor-container.keyboard-open {
-        bottom: 130px !important;
-        height: calc(100vh - 201px) !important;
-    }
-    
-    #canvas.keyboard-open {
-        max-height: calc(100vh - 260px) !important;
-    }
-    
-    .text-card.keyboard-open {
-        max-height: calc(100vh - 280px) !important;
-    }
-    
-    .editor-toolbar, .editor-toolbar.keyboard-open {
-        bottom: 60px !important;
+    .editor-toolbar {
         height: 60px !important;
+        bottom: 60px !important;
     }
     
-    .tool-panel.active, .tool-panel.active.keyboard-open {
+    .tool-panel.active {
         bottom: 120px !important;
     }
     
-    .bottom-nav, .bottom-nav.keyboard-open {
+    .bottom-nav {
         height: 60px !important;
+    }
+    
+    .keyboard-open .editor-toolbar {
+        bottom: 60px !important;
+    }
+    
+    .keyboard-open .tool-panel.active {
+        bottom: 120px !important;
     }
 }
 
@@ -796,6 +711,10 @@ body.keyboard-open {
         height: 60px !important;
         padding: 6px;
     }
+    
+    .text-card {
+        max-width: 95%;
+    }
 }
 
 @media (max-width: 480px) {
@@ -842,6 +761,15 @@ body.keyboard-open {
     
     .text-card {
         max-width: 95%;
+    }
+    
+    .text-card-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .text-card-btn {
+        width: 100%;
     }
 }
 
@@ -1032,4 +960,9 @@ input[type="checkbox"] {
 
 .category-item:hover img {
     transform: scale(1.05);
+}
+
+/* إخفاء زر السمة الزرقاء */
+.theme-btn[data-theme="blue"] {
+    display: none !important;
 }
