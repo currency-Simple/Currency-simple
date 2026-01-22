@@ -128,6 +128,11 @@ body[dir="ltr"] {
     aspect-ratio: 4/5;
     background: var(--card-bg);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.category-item:hover {
+    transform: scale(1.03);
 }
 
 .category-item img {
@@ -165,6 +170,11 @@ body[dir="ltr"] {
     background: var(--card-bg);
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     aspect-ratio: 4/5;
+    transition: transform 0.3s ease;
+}
+
+.image-item:hover {
+    transform: scale(1.02);
 }
 
 .image-item img {
@@ -191,7 +201,7 @@ body[dir="ltr"] {
     left: 0;
     right: 0;
     bottom: 140px;
-    background: #1a1a1a;
+    background: transparent !important; /* المشكلة 3: إزالة الخلفية السوداء */
     overflow: hidden;
     height: calc(100vh - 211px);
 }
@@ -205,7 +215,7 @@ body[dir="ltr"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #1a1a1a;
+    background: transparent !important; /* المشكلة 3: إزالة الخلفية السوداء */
     padding: 10px;
     box-sizing: border-box;
     overflow: hidden;
@@ -220,6 +230,9 @@ body[dir="ltr"] {
     aspect-ratio: 4/5;
     display: block;
     margin: auto;
+    background: transparent !important; /* المشكلة 3: إزالة الخلفية السوداء */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
 }
 
 .text-overlay {
@@ -243,11 +256,20 @@ body[dir="ltr"] {
     user-select: text !important;
     touch-action: manipulation;
     line-height: 1.2;
+    transition: all 0.2s ease; /* تحسينات للنص */
+    min-height: 60px;
 }
 
-.text-overlay:empty:before {
-    content: 'اكتب هنا...';
+/* المشكلة 2: تحسين النص الافتراضي */
+.text-overlay[data-placeholder]:empty:before {
+    content: attr(data-placeholder);
     color: rgba(255,255,255,0.6);
+}
+
+.text-overlay:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 /* Toolbar - FIXED AT BOTTOM */
@@ -280,6 +302,11 @@ body[dir="ltr"] {
     font-size: 10px;
     touch-action: manipulation;
     min-width: 60px;
+    transition: all 0.2s ease;
+}
+
+.tool-btn:hover {
+    background: var(--bg-color);
 }
 
 .tool-btn.active {
@@ -350,6 +377,11 @@ body[dir="ltr"] {
     cursor: pointer;
     border: 2px solid var(--border-color);
     touch-action: manipulation;
+    transition: transform 0.2s ease;
+}
+
+.color-item:hover {
+    transform: scale(1.1);
 }
 
 .effect-option {
@@ -363,6 +395,7 @@ body[dir="ltr"] {
 .effect-option input[type="checkbox"] {
     width: 22px;
     height: 22px;
+    cursor: pointer;
 }
 
 /* Settings */
@@ -401,6 +434,14 @@ body[dir="ltr"] {
     cursor: pointer;
     font-size: 14px;
     touch-action: manipulation;
+    transition: all 0.2s ease;
+}
+
+.theme-btn:hover,
+.lang-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
 .theme-btn.active,
@@ -418,6 +459,11 @@ body[dir="ltr"] {
     color: var(--text-color);
     text-decoration: none;
     border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s ease;
+}
+
+.setting-link:hover {
+    background: var(--bg-color);
 }
 
 .setting-link:last-child {
@@ -454,6 +500,11 @@ body[dir="ltr"] {
     font-size: 11px;
     touch-action: manipulation;
     min-width: 70px;
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background: var(--bg-color);
 }
 
 .nav-btn.active {
@@ -503,7 +554,7 @@ body.keyboard-open {
     left: 0 !important;
     right: 0 !important;
     bottom: 140px !important;
-    background: #1a1a1a !important;
+    background: transparent !important; /* إزالة الخلفية السوداء */
     overflow: hidden !important;
     z-index: 1 !important;
     height: calc(100vh - 211px) !important;
@@ -519,7 +570,7 @@ body.keyboard-open {
     display: flex !important;
     align-items: flex-start !important;
     justify-content: center !important;
-    background: #1a1a1a !important;
+    background: transparent !important; /* إزالة الخلفية السوداء */
     padding: 5px !important;
     height: 100% !important;
     max-height: 100% !important;
@@ -536,6 +587,7 @@ body.keyboard-open {
     display: block !important;
     margin: 5px auto !important;
     aspect-ratio: 4/5 !important;
+    background: transparent !important; /* إزالة الخلفية السوداء */
 }
 
 /* النص فوق الصورة */
@@ -718,6 +770,24 @@ body.keyboard-open {
     .nav-btn .material-symbols-outlined {
         font-size: 20px;
     }
+    
+    /* تحسينات للهواتف */
+    .editor-container {
+        top: 60px !important;
+        bottom: 120px !important;
+        height: calc(100vh - 180px) !important;
+    }
+    
+    .editor-toolbar {
+        height: 60px !important;
+        bottom: 60px !important;
+        padding: 8px;
+    }
+    
+    .bottom-nav {
+        height: 60px !important;
+        padding: 6px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -772,11 +842,6 @@ body.keyboard-open {
 }
 
 /* التأكد من أن النص لا يسبب مشاكل في التركيز */
-.text-overlay:focus {
-    outline: none !important;
-    box-shadow: none !important;
-}
-
 input:focus, textarea:focus, select:focus {
     outline: none !important;
     box-shadow: none !important;
@@ -793,8 +858,58 @@ input:focus, textarea:focus, select:focus {
     user-select: none !important;
 }
 
-/* ============ أنماط جديدة للتنزيل والمشاركة ============ */
+/* ============ أنماط جديدة ============ */
 
+/* المشكلة 2: تحسين النص الافتراضي */
+.text-overlay[data-placeholder]:empty:before {
+    content: attr(data-placeholder);
+    color: rgba(255,255,255,0.6);
+    pointer-events: none;
+}
+
+/* المشكلة 3: تحسين عرض الصورة بدون خلفية */
+#canvas {
+    background: transparent !important;
+}
+
+.canvas-wrapper-fixed {
+    background: linear-gradient(45deg, var(--bg-color) 25%, transparent 25%),
+                linear-gradient(-45deg, var(--bg-color) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, var(--bg-color) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--bg-color) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    background-color: rgba(245, 245, 247, 0.5);
+}
+
+[data-theme="dark"] .canvas-wrapper-fixed {
+    background: linear-gradient(45deg, #2c2c2e 25%, transparent 25%),
+                linear-gradient(-45deg, #2c2c2e 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #2c2c2e 75%),
+                linear-gradient(-45deg, transparent 75%, #2c2c2e 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    background-color: rgba(44, 44, 46, 0.5);
+}
+
+/* تحسينات للصور */
+.image-item img {
+    transition: transform 0.3s ease;
+}
+
+.image-item:hover img {
+    transform: scale(1.03);
+}
+
+.category-item img {
+    transition: transform 0.3s ease;
+}
+
+.category-item:hover img {
+    transform: scale(1.05);
+}
+
+/* إشعارات */
 .custom-alert {
     position: fixed;
     top: 20px;
@@ -868,12 +983,23 @@ input:focus, textarea:focus, select:focus {
     font-size: 16px;
 }
 
-/* تحسينات للمحاذاة */
+/* تحسينات للكتابة */
 .text-overlay {
+    cursor: text;
+    min-height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
+}
+
+.text-overlay:focus {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* منع التحديد غير المرغوب */
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
 }
 
 /* تحسينات للشاشات الصغيرة جداً */
@@ -912,11 +1038,86 @@ canvas {
 
 /* تحسين التركيز */
 .text-overlay:focus {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
-/* منع التحديد غير المرغوب */
-* {
-    -webkit-touch-callout: none;
-    -webkit-user-drag: none;
+/* تحسينات للأزرار */
+button {
+    transition: all 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+/* تحسينات للون المختار */
+.color-item.selected {
+    border: 3px solid var(--primary-color);
+    box-shadow: 0 0 10px rgba(0, 122, 255, 0.3);
+}
+
+/* تحسينات للتأثيرات */
+.tool-btn .material-symbols-outlined {
+    transition: transform 0.2s ease;
+}
+
+.tool-btn:hover .material-symbols-outlined {
+    transform: scale(1.1);
+}
+
+/* تحسينات للعناوين */
+.header h1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* تحسينات للشريط المنزلق */
+input[type="range"] {
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border-color);
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* تحسينات للتحقق */
+input[type="checkbox"] {
+    accent-color: var(--primary-color);
+}
+
+/* تحسينات للروابط */
+.setting-link {
+    cursor: pointer;
+}
+
+/* تحسينات للشريط المنزلق العمودي */
+.tool-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tool-panel::-webkit-scrollbar-track {
+    background: var(--bg-color);
+    border-radius: 3px;
+}
+
+.tool-panel::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.tool-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
 }
