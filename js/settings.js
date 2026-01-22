@@ -1,6 +1,74 @@
 // الترجمات
 const translations = {
-    // ... ترجماتك موجودة (لا تغير)
+    ar: {
+        edit: "تحرير",
+        font: "الخط",
+        size: "الحجم",
+        color: "اللون",
+        stroke: "الحواف",
+        effects: "تأثيرات",
+        shadow: "ظل",
+        background: "خلفية",
+        settings: "الإعدادات",
+        theme: "السمة",
+        light: "فاتح",
+        dark: "داكن",
+        blue: "أزرق",
+        language: "اللغة",
+        privacy: "سياسة الخصوصية",
+        about: "معلومات حول",
+        help: "مركز المساعدة",
+        contact: "اتصل بنا",
+        version: "الإصدار",
+        categories: "الفئات",
+        editor: "التحرير"
+    },
+    en: {
+        edit: "Edit",
+        font: "Font",
+        size: "Size",
+        color: "Color",
+        stroke: "Stroke",
+        effects: "Effects",
+        shadow: "Shadow",
+        background: "Background",
+        settings: "Settings",
+        theme: "Theme",
+        light: "Light",
+        dark: "Dark",
+        blue: "Blue",
+        language: "Language",
+        privacy: "Privacy Policy",
+        about: "About",
+        help: "Help Center",
+        contact: "Contact Us",
+        version: "Version",
+        categories: "Categories",
+        editor: "Editor"
+    },
+    fr: {
+        edit: "Éditer",
+        font: "Police",
+        size: "Taille",
+        color: "Couleur",
+        stroke: "Contour",
+        effects: "Effets",
+        shadow: "Ombre",
+        background: "Arrière-plan",
+        settings: "Paramètres",
+        theme: "Thème",
+        light: "Clair",
+        dark: "Sombre",
+        blue: "Bleu",
+        language: "Langue",
+        privacy: "Politique de confidentialité",
+        about: "À propos",
+        help: "Centre d'aide",
+        contact: "Contactez-nous",
+        version: "Version",
+        categories: "Catégories",
+        editor: "Éditeur"
+    }
 };
 
 // تحميل الإعدادات المحفوظة
@@ -93,9 +161,6 @@ function toggleToolPanel(panelId) {
         }
     });
 }
-
-// هذه الدوال كانت تعارض دوال colors.js - إزالتها أو جعلها تأخذ القيم من colors.js
-// لا نعيد تعريفها لأنها موجودة في colors.js
 
 // تحميل الإعدادات عند بدء التطبيق
 window.addEventListener('DOMContentLoaded', () => {
