@@ -174,7 +174,7 @@ function loadImageToEditor(imageUrl) {
     img.src = imageUrl;
 }
 
-// رسم النص على Canvas - إصلاح كامل
+// ============== دالة رسم النص المعدلة ==============
 function renderTextOnCanvas() {
     if (!imageLoaded || !currentImage) {
         console.error('لم يتم تحميل صورة');
@@ -182,7 +182,7 @@ function renderTextOnCanvas() {
     }
     
     try {
-        // إعادة رسم الصورة
+        // إعادة رسم الصورة الأصلية فقط مرة واحدة
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
         
@@ -195,7 +195,7 @@ function renderTextOnCanvas() {
         const text = textElement.innerText || textElement.textContent;
         if (!text || text === 'اكتب هنا...' || text === 'Type here...' || text === 'Écrivez ici...') {
             console.log('لا يوجد نص لرسمه');
-            return true; // نرجع true لأن الصورة رسمت بنجاح
+            return true;
         }
         
         const fontFamily = document.getElementById('fontFamily')?.value || "Arial";
@@ -204,6 +204,7 @@ function renderTextOnCanvas() {
         const shadowEnabled = document.getElementById('shadowEnabled')?.checked || false;
         const cardEnabled = document.getElementById('cardEnabled')?.checked || false;
         
+        // حفظ حالة الـ context
         ctx.save();
         
         // إعداد الخط
@@ -219,7 +220,20 @@ function renderTextOnCanvas() {
         const totalHeight = lines.length * lineHeight;
         const startY = (canvas.height / 2) - (totalHeight / 2) + (lineHeight / 2);
         
-        // رسم كل سطر
+        // إعداد الظل (مرة واحدة فقط)
+        if (shadowEnabled) {
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            ctx.shadowBlur = 6;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = 3;
+        } else {
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        }
+        
+        // رسم كل سطر (فقط مرة واحدة لكل سطر)
         lines.forEach((line, index) => {
             const y = startY + (index * lineHeight);
             const x = canvas.width / 2;
@@ -227,7 +241,7 @@ function renderTextOnCanvas() {
             // قياس عرض النص
             const textMetrics = ctx.measureText(line);
             
-            // رسم خلفية النص
+            // رسم خلفية النص (إذا مفعلة)
             if (cardEnabled) {
                 const padding = 20;
                 const bgWidth = textMetrics.width + (padding * 2);
@@ -235,21 +249,14 @@ function renderTextOnCanvas() {
                 const bgX = x - (bgWidth / 2);
                 const bgY = y - (fontSize / 2) - (padding / 2);
                 
+                ctx.save();
                 ctx.fillStyle = currentCardColor || '#000000';
                 ctx.globalAlpha = 0.7;
                 ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
-                ctx.globalAlpha = 1;
+                ctx.restore();
             }
             
-            // إعداد الظل
-            if (shadowEnabled) {
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                ctx.shadowBlur = 6;
-                ctx.shadowOffsetX = 3;
-                ctx.shadowOffsetY = 3;
-            }
-            
-            // رسم حواف النص
+            // رسم حواف النص (إذا مفعلة)
             if (strokeWidth > 0) {
                 ctx.strokeStyle = currentStrokeColor || '#000000';
                 ctx.lineWidth = strokeWidth * 2;
@@ -259,20 +266,18 @@ function renderTextOnCanvas() {
             // رسم النص نفسه
             ctx.fillStyle = currentTextColor || '#FFFFFF';
             ctx.fillText(line, x, y);
-            
-            // إعادة تعيين الظل للخطوة التالية
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
         });
         
+        // استعادة حالة الـ context
         ctx.restore();
+        
         console.log('تم رسم النص على Canvas بنجاح');
         return true;
         
     } catch (error) {
         console.error('خطأ في رسم النص:', error);
+        // استعادة الـ context في حالة خطأ
+        try { ctx.restore(); } catch(e) {}
         return false;
     }
 }
