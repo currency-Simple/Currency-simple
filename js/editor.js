@@ -2,7 +2,6 @@
 let canvas, ctx;
 let currentImage = null;
 let imageLoaded = false;
-let originalImageUrl = '';
 
 // تهيئة المحرر
 window.addEventListener('DOMContentLoaded', () => {
@@ -25,34 +24,10 @@ function setupEventListeners() {
     const shadowEnabled = document.getElementById('shadowEnabled');
     const cardEnabled = document.getElementById('cardEnabled');
 
-    // المشكلة 2: إخفاء "اكتب هنا..." عند الكتابة
     if (textOverlay) {
-        // عندما يركز المستخدم على حقل النص
-        textOverlay.addEventListener('focus', function() {
-            if (this.textContent === 'اكتب هنا...' || 
-                this.textContent === 'Type here...' || 
-                this.textContent === 'Écrivez ici...') {
-                this.textContent = '';
-            }
-        });
-        
-        // عند كتابة أي شيء
-        textOverlay.addEventListener('input', function() {
+        textOverlay.addEventListener('input', () => {
             autoAdjustFontSize();
             updateTextStyle();
-        });
-        
-        // عند فقدان التركيز إذا كان فارغاً
-        textOverlay.addEventListener('blur', function() {
-            if (this.textContent.trim() === '') {
-                const lang = localStorage.getItem('language') || 'ar';
-                const placeholders = {
-                    ar: 'اكتب هنا...',
-                    en: 'Type here...',
-                    fr: 'Écrivez ici...'
-                };
-                this.textContent = placeholders[lang];
-            }
         });
     }
     
@@ -150,16 +125,12 @@ function updateTextStyle() {
     }
 }
 
-// المشكلة 3: تحميل الصورة بدون خلفية وبجودة كاملة
+// تحميل الصورة
 function loadImageToEditor(imageUrl) {
-    console.log('جاري تحميل الصورة:', imageUrl);
-    originalImageUrl = imageUrl;
-    
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
     img.onload = function() {
-        console.log('الصورة تم تحميلها:', img.width, 'x', img.height);
         currentImage = img;
         imageLoaded = true;
         
@@ -171,13 +142,13 @@ function loadImageToEditor(imageUrl) {
         const container = document.querySelector('.canvas-wrapper-fixed');
         if (!container) return;
         
-        const containerWidth = container.clientWidth - 20; // مع هامش 20px
+        const containerWidth = container.clientWidth - 20;
         const containerHeight = container.clientHeight - 20;
         
         // حساب نسبة التكبير/التصغير
         const widthRatio = containerWidth / originalWidth;
         const heightRatio = containerHeight / originalHeight;
-        const scale = Math.min(widthRatio, heightRatio, 1); // لا تكبير أكثر من 100%
+        const scale = Math.min(widthRatio, heightRatio, 1);
         
         // أبعاد العرض
         const displayWidth = originalWidth * scale;
@@ -187,21 +158,19 @@ function loadImageToEditor(imageUrl) {
         canvas.width = displayWidth;
         canvas.height = displayHeight;
         
-        // تنظيف Canvas ووضع خلفية شفافة
+        // تنظيف Canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // إعدادات جودة عالية للرسم
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
-        // رسم الصورة الأصلية بدون خلفية سوداء
+        // رسم الصورة الأصلية
         ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
         
         // ضبط أسلوب النص
         autoAdjustFontSize();
         updateTextStyle();
-        
-        console.log('الصورة معروضة بحجم:', displayWidth, 'x', displayHeight);
     };
     
     img.onerror = function(error) {
@@ -212,7 +181,7 @@ function loadImageToEditor(imageUrl) {
     img.src = imageUrl;
 }
 
-// المشكلة 1: إصلاح النص المكرر عند التنزيل
+// ============== دالة رسم النص المحسنة (إصلاح المشكلتين) ==============
 function renderTextOnCanvas(forExport = false) {
     if (!imageLoaded || !currentImage) {
         console.error('لم يتم تحميل صورة');
@@ -220,12 +189,11 @@ function renderTextOnCanvas(forExport = false) {
     }
     
     try {
-        // إذا كان للتصدير، نستخدم Canvas جديد
-        let targetCanvas = canvas;
-        let targetCtx = ctx;
+        // إنشاء Canvas بناءً على الغرض
+        let targetCanvas, targetCtx;
         
         if (forExport) {
-            // إنشاء Canvas جديد للتصدير بنفس حجم الصورة الأصلية
+            // للتصدير: نستخدم Canvas بنفس حجم الصورة الأصلية
             const exportCanvas = document.createElement('canvas');
             const originalWidth = currentImage.naturalWidth || currentImage.width;
             const originalHeight = currentImage.naturalHeight || currentImage.height;
@@ -235,14 +203,14 @@ function renderTextOnCanvas(forExport = false) {
             targetCanvas = exportCanvas;
             targetCtx = exportCanvas.getContext('2d');
             
-            // إعدادات جودة عالية
-            targetCtx.imageSmoothingEnabled = true;
-            targetCtx.imageSmoothingQuality = 'high';
-            
-            // رسم الصورة الأصلية بالحجم الكامل
+            // رسم الصورة الأصلية بحجمها الكامل
             targetCtx.drawImage(currentImage, 0, 0, originalWidth, originalHeight);
         } else {
-            // للعرض العادي: مسح واعادة رسم
+            // للعرض: نستخدم Canvas الحالي
+            targetCanvas = canvas;
+            targetCtx = ctx;
+            
+            // إعادة رسم الصورة
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
         }
@@ -256,13 +224,7 @@ function renderTextOnCanvas(forExport = false) {
         
         const text = textElement.innerText || textElement.textContent;
         if (!text || text === 'اكتب هنا...' || text === 'Type here...' || text === 'Écrivez ici...') {
-            // لا يوجد نص، نرجع الصورة فقط
-            if (forExport) {
-                // نسخ Canvas التصدير إلى Canvas الرئيسي للعودة
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(targetCanvas, 0, 0, canvas.width, canvas.height);
-            }
-            return true;
+            return forExport ? targetCanvas : true;
         }
         
         // إعداد النص
@@ -277,7 +239,7 @@ function renderTextOnCanvas(forExport = false) {
         if (forExport) {
             // تكبير النص للتصدير ليناسب حجم الصورة الكبير
             const scale = targetCanvas.width / canvas.width;
-            finalFontSize = fontSize * scale;
+            finalFontSize = fontSize * scale * 0.8; // تقليل قليلاً ليتناسب مع الصورة الكبيرة
         }
         
         targetCtx.save();
@@ -289,13 +251,31 @@ function renderTextOnCanvas(forExport = false) {
         targetCtx.lineJoin = 'round';
         targetCtx.lineCap = 'round';
         
-        // تقسيم النص إلى أسطر
-        const lines = text.split('\n').filter(line => line.trim());
-        const lineHeight = finalFontSize * 1.3;
-        const totalHeight = lines.length * lineHeight;
+        // المشكلة 1: تقسيم النص بشكل صحيح إلى أسطر
+        const maxLineWidth = targetCanvas.width * 0.8; // 80% من عرض الصورة
+        const lines = wrapText(text, maxLineWidth, targetCtx, finalFontSize);
+        
+        // المشكلة 2: ضبط حجم الخط ليتناسب مع العرض
+        let adjustedFontSize = finalFontSize;
+        let adjustedLines = lines;
+        
+        // التحقق من أن النص لا يتجاوز عرض الصورة
+        while (true) {
+            const testWidth = Math.max(...adjustedLines.map(line => targetCtx.measureText(line).width));
+            if (testWidth <= maxLineWidth || adjustedFontSize <= 20) {
+                break;
+            }
+            adjustedFontSize -= 2;
+            targetCtx.font = 'bold ' + adjustedFontSize + 'px ' + fontFamily;
+            adjustedLines = wrapText(text, maxLineWidth, targetCtx, adjustedFontSize);
+        }
+        
+        // حساب ارتفاع النص الكلي
+        const lineHeight = adjustedFontSize * 1.3;
+        const totalHeight = adjustedLines.length * lineHeight;
         const startY = (targetCanvas.height / 2) - (totalHeight / 2) + (lineHeight / 2);
         
-        // إعداد الظل (إذا مفعل)
+        // إعداد الظل
         if (shadowEnabled) {
             targetCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
             targetCtx.shadowBlur = 8;
@@ -308,21 +288,21 @@ function renderTextOnCanvas(forExport = false) {
             targetCtx.shadowOffsetY = 0;
         }
         
-        // رسم كل سطر (مرة واحدة فقط)
-        lines.forEach((line, index) => {
+        // رسم كل سطر
+        adjustedLines.forEach((line, index) => {
             const y = startY + (index * lineHeight);
             const x = targetCanvas.width / 2;
             
             // قياس عرض النص
             const textMetrics = targetCtx.measureText(line);
             
-            // رسم خلفية النص (إذا مفعلة)
+            // رسم خلفية النص
             if (cardEnabled) {
-                const padding = finalFontSize * 0.5;
+                const padding = adjustedFontSize * 0.5;
                 const bgWidth = textMetrics.width + (padding * 2);
-                const bgHeight = finalFontSize + padding;
+                const bgHeight = adjustedFontSize + padding;
                 const bgX = x - (bgWidth / 2);
-                const bgY = y - (finalFontSize / 2) - (padding / 2);
+                const bgY = y - (adjustedFontSize / 2) - (padding / 2);
                 
                 targetCtx.save();
                 targetCtx.fillStyle = currentCardColor || '#000000';
@@ -331,27 +311,21 @@ function renderTextOnCanvas(forExport = false) {
                 targetCtx.restore();
             }
             
-            // رسم حواف النص (إذا مفعلة)
+            // رسم حواف النص
             if (strokeWidth > 0) {
                 targetCtx.strokeStyle = currentStrokeColor || '#000000';
                 targetCtx.lineWidth = strokeWidth * (forExport ? 3 : 1);
                 targetCtx.strokeText(line, x, y);
             }
             
-            // رسم النص نفسه (مرة واحدة فقط)
+            // رسم النص نفسه
             targetCtx.fillStyle = currentTextColor || '#FFFFFF';
             targetCtx.fillText(line, x, y);
         });
         
         targetCtx.restore();
         
-        // إذا كان للتصدير، نرجع Canvas التصدير
-        if (forExport) {
-            return targetCanvas;
-        }
-        
-        console.log('تم رسم النص على Canvas');
-        return true;
+        return forExport ? targetCanvas : true;
         
     } catch (error) {
         console.error('خطأ في رسم النص:', error);
@@ -359,8 +333,29 @@ function renderTextOnCanvas(forExport = false) {
     }
 }
 
-// دالة خاصة للتصدير (لحل المشكلة 1)
+// ============== دالة مساعدة لتقسيم النص إلى أسطر ==============
+function wrapText(text, maxWidth, ctx, fontSize) {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = words[0];
+    
+    for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        const width = ctx.measureText(currentLine + " " + word).width;
+        
+        if (width < maxWidth) {
+            currentLine += " " + word;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    }
+    lines.push(currentLine);
+    
+    return lines;
+}
+
+// دالة خاصة للتصدير
 function prepareImageForExport() {
-    const result = renderTextOnCanvas(true); // true = للتصدير
-    return result;
+    return renderTextOnCanvas(true);
 }
