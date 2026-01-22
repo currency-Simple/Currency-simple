@@ -1,3 +1,4 @@
+[file content begin]
 // متغيرات عامة
 let categories = [];
 let currentCategory = null;
@@ -13,34 +14,68 @@ window.addEventListener('DOMContentLoaded', () => {
     // إضافة مستمعات للوحة المفاتيح
     setupKeyboardListeners();
     
-    console.log('App loaded successfully');
+    // إضافة مستمع للتركيز على حقل النص
+    const textOverlay = document.getElementById('textOverlay');
+    if (textOverlay) {
+        textOverlay.addEventListener('focus', handleTextFocus);
+        textOverlay.addEventListener('blur', handleTextBlur);
+        textOverlay.addEventListener('input', handleTextInput);
+    }
 });
 
 // إعداد مستمعات لوحة المفاتيح
 function setupKeyboardListeners() {
-    // بسيط للموبايل
-    window.addEventListener('resize', function() {
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if (isMobile) {
-            const keyboardHeight = window.innerHeight - document.documentElement.clientHeight;
+    // للمتصفحات الحديثة
+    if ('visualViewport' in window) {
+        const viewport = window.visualViewport;
+        
+        viewport.addEventListener('resize', () => {
+            const keyboardHeight = window.innerHeight - viewport.height;
+            
             if (keyboardHeight > 100) {
                 handleKeyboardOpen(keyboardHeight);
             } else {
                 handleKeyboardClose();
             }
-        }
-    });
+        });
+    } else {
+        window.addEventListener('resize', () => {
+            setTimeout(() => {
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (isMobile && window.innerHeight < window.outerHeight * 0.7) {
+                    handleKeyboardOpen(200);
+                } else {
+                    handleKeyboardClose();
+                }
+            }, 100);
+        });
+    }
 }
 
 // التعامل مع فتح لوحة المفاتيح
 function handleKeyboardOpen(keyboardHeight) {
     if (keyboardOpen) return;
     keyboardOpen = true;
-    console.log('Keyboard opened');
+    console.log('Keyboard opened, height:', keyboardHeight);
     
-    // إضافة كلاس
+    document.documentElement.classList.add('keyboard-open');
     document.body.classList.add('keyboard-open');
-    document.getElementById('editorPage')?.classList.add('keyboard-open');
+    
+    const editorPage = document.getElementById('editorPage');
+    if (editorPage) editorPage.classList.add('keyboard-open');
+    
+    adjustCanvasForKeyboard(keyboardHeight);
+    
+    const bottomNav = document.querySelector('.bottom-nav');
+    const editorToolbar = document.querySelector('.editor-toolbar');
+    const toolPanels = document.querySelectorAll('.tool-panel.active');
+    
+    if (bottomNav) bottomNav.classList.add('keyboard-open');
+    if (editorToolbar) editorToolbar.classList.add('keyboard-open');
+    
+    toolPanels.forEach(panel => {
+        panel.classList.add('keyboard-open');
+    });
 }
 
 // التعامل مع إغلاق لوحة المفاتيح
@@ -49,9 +84,95 @@ function handleKeyboardClose() {
     keyboardOpen = false;
     console.log('Keyboard closed');
     
-    // إزالة الكلاس
+    document.documentElement.classList.remove('keyboard-open');
     document.body.classList.remove('keyboard-open');
-    document.getElementById('editorPage')?.classList.remove('keyboard-open');
+    
+    const editorPage = document.getElementById('editorPage');
+    if (editorPage) editorPage.classList.remove('keyboard-open');
+    
+    restoreCanvasAfterKeyboard();
+    
+    const bottomNav = document.querySelector('.bottom-nav');
+    const editorToolbar = document.querySelector('.editor-toolbar');
+    const toolPanels = document.querySelectorAll('.tool-panel.active');
+    
+    if (bottomNav) bottomNav.classList.remove('keyboard-open');
+    if (editorToolbar) editorToolbar.classList.remove('keyboard-open');
+    
+    toolPanels.forEach(panel => {
+        panel.classList.remove('keyboard-open');
+    });
+}
+
+// ضبط Canvas عند فتح لوحة المفاتيح
+function adjustCanvasForKeyboard(keyboardHeight) {
+    const canvasWrapper = document.getElementById('canvasWrapperFixed');
+    const canvas = document.getElementById('canvas');
+    const textOverlay = document.getElementById('textOverlay');
+    
+    if (canvasWrapper && canvas && textOverlay) {
+        canvasWrapper.dataset.originalHeight = canvasWrapper.style.height;
+        canvas.dataset.originalMaxHeight = canvas.style.maxHeight;
+        
+        const totalFixedHeight = 71 + 70 + 70 + 50;
+        const availableHeight = window.innerHeight - totalFixedHeight - keyboardHeight;
+        
+        canvasWrapper.style.height = availableHeight + 'px';
+        canvas.style.maxHeight = availableHeight + 'px';
+        canvas.style.maxWidth = '100%';
+        canvas.style.objectFit = 'contain';
+        
+        textOverlay.style.fontSize = 'calc(min(48px, 5vw))';
+        textOverlay.style.maxHeight = (availableHeight - 40) + 'px';
+        textOverlay.style.overflowY = 'auto';
+        
+        canvasWrapper.style.justifyContent = 'flex-start';
+        canvasWrapper.style.paddingTop = '10px';
+    }
+}
+
+// استعادة Canvas بعد إغلاق لوحة المفاتيح
+function restoreCanvasAfterKeyboard() {
+    const canvasWrapper = document.getElementById('canvasWrapperFixed');
+    const canvas = document.getElementById('canvas');
+    const textOverlay = document.getElementById('textOverlay');
+    
+    if (canvasWrapper && canvas && textOverlay) {
+        canvasWrapper.style.height = '';
+        canvasWrapper.style.paddingTop = '';
+        canvasWrapper.style.justifyContent = '';
+        
+        canvas.style.maxHeight = '';
+        canvas.style.objectFit = 'contain';
+        
+        textOverlay.style.fontSize = '';
+        textOverlay.style.maxHeight = '';
+        textOverlay.style.overflowY = '';
+    }
+}
+
+// التعامل مع التركيز على حقل النص
+function handleTextFocus() {
+    console.log('Text field focused');
+}
+
+function handleTextBlur() {
+    setTimeout(() => {
+        if (!document.activeElement || document.activeElement.id !== 'textOverlay') {
+            handleKeyboardClose();
+        }
+    }, 300);
+}
+
+function handleTextInput() {
+    setTimeout(() => {
+        if (typeof autoAdjustFontSize === 'function') {
+            autoAdjustFontSize();
+        }
+        if (typeof updateTextStyle === 'function') {
+            updateTextStyle();
+        }
+    }, 50);
 }
 
 // تحميل الفئات
@@ -59,40 +180,43 @@ async function loadCategories() {
     categories = [];
     console.log('Loading categories...');
     
-    // محاولة تحميل فئة واحدة أولاً للتجربة
-    try {
-        const response = await fetch('data/images1.json');
-        if (response.ok) {
-            const data = await response.json();
-            if (data && data.images && data.images.length > 0) {
-                categories.push({
-                    id: 1,
-                    name: data.name || 'فئة 1',
-                    coverImage: data.images[0].url,
-                    images: data.images
-                });
-                console.log('Category 1 loaded');
-            }
-        }
-    } catch (error) {
-        console.log('Using demo categories');
-        loadDemoCategories();
+    const promises = [];
+    for (let i = 1; i <= 100; i++) {
+        promises.push(
+            fetch(`data/images${i}.json`)
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                    if (data && data.images && data.images.length > 0) {
+                        categories.push({
+                            id: i,
+                            name: data.name || `فئة ${i}`,
+                            coverImage: data.images[0].url,
+                            images: data.images
+                        });
+                    }
+                })
+                .catch(() => null)
+        );
     }
+    
+    await Promise.allSettled(promises);
     
     if (categories.length === 0) {
         loadDemoCategories();
     } else {
+        categories.sort((a, b) => a.id - b.id);
         displayCategories();
     }
+    
+    console.log('Categories loaded:', categories.length);
 }
 
 // فئات تجريبية
 function loadDemoCategories() {
-    console.log('Loading demo categories...');
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 10; i++) {
         const images = [];
-        for (let j = 1; j <= 20; j++) {
-            const id = (i - 1) * 20 + j;
+        for (let j = 1; j <= 100; j++) {
+            const id = (i - 1) * 100 + j;
             images.push({
                 id: id,
                 url: `https://picsum.photos/400/500?random=${id}`,
@@ -121,8 +245,7 @@ function displayCategories() {
         item.className = 'category-item';
         item.onclick = () => openCategory(cat);
         item.innerHTML = `
-            <img src="${cat.coverImage}" alt="${cat.name}" loading="lazy" 
-                 onerror="this.src='https://via.placeholder.com/400x500?text=Error+Loading'">
+            <img src="${cat.coverImage}" alt="${cat.name}" loading="lazy">
             <div class="category-overlay">
                 <div class="category-title">${cat.name}</div>
             </div>
@@ -156,9 +279,6 @@ function displayImages() {
         imgEl.src = img.url;
         imgEl.alt = img.title || 'صورة';
         imgEl.loading = 'lazy';
-        imgEl.onerror = function() {
-            this.src = 'https://via.placeholder.com/400x500?text=Error+Loading';
-        };
         
         item.appendChild(imgEl);
         grid.appendChild(item);
@@ -167,20 +287,14 @@ function displayImages() {
 
 // اختيار صورة
 function selectImage(img) {
-    console.log('Selecting image:', img.url);
     localStorage.setItem('selectedImage', JSON.stringify(img));
     showPage('editor');
     
-    // تأخير قصير لتحميل الصورة
     setTimeout(() => {
         if (typeof loadImageToEditor === 'function') {
-            console.log('Loading image to editor...');
             loadImageToEditor(img.url);
-        } else {
-            console.error('loadImageToEditor function not found!');
-            alert('خطأ في تحميل المحرر');
         }
-    }, 300);
+    }, 100);
 }
 
 // التنقل بين الصفحات
@@ -211,6 +325,10 @@ function showPage(pageName) {
     
     const btn = document.getElementById(navMap[pageName]);
     if (btn) btn.classList.add('active');
+    
+    if (pageName !== 'editor') {
+        handleKeyboardClose();
+    }
 }
 
 // العودة
@@ -222,123 +340,338 @@ function goBackToImages() {
     }
 }
 
-// تنزيل الصورة - الإصلاح الكامل
-function downloadImage() {
-    console.log('Attempting to download image...');
-    
-    const canvas = document.getElementById('canvas');
-    if (!canvas) {
-        alert('لم يتم العثور على عنصر Canvas');
-        return;
-    }
-    
-    if (!canvas.width || canvas.width === 0) {
-        alert('يرجى اختيار صورة أولاً');
-        return;
-    }
-    
+// ============== دالة التنزيل المحسنة ==============
+async function downloadImage() {
     try {
-        console.log('Canvas found, width:', canvas.width, 'height:', canvas.height);
+        console.log('بدء عملية التنزيل...');
         
-        // 1. أولاً تأكد من أن النص مرسوم على Canvas
-        if (typeof renderTextOnCanvas === 'function') {
-            console.log('Calling renderTextOnCanvas...');
-            renderTextOnCanvas();
-        } else {
-            console.error('renderTextOnCanvas function not available');
-            alert('خطأ في دالة الرسم');
+        // التحقق من وجود صورة
+        const canvas = document.getElementById('canvas');
+        if (!canvas || !canvas.width || !canvas.width > 0) {
+            showAlert('يرجى اختيار صورة أولاً', 'error');
             return;
         }
         
-        // 2. انتظر قليلاً لضمان اكتمال الرسم
-        setTimeout(() => {
-            try {
-                // 3. تحقق من وجود محتوى على Canvas
-                const ctx = canvas.getContext('2d');
-                const imageData = ctx.getImageData(0, 0, 1, 1).data;
-                console.log('Canvas has data:', imageData);
-                
-                // 4. أنشئ رابط التنزيل
-                const link = document.createElement('a');
-                const fileName = `صورة-مع-نص-${Date.now()}.png`;
-                
-                // 5. حوّل Canvas إلى صورة
-                const dataURL = canvas.toDataURL('image/png');
-                console.log('Data URL generated, length:', dataURL.length);
-                
-                // 6. عيّن خصائص الرابط
-                link.download = fileName;
-                link.href = dataURL;
-                
-                // 7. أضف الرابط للصفحة وانقر عليه
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                console.log('Download successful:', fileName);
-                
-            } catch (innerError) {
-                console.error('Inner download error:', innerError);
-                alert('خطأ في إنشاء الصورة: ' + innerError.message);
+        // إظهار مؤشر تحميل
+        showLoadingIndicator('جاري تحضير الصورة للتنزيل...');
+        
+        // التأكد أننا في صفحة المحرر
+        if (!document.getElementById('editorPage').classList.contains('active')) {
+            showPage('editor');
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        // رسم النص على Canvas
+        if (typeof prepareCanvasForExport === 'function') {
+            const success = prepareCanvasForExport();
+            if (!success) {
+                hideLoadingIndicator();
+                showAlert('فشل في تحضير الصورة', 'error');
+                return;
             }
-        }, 500); // انتظار أطول لضمان الرسم
+        } else if (typeof renderTextOnCanvas === 'function') {
+            const success = renderTextOnCanvas();
+            if (!success) {
+                hideLoadingIndicator();
+                showAlert('فشل في تحضير الصورة', 'error');
+                return;
+            }
+        } else {
+            hideLoadingIndicator();
+            showAlert('دالة الرسم غير متوفرة', 'error');
+            return;
+        }
+        
+        // انتظار قصير لضمان الرسم
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // إنشاء رابط التنزيل
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        link.download = `صورة-مع-نص-${timestamp}.png`;
+        
+        // تحويل Canvas إلى صورة
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                hideLoadingIndicator();
+                showAlert('فشل في إنشاء الصورة', 'error');
+                return;
+            }
+            
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            
+            // محاكاة النقر على الرابط
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // تحرير الذاكرة
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            
+            hideLoadingIndicator();
+            showAlert('تم تنزيل الصورة بنجاح!', 'success');
+            
+            console.log('تم التنزيل بنجاح');
+            
+        }, 'image/png', 1.0);
         
     } catch (error) {
-        console.error('Download error:', error);
-        alert('حدث خطأ أثناء التنزيل: ' + error.message);
+        console.error('خطأ في التنزيل:', error);
+        hideLoadingIndicator();
+        showAlert('حدث خطأ أثناء التنزيل: ' + error.message, 'error');
     }
 }
 
-// مشاركة الصورة
+// ============== دالة المشاركة المحسنة ==============
 async function shareImage() {
-    console.log('Attempting to share image...');
-    
-    const canvas = document.getElementById('canvas');
-    if (!canvas || !canvas.width) {
-        alert('يرجى اختيار صورة أولاً');
-        return;
-    }
-    
     try {
-        // 1. ارسم النص أولاً
-        if (typeof renderTextOnCanvas === 'function') {
-            renderTextOnCanvas();
+        console.log('بدء عملية المشاركة...');
+        
+        // التحقق من وجود صورة
+        const canvas = document.getElementById('canvas');
+        if (!canvas || !canvas.width || !canvas.width > 0) {
+            showAlert('يرجى اختيار صورة أولاً', 'error');
+            return;
         }
         
-        // 2. انتظر للرسم
-        setTimeout(async () => {
-            try {
-                canvas.toBlob(async (blob) => {
-                    if (!blob) {
-                        alert('فشل في إنشاء الصورة');
-                        return;
-                    }
-                    
-                    const file = new File([blob], 'image.png', { type: 'image/png' });
-                    
-                    if (navigator.share) {
-                        try {
-                            await navigator.share({
-                                files: [file],
-                                title: 'صورة مع نص',
-                                text: 'شاهد هذه الصورة الجميلة!'
-                            });
-                        } catch (shareError) {
-                            console.log('Sharing cancelled or failed:', shareError);
-                        }
-                    } else {
-                        alert('المشاركة غير مدعومة في هذا المتصفح. يمكنك تنزيل الصورة بدلاً من ذلك.');
-                    }
-                }, 'image/png', 1.0);
-                
-            } catch (error) {
-                console.error('Share error:', error);
-                alert('خطأ في المشاركة');
+        // التحقق من دعم المشاركة
+        if (!navigator.share) {
+            showAlert('المشاركة غير مدعومة في هذا المتصفح', 'info');
+            return downloadImage(); // استدعاء التنزيل كبديل
+        }
+        
+        // إظهار مؤشر تحميل
+        showLoadingIndicator('جاري تحضير الصورة للمشاركة...');
+        
+        // التأكد أننا في صفحة المحرر
+        if (!document.getElementById('editorPage').classList.contains('active')) {
+            showPage('editor');
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        // رسم النص على Canvas
+        if (typeof prepareCanvasForExport === 'function') {
+            const success = prepareCanvasForExport();
+            if (!success) {
+                hideLoadingIndicator();
+                showAlert('فشل في تحضير الصورة', 'error');
+                return;
             }
-        }, 500);
+        } else if (typeof renderTextOnCanvas === 'function') {
+            const success = renderTextOnCanvas();
+            if (!success) {
+                hideLoadingIndicator();
+                showAlert('فشل في تحضير الصورة', 'error');
+                return;
+            }
+        } else {
+            hideLoadingIndicator();
+            showAlert('دالة الرسم غير متوفرة', 'error');
+            return;
+        }
+        
+        // انتظار قصير لضمان الرسم
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // تحويل Canvas إلى Blob
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                hideLoadingIndicator();
+                showAlert('فشل في إنشاء الصورة', 'error');
+                return;
+            }
+            
+            // إنشاء ملف من Blob
+            const file = new File([blob], 'صورة-مع-نص.png', { 
+                type: 'image/png',
+                lastModified: Date.now()
+            });
+            
+            try {
+                // التحقق من إمكانية المشاركة
+                if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
+                    hideLoadingIndicator();
+                    showAlert('لا يمكن مشاركة الملف في هذا الجهاز', 'info');
+                    return downloadImage();
+                }
+                
+                // مشاركة الملف
+                await navigator.share({
+                    files: [file],
+                    title: 'صورة مع نص',
+                    text: 'شاهد هذه الصورة الرائعة مع نص مكتوب عليها!'
+                });
+                
+                hideLoadingIndicator();
+                showAlert('تم المشاركة بنجاح!', 'success');
+                console.log('تمت المشاركة بنجاح');
+                
+            } catch (shareError) {
+                hideLoadingIndicator();
+                
+                // إذا كان الخطأ بسبب إلغاء المستخدم، لا نعرض رسالة
+                if (shareError.name === 'AbortError') {
+                    console.log('تم إلغاء المشاركة من قبل المستخدم');
+                    return;
+                }
+                
+                console.error('خطأ في المشاركة:', shareError);
+                showAlert('فشلت المشاركة: ' + shareError.message, 'error');
+                
+                // محاولة التنزيل كبديل
+                downloadImage();
+            }
+            
+        }, 'image/png', 1.0);
         
     } catch (error) {
-        console.error('Share setup error:', error);
-        alert('حدث خطأ في إعداد المشاركة');
+        console.error('خطأ في المشاركة:', error);
+        hideLoadingIndicator();
+        showAlert('حدث خطأ أثناء المشاركة: ' + error.message, 'error');
     }
 }
+
+// ============== دوال مساعدة ==============
+function showAlert(message, type = 'info') {
+    // إزالة أي رسالة سابقة
+    const existingAlert = document.querySelector('.custom-alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    // إنشاء عنصر الرسالة
+    const alert = document.createElement('div');
+    alert.className = `custom-alert ${type}`;
+    alert.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" style="
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 10px;
+        ">×</button>
+    `;
+    
+    // إضافة الأنماط إذا لم تكن موجودة
+    if (!document.getElementById('alert-styles')) {
+        const style = document.createElement('style');
+        style.id = 'alert-styles';
+        style.textContent = `
+            .custom-alert {
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 100000;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                min-width: 300px;
+                max-width: 90%;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                animation: slideIn 0.3s ease-out;
+            }
+            @keyframes slideIn {
+                from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+                to { transform: translateX(-50%) translateY(0); opacity: 1; }
+            }
+            .custom-alert.success { background: #4CAF50; }
+            .custom-alert.error { background: #f44336; }
+            .custom-alert.info { background: #2196F3; }
+            .custom-alert.warning { background: #ff9800; }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(alert);
+    
+    // إزالة الرسالة تلقائياً بعد 5 ثواني
+    setTimeout(() => {
+        if (alert.parentElement) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+function showLoadingIndicator(message = 'جاري المعالجة...') {
+    // إزالة أي مؤشر سابق
+    const existingLoader = document.querySelector('.custom-loader');
+    if (existingLoader) {
+        existingLoader.remove();
+    }
+    
+    // إنشاء عنصر التحميل
+    const loader = document.createElement('div');
+    loader.className = 'custom-loader';
+    loader.innerHTML = `
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">${message}</div>
+        </div>
+    `;
+    
+    // إضافة الأنماط إذا لم تكن موجودة
+    if (!document.getElementById('loader-styles')) {
+        const style = document.createElement('style');
+        style.id = 'loader-styles';
+        style.textContent = `
+            .custom-loader {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 100001;
+                backdrop-filter: blur(4px);
+            }
+            .loader-content {
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                text-align: center;
+                min-width: 250px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            }
+            .loader-spinner {
+                width: 50px;
+                height: 50px;
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #007aff;
+                border-radius: 50%;
+                margin: 0 auto 20px;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .loader-text {
+                color: #333;
+                font-weight: bold;
+                font-size: 16px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(loader);
+}
+
+function hideLoadingIndicator() {
+    const loader = document.querySelector('.custom-loader');
+    if (loader) {
+        loader.remove();
+    }
+}
+[file content end]
