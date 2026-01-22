@@ -221,17 +221,12 @@ function addDeleteTextButton() {
 
 // إعداد مستمعات لوحة المفاتيح
 function setupKeyboardListeners() {
-    // إزالة جميع المستمعات القديمة للوحة المفاتيح
-    // سنستخدم أسلوباً أبسط لمنع ارتفاع العناصر
-    
     window.addEventListener('resize', () => {
         setTimeout(() => {
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const windowHeight = window.innerHeight;
             const screenHeight = window.screen.height;
             
-            // إذا كان الارتفاع الحالي أقل من 70% من ارتفاع الشاشة،
-            // فهذا يعني أن لوحة المفاتيح مفتوحة
             if (isMobile && windowHeight < screenHeight * 0.7) {
                 handleKeyboardOpen();
             } else {
@@ -247,7 +242,6 @@ function handleKeyboardOpen() {
     keyboardOpen = true;
     console.log('Keyboard opened');
     
-    // فقط إضافة كلاس للجسم لمنع التمرير
     document.body.classList.add('keyboard-open');
 }
 
@@ -257,7 +251,6 @@ function handleKeyboardClose() {
     keyboardOpen = false;
     console.log('Keyboard closed');
     
-    // إزالة كلاس لوحة المفاتيح
     document.body.classList.remove('keyboard-open');
 }
 
@@ -430,14 +423,13 @@ function goBackToImages() {
     }
 }
 
-// ============== دالة التنزيل ==============
+// ============== دالة التنزيل المحسنة ==============
 async function downloadImage() {
     try {
         console.log('بدء عملية التنزيل...');
         
         // التحقق من وجود صورة
-        const canvas = document.getElementById('canvas');
-        if (!canvas || !canvas.width || !canvas.width > 0) {
+        if (!currentImage || !imageLoaded) {
             showAlert('يرجى اختيار صورة أولاً', 'error');
             return;
         }
@@ -445,10 +437,10 @@ async function downloadImage() {
         // إظهار مؤشر تحميل
         showLoadingIndicator('جاري إنشاء الصورة النهائية...');
         
-        // استخدام دالة التصدير
+        // استخدام دالة التصدير المحسنة
         let exportCanvas;
-        if (typeof prepareImageForExport === 'function') {
-            exportCanvas = prepareImageForExport();
+        if (typeof prepareHighQualityExport === 'function') {
+            exportCanvas = prepareHighQualityExport();
             if (!exportCanvas) {
                 hideLoadingIndicator();
                 showAlert('فشل في تحضير الصورة', 'error');
@@ -472,7 +464,7 @@ async function downloadImage() {
             const link = document.createElement('a');
             link.download = filename;
             
-            // تحويل Canvas إلى صورة
+            // تحويل Canvas إلى صورة عالية الجودة
             exportCanvas.toBlob((blob) => {
                 if (!blob) {
                     hideLoadingIndicator();
@@ -553,8 +545,7 @@ async function shareImage() {
         console.log('بدء عملية المشاركة...');
         
         // التحقق من وجود صورة
-        const canvas = document.getElementById('canvas');
-        if (!canvas || !canvas.width || !canvas.width > 0) {
+        if (!currentImage || !imageLoaded) {
             showAlert('يرجى اختيار صورة أولاً', 'error');
             return;
         }
@@ -568,10 +559,10 @@ async function shareImage() {
         // إظهار مؤشر تحميل
         showLoadingIndicator('جاري تحضير الصورة للمشاركة...');
         
-        // استخدام دالة التصدير
+        // استخدام دالة التصدير المحسنة
         let exportCanvas;
-        if (typeof prepareImageForExport === 'function') {
-            exportCanvas = prepareImageForExport();
+        if (typeof prepareHighQualityExport === 'function') {
+            exportCanvas = prepareHighQualityExport();
             if (!exportCanvas) {
                 hideLoadingIndicator();
                 showAlert('فشل في تحضير الصورة', 'error');
@@ -704,5 +695,7 @@ function hideLoadingIndicator() {
     }
 }
 
-// إضافة متغير النص العام
+// إضافة متغيرات الصورة العامة
 window.currentText = '';
+let currentImage = null;
+let imageLoaded = false;
