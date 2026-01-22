@@ -130,6 +130,8 @@ body[dir="ltr"] {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
 }
 
 .category-overlay {
@@ -172,6 +174,8 @@ body[dir="ltr"] {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
 }
 
 /* Editor Page */
@@ -224,6 +228,8 @@ body[dir="ltr"] {
     background: transparent !important;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     border-radius: 8px;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
 }
 
 /* بطاقة النص */
@@ -631,7 +637,20 @@ body.keyboard-open {
     display: none !important;
 }
 
-/* تعديلات للهواتف الصغيرة */
+/* تحسين جودة الصور */
+.category-item img,
+.image-item img,
+#canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* تحسينات للهواتف الصغيرة */
 @media (max-height: 700px) {
     .editor-container {
         bottom: 130px !important;
@@ -965,4 +984,31 @@ input[type="checkbox"] {
 /* إخفاء زر السمة الزرقاء */
 .theme-btn[data-theme="blue"] {
     display: none !important;
+}
+
+/* تحسين جودة العرض */
+#canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* تحسين عرض الألوان */
+.color-item {
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.color-item:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.color-item[style*="border: 2px solid #ccc"] {
+    border-color: #999 !important;
 }
