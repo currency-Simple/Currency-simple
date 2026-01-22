@@ -2,12 +2,12 @@
 let canvas, ctx;
 let currentImage = null;
 let imageLoaded = false;
-let originalCanvasSize = { width: 0, height: 0 };
+let originalImageUrl = '';
 
 // تهيئة المحرر
 window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('canvas');
-    ctx = canvas.getContext('2d', { alpha: false }); // إيقاف الشفافية للأداء
+    ctx = canvas.getContext('2d');
     
     initializeFonts();
     initializeColors();
@@ -25,10 +25,34 @@ function setupEventListeners() {
     const shadowEnabled = document.getElementById('shadowEnabled');
     const cardEnabled = document.getElementById('cardEnabled');
 
+    // المشكلة 2: إخفاء "اكتب هنا..." عند الكتابة
     if (textOverlay) {
-        textOverlay.addEventListener('input', () => {
+        // عندما يركز المستخدم على حقل النص
+        textOverlay.addEventListener('focus', function() {
+            if (this.textContent === 'اكتب هنا...' || 
+                this.textContent === 'Type here...' || 
+                this.textContent === 'Écrivez ici...') {
+                this.textContent = '';
+            }
+        });
+        
+        // عند كتابة أي شيء
+        textOverlay.addEventListener('input', function() {
             autoAdjustFontSize();
             updateTextStyle();
+        });
+        
+        // عند فقدان التركيز إذا كان فارغاً
+        textOverlay.addEventListener('blur', function() {
+            if (this.textContent.trim() === '') {
+                const lang = localStorage.getItem('language') || 'ar';
+                const placeholders = {
+                    ar: 'اكتب هنا...',
+                    en: 'Type here...',
+                    fr: 'Écrivez ici...'
+                };
+                this.textContent = placeholders[lang];
+            }
         });
     }
     
@@ -126,124 +150,102 @@ function updateTextStyle() {
     }
 }
 
-// تحميل الصورة - إصلاح المشكلة 3
+// المشكلة 3: تحميل الصورة بدون خلفية وبجودة كاملة
 function loadImageToEditor(imageUrl) {
+    console.log('جاري تحميل الصورة:', imageUrl);
+    originalImageUrl = imageUrl;
+    
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
     img.onload = function() {
+        console.log('الصورة تم تحميلها:', img.width, 'x', img.height);
         currentImage = img;
         imageLoaded = true;
         
-        // حفظ الأبعاد الأصلية للصورة
-        const originalWidth = img.width;
-        const originalHeight = img.height;
+        // الحفاظ على نسبة العرض والارتفاع الأصلية للصورة
+        const originalWidth = img.naturalWidth || img.width;
+        const originalHeight = img.naturalHeight || img.height;
         
-        // نسبة 4:5 ثابتة للـ Canvas
-        const targetRatio = 4 / 5;
-        let width, height;
+        // حساب الحجم المناسب للعرض في المحرر
+        const container = document.querySelector('.canvas-wrapper-fixed');
+        if (!container) return;
         
-        // حساب الأبعاد مع الحفاظ على نسبة الصورة الأصلية
-        if (originalWidth / originalHeight > targetRatio) {
-            // الصورة أوسع من النسبة المطلوبة
-            height = originalHeight;
-            width = height * targetRatio;
-        } else {
-            // الصورة أطول من النسبة المطلوبة
-            width = originalWidth;
-            height = width / targetRatio;
-        }
+        const containerWidth = container.clientWidth - 20; // مع هامش 20px
+        const containerHeight = container.clientHeight - 20;
         
-        // ضبط أبعاد Canvas بأعلى جودة
-        canvas.width = Math.max(800, width); // الحد الأدنى 800 بكسل للجودة
-        canvas.height = Math.max(1000, height); // الحد الأدنى 1000 بكسل للجودة
+        // حساب نسبة التكبير/التصغير
+        const widthRatio = containerWidth / originalWidth;
+        const heightRatio = containerHeight / originalHeight;
+        const scale = Math.min(widthRatio, heightRatio, 1); // لا تكبير أكثر من 100%
         
-        // حفظ الأبعاد الأصلية
-        originalCanvasSize.width = canvas.width;
-        originalCanvasSize.height = canvas.height;
+        // أبعاد العرض
+        const displayWidth = originalWidth * scale;
+        const displayHeight = originalHeight * scale;
         
-        // رسم الصورة على Canvas بالحجم الكامل
+        // ضبط أبعاد Canvas للعرض فقط
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        
+        // تنظيف Canvas ووضع خلفية شفافة
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // حساب الموقع لمركز الصورة
-        const x = (canvas.width - width) / 2;
-        const y = (canvas.height - height) / 2;
-        
-        // تحسين جودة الرسم
+        // إعدادات جودة عالية للرسم
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
-        // رسم الصورة
-        ctx.drawImage(img, x, y, width, height);
+        // رسم الصورة الأصلية بدون خلفية سوداء
+        ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
         
-        // ضبط الحجم المعروض
-        const container = document.querySelector('.canvas-wrapper-fixed');
-        if (container) {
-            const containerWidth = container.clientWidth;
-            const containerHeight = container.clientHeight;
-            
-            const widthRatio = containerWidth / canvas.width;
-            const heightRatio = containerHeight / canvas.height;
-            const scale = Math.min(widthRatio, heightRatio) * 0.9; // 90% من الحجم المتاح
-            
-            canvas.style.width = (canvas.width * scale) + 'px';
-            canvas.style.height = (canvas.height * scale) + 'px';
-            canvas.style.objectFit = 'contain';
-        }
-        
+        // ضبط أسلوب النص
         autoAdjustFontSize();
         updateTextStyle();
         
-        console.log('Image loaded:', canvas.width, 'x', canvas.height);
+        console.log('الصورة معروضة بحجم:', displayWidth, 'x', displayHeight);
     };
     
-    img.onerror = function() {
-        console.error('Failed to load image');
+    img.onerror = function(error) {
+        console.error('فشل تحميل الصورة:', error);
         alert('فشل تحميل الصورة. الرجاء المحاولة مرة أخرى.');
     };
     
     img.src = imageUrl;
 }
 
-// ============== دالة رسم النص المعدلة (إصلاح المشكلة 3) ==============
-function renderTextOnCanvas() {
+// المشكلة 1: إصلاح النص المكرر عند التنزيل
+function renderTextOnCanvas(forExport = false) {
     if (!imageLoaded || !currentImage) {
         console.error('لم يتم تحميل صورة');
         return false;
     }
     
     try {
-        // استخدام Canvas جديد عالي الجودة للتصدير
-        const exportCanvas = document.createElement('canvas');
-        const exportCtx = exportCanvas.getContext('2d');
+        // إذا كان للتصدير، نستخدم Canvas جديد
+        let targetCanvas = canvas;
+        let targetCtx = ctx;
         
-        // استخدام الأبعاد الأصلية المخزنة
-        exportCanvas.width = originalCanvasSize.width || canvas.width;
-        exportCanvas.height = originalCanvasSize.height || canvas.height;
-        
-        // تحسين الجودة
-        exportCtx.imageSmoothingEnabled = true;
-        exportCtx.imageSmoothingQuality = 'high';
-        
-        // إعادة حساب أبعاد الصورة للـ Canvas الجديد
-        const targetRatio = 4 / 5;
-        let width, height;
-        
-        if (currentImage.width / currentImage.height > targetRatio) {
-            height = currentImage.height;
-            width = height * targetRatio;
+        if (forExport) {
+            // إنشاء Canvas جديد للتصدير بنفس حجم الصورة الأصلية
+            const exportCanvas = document.createElement('canvas');
+            const originalWidth = currentImage.naturalWidth || currentImage.width;
+            const originalHeight = currentImage.naturalHeight || currentImage.height;
+            
+            exportCanvas.width = originalWidth;
+            exportCanvas.height = originalHeight;
+            targetCanvas = exportCanvas;
+            targetCtx = exportCanvas.getContext('2d');
+            
+            // إعدادات جودة عالية
+            targetCtx.imageSmoothingEnabled = true;
+            targetCtx.imageSmoothingQuality = 'high';
+            
+            // رسم الصورة الأصلية بالحجم الكامل
+            targetCtx.drawImage(currentImage, 0, 0, originalWidth, originalHeight);
         } else {
-            width = currentImage.width;
-            height = width / targetRatio;
+            // للعرض العادي: مسح واعادة رسم
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
         }
-        
-        // حساب الموقع لمركز الصورة
-        const x = (exportCanvas.width - width) / 2;
-        const y = (exportCanvas.height - height) / 2;
-        
-        // رسم الصورة الأصلية
-        exportCtx.clearRect(0, 0, exportCanvas.width, exportCanvas.height);
-        exportCtx.drawImage(currentImage, x, y, width, height);
         
         // الحصول على النص
         const textElement = document.getElementById('textOverlay');
@@ -254,103 +256,111 @@ function renderTextOnCanvas() {
         
         const text = textElement.innerText || textElement.textContent;
         if (!text || text === 'اكتب هنا...' || text === 'Type here...' || text === 'Écrivez ici...') {
-            // إذا لا يوجد نص، نرجع الصورة فقط
-            // نسخ Canvas التصدير إلى Canvas الرئيسي
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(exportCanvas, 0, 0, canvas.width, canvas.height);
+            // لا يوجد نص، نرجع الصورة فقط
+            if (forExport) {
+                // نسخ Canvas التصدير إلى Canvas الرئيسي للعودة
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(targetCanvas, 0, 0, canvas.width, canvas.height);
+            }
             return true;
         }
         
-        // إعداد النص للتصدير
+        // إعداد النص
         const fontFamily = document.getElementById('fontFamily')?.value || "Arial";
         const fontSize = parseInt(document.getElementById('fontSize')?.value || "48");
         const strokeWidth = parseInt(document.getElementById('strokeWidth')?.value || "3");
         const shadowEnabled = document.getElementById('shadowEnabled')?.checked || false;
         const cardEnabled = document.getElementById('cardEnabled')?.checked || false;
         
-        // حساب حجم الخط للتصدير (أكبر للحصول على جودة أفضل)
-        const exportFontSize = fontSize * (exportCanvas.width / canvas.width);
+        // حساب حجم الخط المناسب
+        let finalFontSize = fontSize;
+        if (forExport) {
+            // تكبير النص للتصدير ليناسب حجم الصورة الكبير
+            const scale = targetCanvas.width / canvas.width;
+            finalFontSize = fontSize * scale;
+        }
         
-        exportCtx.save();
+        targetCtx.save();
         
-        // إعداد الخط للتصدير
-        exportCtx.font = 'bold ' + exportFontSize + 'px ' + fontFamily;
-        exportCtx.textAlign = 'center';
-        exportCtx.textBaseline = 'middle';
-        exportCtx.lineJoin = 'round';
-        exportCtx.lineCap = 'round';
+        // إعداد الخط
+        targetCtx.font = 'bold ' + finalFontSize + 'px ' + fontFamily;
+        targetCtx.textAlign = 'center';
+        targetCtx.textBaseline = 'middle';
+        targetCtx.lineJoin = 'round';
+        targetCtx.lineCap = 'round';
         
         // تقسيم النص إلى أسطر
         const lines = text.split('\n').filter(line => line.trim());
-        const lineHeight = exportFontSize * 1.3;
+        const lineHeight = finalFontSize * 1.3;
         const totalHeight = lines.length * lineHeight;
-        const startY = (exportCanvas.height / 2) - (totalHeight / 2) + (lineHeight / 2);
+        const startY = (targetCanvas.height / 2) - (totalHeight / 2) + (lineHeight / 2);
         
-        // إعداد الظل
+        // إعداد الظل (إذا مفعل)
         if (shadowEnabled) {
-            exportCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-            exportCtx.shadowBlur = 8;
-            exportCtx.shadowOffsetX = 4;
-            exportCtx.shadowOffsetY = 4;
+            targetCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            targetCtx.shadowBlur = 8;
+            targetCtx.shadowOffsetX = 4;
+            targetCtx.shadowOffsetY = 4;
+        } else {
+            targetCtx.shadowColor = 'transparent';
+            targetCtx.shadowBlur = 0;
+            targetCtx.shadowOffsetX = 0;
+            targetCtx.shadowOffsetY = 0;
         }
         
-        // رسم كل سطر
+        // رسم كل سطر (مرة واحدة فقط)
         lines.forEach((line, index) => {
             const y = startY + (index * lineHeight);
-            const x = exportCanvas.width / 2;
+            const x = targetCanvas.width / 2;
             
             // قياس عرض النص
-            const textMetrics = exportCtx.measureText(line);
+            const textMetrics = targetCtx.measureText(line);
             
-            // رسم خلفية النص
+            // رسم خلفية النص (إذا مفعلة)
             if (cardEnabled) {
-                const padding = 30;
+                const padding = finalFontSize * 0.5;
                 const bgWidth = textMetrics.width + (padding * 2);
-                const bgHeight = exportFontSize + padding;
+                const bgHeight = finalFontSize + padding;
                 const bgX = x - (bgWidth / 2);
-                const bgY = y - (exportFontSize / 2) - (padding / 2);
+                const bgY = y - (finalFontSize / 2) - (padding / 2);
                 
-                exportCtx.save();
-                exportCtx.fillStyle = currentCardColor || '#000000';
-                exportCtx.globalAlpha = 0.7;
-                exportCtx.fillRect(bgX, bgY, bgWidth, bgHeight);
-                exportCtx.restore();
+                targetCtx.save();
+                targetCtx.fillStyle = currentCardColor || '#000000';
+                targetCtx.globalAlpha = 0.7;
+                targetCtx.fillRect(bgX, bgY, bgWidth, bgHeight);
+                targetCtx.restore();
             }
             
-            // رسم حواف النص
+            // رسم حواف النص (إذا مفعلة)
             if (strokeWidth > 0) {
-                exportCtx.strokeStyle = currentStrokeColor || '#000000';
-                exportCtx.lineWidth = strokeWidth * 3;
-                exportCtx.strokeText(line, x, y);
+                targetCtx.strokeStyle = currentStrokeColor || '#000000';
+                targetCtx.lineWidth = strokeWidth * (forExport ? 3 : 1);
+                targetCtx.strokeText(line, x, y);
             }
             
-            // رسم النص نفسه
-            exportCtx.fillStyle = currentTextColor || '#FFFFFF';
-            exportCtx.fillText(line, x, y);
+            // رسم النص نفسه (مرة واحدة فقط)
+            targetCtx.fillStyle = currentTextColor || '#FFFFFF';
+            targetCtx.fillText(line, x, y);
         });
         
-        exportCtx.restore();
+        targetCtx.restore();
         
-        // نسخ Canvas التصدير إلى Canvas الرئيسي للعرض
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(exportCanvas, 0, 0, canvas.width, canvas.height);
+        // إذا كان للتصدير، نرجع Canvas التصدير
+        if (forExport) {
+            return targetCanvas;
+        }
         
-        // تحديث Canvas الرئيسي بصورة التصدير
-        const dataURL = exportCanvas.toDataURL('image/png', 1.0);
-        const img = new Image();
-        img.onload = function() {
-            canvas.width = exportCanvas.width;
-            canvas.height = exportCanvas.height;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
-        };
-        img.src = dataURL;
-        
-        console.log('تم رسم النص على Canvas للتصدير');
+        console.log('تم رسم النص على Canvas');
         return true;
         
     } catch (error) {
         console.error('خطأ في رسم النص:', error);
         return false;
     }
+}
+
+// دالة خاصة للتصدير (لحل المشكلة 1)
+function prepareImageForExport() {
+    const result = renderTextOnCanvas(true); // true = للتصدير
+    return result;
 }
