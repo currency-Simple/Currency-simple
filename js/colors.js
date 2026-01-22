@@ -22,6 +22,11 @@ let currentTextColor = "#FFFFFF";
 let currentStrokeColor = "#000000";
 let currentCardColor = "#000000";
 
+// تخزين الألوان في window لاستخدامها في editor.js
+window.currentTextColor = currentTextColor;
+window.currentStrokeColor = currentStrokeColor;
+window.currentCardColor = currentCardColor;
+
 // تهيئة شبكات الألوان
 function initializeColors() {
   console.log('⏳ جاري تهيئة الألوان...');
@@ -79,38 +84,41 @@ function createColorItem(color, onClick) {
 // تعيين لون النص
 function setTextColor(color) {
   currentTextColor = color;
+  window.currentTextColor = color;
   console.log('✓ لون النص:', color);
   
   // تحديث النمط فوراً
-  if (typeof updateTextStyle === 'function') {
-    updateTextStyle();
-  } else {
-    console.error('❌ دالة updateTextStyle غير موجودة');
+  if (window.currentText) {
+    if (typeof updateTextOnCanvas === 'function') {
+      updateTextOnCanvas();
+    }
   }
 }
 
 // تعيين لون الحواف
 function setStrokeColor(color) {
   currentStrokeColor = color;
+  window.currentStrokeColor = color;
   console.log('✓ لون الحواف:', color);
   
   // تحديث النمط فوراً
-  if (typeof updateTextStyle === 'function') {
-    updateTextStyle();
-  } else {
-    console.error('❌ دالة updateTextStyle غير موجودة');
+  if (window.currentText) {
+    if (typeof updateTextOnCanvas === 'function') {
+      updateTextOnCanvas();
+    }
   }
 }
 
 // تعيين لون الخلفية
 function setCardColor(color) {
   currentCardColor = color;
+  window.currentCardColor = color;
   console.log('✓ لون الخلفية:', color);
   
   // تحديث النمط فوراً
-  if (typeof updateTextStyle === 'function') {
-    updateTextStyle();
-  } else {
-    console.error('❌ دالة updateTextStyle غير موجودة');
+  if (window.currentText) {
+    if (typeof updateTextOnCanvas === 'function') {
+      updateTextOnCanvas();
+    }
   }
 }
