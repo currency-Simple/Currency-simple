@@ -12,117 +12,55 @@ window.addEventListener('DOMContentLoaded', () => {
     initializeColors();
     setupEventListeners();
     
+    // إضافة زر حذف النص
+    if (typeof addDeleteTextButton === 'function') {
+        setTimeout(addDeleteTextButton, 500);
+    }
+    
     console.log('Editor initialized');
 });
 
 // إعداد الأحداث
 function setupEventListeners() {
-    const textOverlay = document.getElementById('textOverlay');
     const fontFamily = document.getElementById('fontFamily');
     const fontSize = document.getElementById('fontSize');
     const strokeWidth = document.getElementById('strokeWidth');
     const shadowEnabled = document.getElementById('shadowEnabled');
     const cardEnabled = document.getElementById('cardEnabled');
 
-    if (textOverlay) {
-        textOverlay.addEventListener('input', () => {
-            autoAdjustFontSize();
-            updateTextStyle();
-        });
-    }
-    
     if (fontSize) {
         fontSize.addEventListener('input', (e) => {
             document.getElementById('fontSizeDisplay').textContent = e.target.value;
-            updateTextStyle();
+            if (window.currentText) {
+                renderTextOnCanvas(false);
+            }
         });
     }
     
     if (strokeWidth) {
         strokeWidth.addEventListener('input', (e) => {
             document.getElementById('strokeWidthDisplay').textContent = e.target.value;
-            updateTextStyle();
+            if (window.currentText) {
+                renderTextOnCanvas(false);
+            }
         });
     }
     
-    if (fontFamily) fontFamily.addEventListener('change', updateTextStyle);
-    if (shadowEnabled) shadowEnabled.addEventListener('change', updateTextStyle);
-    if (cardEnabled) cardEnabled.addEventListener('change', updateTextStyle);
-}
-
-// تناسق حجم الخط
-function autoAdjustFontSize() {
-    const textOverlay = document.getElementById('textOverlay');
-    if (!textOverlay || !canvas.width) return;
-    
-    const text = textOverlay.innerText || textOverlay.textContent;
-    if (!text || text === 'اكتب هنا...' || text === 'Type here...' || text === 'Écrivez ici...') return;
-    
-    const baseSize = Math.min(canvas.width, canvas.height) / 8;
-    const textLength = text.length;
-    let newSize;
-    
-    if (textLength < 20) newSize = baseSize;
-    else if (textLength < 50) newSize = baseSize * 0.8;
-    else if (textLength < 100) newSize = baseSize * 0.6;
-    else newSize = baseSize * 0.4;
-    
-    newSize = Math.max(20, Math.min(120, newSize));
-    
-    const fontSizeInput = document.getElementById('fontSize');
-    if (fontSizeInput) {
-        fontSizeInput.value = Math.round(newSize);
-        document.getElementById('fontSizeDisplay').textContent = Math.round(newSize);
-        updateTextStyle();
-    }
-}
-
-// تحديث نمط النص
-function updateTextStyle() {
-    const textOverlay = document.getElementById('textOverlay');
-    if (!textOverlay) return;
-    
-    const fontFamily = document.getElementById('fontFamily')?.value || "Arial";
-    const fontSize = document.getElementById('fontSize')?.value || "48";
-    const strokeWidth = parseInt(document.getElementById('strokeWidth')?.value || "3");
-    const shadowEnabled = document.getElementById('shadowEnabled')?.checked || false;
-    const cardEnabled = document.getElementById('cardEnabled')?.checked || false;
-
-    textOverlay.style.fontFamily = fontFamily;
-    textOverlay.style.fontSize = fontSize + 'px';
-    textOverlay.style.fontWeight = 'bold';
-    
-    if (typeof currentTextColor !== 'undefined') {
-        textOverlay.style.color = currentTextColor;
-        textOverlay.style.webkitTextFillColor = currentTextColor;
-    }
-    
-    if (strokeWidth > 0) {
-        textOverlay.style.webkitTextStrokeWidth = strokeWidth + 'px';
-        if (typeof currentStrokeColor !== 'undefined') {
-            textOverlay.style.webkitTextStrokeColor = currentStrokeColor;
+    if (fontFamily) fontFamily.addEventListener('change', () => {
+        if (window.currentText) {
+            renderTextOnCanvas(false);
         }
-        textOverlay.style.paintOrder = 'stroke fill';
-    } else {
-        textOverlay.style.webkitTextStrokeWidth = '0px';
-    }
-    
-    if (shadowEnabled) {
-        textOverlay.style.textShadow = '3px 3px 6px rgba(0,0,0,0.8)';
-    } else {
-        textOverlay.style.textShadow = 'none';
-    }
-    
-    if (cardEnabled) {
-        if (typeof currentCardColor !== 'undefined') {
-            textOverlay.style.backgroundColor = currentCardColor;
+    });
+    if (shadowEnabled) shadowEnabled.addEventListener('change', () => {
+        if (window.currentText) {
+            renderTextOnCanvas(false);
         }
-        textOverlay.style.padding = '10px 20px';
-        textOverlay.style.borderRadius = '8px';
-    } else {
-        textOverlay.style.backgroundColor = 'transparent';
-        textOverlay.style.padding = '10px';
-    }
+    });
+    if (cardEnabled) cardEnabled.addEventListener('change', () => {
+        if (window.currentText) {
+            renderTextOnCanvas(false);
+        }
+    });
 }
 
 // تحميل الصورة
@@ -168,24 +106,41 @@ function loadImageToEditor(imageUrl) {
         // رسم الصورة الأصلية
         ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
         
-        // ضبط أسلوب النص
-        autoAdjustFontSize();
-        updateTextStyle();
+        // إعادة رسم النص إذا كان موجوداً
+        if (window.currentText) {
+            renderTextOnCanvas(false);
+        }
     };
     
     img.onerror = function(error) {
         console.error('فشل تحميل الصورة:', error);
-        alert('فشل تحميل الصورة. الرجاء المحاولة مرة أخرى.');
+        showAlert('فشل تحميل الصورة. الرجاء المحاولة مرة أخرى.', 'error');
     };
     
     img.src = imageUrl;
 }
 
-// ============== دالة رسم النص المحسنة (إصلاح المشكلتين) ==============
+// دالة رسم النص
 function renderTextOnCanvas(forExport = false) {
     if (!imageLoaded || !currentImage) {
         console.error('لم يتم تحميل صورة');
         return false;
+    }
+    
+    // إذا لم يكن هناك نص، فقط ارسم الصورة
+    if (!window.currentText || window.currentText.trim() === '') {
+        if (forExport) {
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = currentImage.naturalWidth || currentImage.width;
+            exportCanvas.height = currentImage.naturalHeight || currentImage.height;
+            const exportCtx = exportCanvas.getContext('2d');
+            exportCtx.drawImage(currentImage, 0, 0, exportCanvas.width, exportCanvas.height);
+            return exportCanvas;
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+            return true;
+        }
     }
     
     try {
@@ -215,31 +170,20 @@ function renderTextOnCanvas(forExport = false) {
             ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
         }
         
-        // الحصول على النص
-        const textElement = document.getElementById('textOverlay');
-        if (!textElement) {
-            console.error('عنصر النص غير موجود');
-            return false;
-        }
-        
-        const text = textElement.innerText || textElement.textContent;
-        if (!text || text === 'اكتب هنا...' || text === 'Type here...' || text === 'Écrivez ici...') {
-            return forExport ? targetCanvas : true;
-        }
-        
         // إعداد النص
-        const fontFamily = document.getElementById('fontFamily')?.value || "Arial";
+        const fontFamily = document.getElementById('fontFamily')?.value || "'Amiri', serif";
         const fontSize = parseInt(document.getElementById('fontSize')?.value || "48");
         const strokeWidth = parseInt(document.getElementById('strokeWidth')?.value || "3");
         const shadowEnabled = document.getElementById('shadowEnabled')?.checked || false;
         const cardEnabled = document.getElementById('cardEnabled')?.checked || false;
+        const text = window.currentText || '';
         
         // حساب حجم الخط المناسب
         let finalFontSize = fontSize;
         if (forExport) {
             // تكبير النص للتصدير ليناسب حجم الصورة الكبير
             const scale = targetCanvas.width / canvas.width;
-            finalFontSize = fontSize * scale * 0.8; // تقليل قليلاً ليتناسب مع الصورة الكبيرة
+            finalFontSize = fontSize * scale * 0.8;
         }
         
         targetCtx.save();
@@ -250,16 +194,16 @@ function renderTextOnCanvas(forExport = false) {
         targetCtx.textBaseline = 'middle';
         targetCtx.lineJoin = 'round';
         targetCtx.lineCap = 'round';
+        targetCtx.direction = 'rtl';
         
-        // المشكلة 1: تقسيم النص بشكل صحيح إلى أسطر
-        const maxLineWidth = targetCanvas.width * 0.8; // 80% من عرض الصورة
+        // تقسيم النص إلى أسطر
+        const maxLineWidth = targetCanvas.width * 0.8;
         const lines = wrapText(text, maxLineWidth, targetCtx, finalFontSize);
         
-        // المشكلة 2: ضبط حجم الخط ليتناسب مع العرض
+        // ضبط حجم الخط ليتناسب مع العرض
         let adjustedFontSize = finalFontSize;
         let adjustedLines = lines;
         
-        // التحقق من أن النص لا يتجاوز عرض الصورة
         while (true) {
             const testWidth = Math.max(...adjustedLines.map(line => targetCtx.measureText(line).width));
             if (testWidth <= maxLineWidth || adjustedFontSize <= 20) {
@@ -333,7 +277,7 @@ function renderTextOnCanvas(forExport = false) {
     }
 }
 
-// ============== دالة مساعدة لتقسيم النص إلى أسطر ==============
+// دالة لتقسيم النص إلى أسطر
 function wrapText(text, maxWidth, ctx, fontSize) {
     const words = text.split(' ');
     const lines = [];
