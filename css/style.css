@@ -62,29 +62,32 @@ body[dir="ltr"] {
     direction: ltr;
 }
 
+/* ============ التصميم العام للصفحات ============ */
 .page {
     display: none;
     width: 100%;
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-bottom: 70px;
 }
 
 .page.active {
     display: block;
-    animation: fadeInUp 0.5s ease-out;
+    animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ============ تصميم الصفحات العادية ============ */
+#categoriesPage,
+#imagesPage,
+#settingsPage {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Header */
@@ -98,6 +101,7 @@ body[dir="ltr"] {
     position: sticky;
     top: 0;
     z-index: 100;
+    flex-shrink: 0;
 }
 
 .header h1 {
@@ -128,41 +132,21 @@ body[dir="ltr"] {
     cursor: pointer;
     color: var(--text-color);
     transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.icon-btn:active:after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100px;
-    height: 100px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    animation: ripple 0.6s ease-out;
-}
-
-@keyframes ripple {
-    0% {
-        width: 0;
-        height: 0;
-        opacity: 1;
-    }
-    100% {
-        width: 100px;
-        height: 100px;
-        opacity: 0;
-    }
 }
 
 .back-btn {
     margin-left: auto;
 }
 
-/* Categories & Images Grid */
+/* ============ صفحات الفئات والصور ============ */
+.categories-content,
+.images-content,
+.settings-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 70px;
+}
+
 .categories-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -192,7 +176,6 @@ body[dir="ltr"] {
     object-fit: cover;
     filter: saturate(1.1) contrast(1.05) brightness(1.05);
     transition: all 0.3s ease;
-    content-visibility: auto;
 }
 
 .category-item:hover img {
@@ -243,7 +226,6 @@ body[dir="ltr"] {
     object-fit: cover;
     filter: saturate(1.1) contrast(1.05) brightness(1.05);
     transition: all 0.3s ease;
-    content-visibility: auto;
 }
 
 .image-item:hover img {
@@ -251,7 +233,7 @@ body[dir="ltr"] {
     transform: scale(1.03);
 }
 
-/* Editor Page */
+/* ============ تصميم صفحة المحرر الجديد ============ */
 #editorPage {
     position: fixed;
     top: 0;
@@ -261,73 +243,47 @@ body[dir="ltr"] {
     overflow: hidden;
     padding: 0;
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-color);
 }
 
-.editor-container {
-    position: absolute;
-    top: 71px;
-    left: 0;
-    right: 0;
-    bottom: 140px;
-    background: transparent !important;
+/* تصميم المحرر الرئيسي */
+.editor-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
-    height: calc(100vh - 211px);
-    transition: height 0.3s ease;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
+    position: relative;
 }
 
-.canvas-wrapper-fixed {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+/* الحاوية الرئيسية للصورة */
+.image-container {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent !important;
-    padding: 10px;
-    box-sizing: border-box;
+    background: transparent;
     overflow: hidden;
-    min-height: 300px;
+    min-height: 0;
+    position: relative;
+    padding: 0;
+    margin: 0;
 }
 
 #canvas {
+    width: 100%;
+    height: 100%;
     max-width: 100%;
     max-height: 100%;
-    width: auto;
-    height: auto;
     object-fit: contain;
     aspect-ratio: 4/5;
-    display: block;
-    margin: auto;
     background: transparent !important;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-    border-radius: 12px;
-    filter: saturate(1.1) contrast(1.05) brightness(1.05) !important;
-    transition: all 0.3s ease;
-    background: linear-gradient(45deg, #f5f5f7 25%, transparent 25%),
-                linear-gradient(-45deg, #f5f5f7 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, #f5f5f7 75%),
-                linear-gradient(-45deg, transparent 75%, #f5f5f7 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    filter: saturate(1.1) contrast(1.05) brightness(1.05);
+    display: block;
 }
 
-[data-theme="dark"] #canvas {
-    background: linear-gradient(45deg, #2c2c2e 25%, transparent 25%),
-                linear-gradient(-45deg, #2c2c2e 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, #2c2c2e 75%),
-                linear-gradient(-45deg, transparent 75%, #2c2c2e 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-}
-
-#canvas:hover {
-    filter: saturate(1.2) contrast(1.1) brightness(1.1) !important;
-}
-
+/* النص فوق الصورة */
 .text-overlay {
     position: absolute;
     top: 50%;
@@ -342,7 +298,7 @@ body[dir="ltr"] {
     white-space: pre-wrap;
     word-wrap: break-word;
     max-width: 90%;
-    padding: 15px !important;
+    padding: 15px;
     cursor: text;
     z-index: 10;
     -webkit-user-select: text !important;
@@ -374,20 +330,16 @@ body[dir="ltr"] {
     -webkit-backdrop-filter: blur(10px);
 }
 
-/* Toolbar */
+/* شريط أدوات المحرر */
 .editor-toolbar {
-    position: fixed;
-    bottom: 70px;
-    left: 0;
-    right: 0;
+    background: var(--card-bg);
+    padding: 10px;
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: space-around;
-    padding: 10px;
-    background: var(--card-bg);
-    border-top: 1px solid var(--border-color);
-    z-index: 10001;
     height: 70px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+    z-index: 10001;
 }
 
 .tool-btn {
@@ -405,6 +357,7 @@ body[dir="ltr"] {
     touch-action: manipulation;
     min-width: 60px;
     transition: all 0.2s ease;
+    flex: 1;
 }
 
 .tool-btn:hover {
@@ -425,13 +378,9 @@ body[dir="ltr"] {
     transform: scale(1.1);
 }
 
-/* Tool Panels */
+/* لوحات الأدوات */
 .tool-panel {
     display: none;
-    position: fixed;
-    bottom: 140px;
-    left: 0;
-    right: 0;
     background: var(--card-bg);
     padding: 15px;
     border-top: 1px solid var(--border-color);
@@ -439,28 +388,11 @@ body[dir="ltr"] {
     max-height: 250px;
     overflow-y: auto;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+    flex-shrink: 0;
 }
 
 .tool-panel.active {
     display: block;
-}
-
-.tool-panel::-webkit-scrollbar {
-    width: 6px;
-}
-
-.tool-panel::-webkit-scrollbar-track {
-    background: var(--bg-color);
-    border-radius: 3px;
-}
-
-.tool-panel::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-.tool-panel::-webkit-scrollbar-thumb:hover {
-    background: var(--text-secondary);
 }
 
 .tool-select {
@@ -546,7 +478,53 @@ body[dir="ltr"] {
     accent-color: var(--primary-color);
 }
 
-/* Settings */
+/* ============ القائمة السفلية ============ */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    display: flex;
+    justify-content: space-around;
+    padding: 8px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    z-index: 10002;
+    height: 70px;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-radius: 10px;
+    flex: 1;
+    font-size: 11px;
+    touch-action: manipulation;
+    min-width: 70px;
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background: var(--bg-color);
+}
+
+.nav-btn.active {
+    color: var(--primary-color);
+    background: var(--bg-color);
+}
+
+.nav-btn .material-symbols-outlined {
+    font-size: 24px;
+}
+
+/* ============ صفحة الإعدادات ============ */
 .settings-content {
     padding: 15px;
 }
@@ -619,226 +597,55 @@ body[dir="ltr"] {
     border-bottom: none;
 }
 
-/* Bottom Nav */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--card-bg);
-    display: flex;
-    justify-content: space-around;
-    padding: 8px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    z-index: 10002;
-    height: 70px;
-}
-
-.nav-btn {
-    background: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 8px;
-    cursor: pointer;
-    color: var(--text-secondary);
-    border-radius: 10px;
-    flex: 1;
-    font-size: 11px;
-    touch-action: manipulation;
-    min-width: 70px;
-    transition: all 0.2s ease;
-}
-
-.nav-btn:hover {
-    background: var(--bg-color);
-}
-
-.nav-btn.active {
-    color: var(--primary-color);
-    background: var(--bg-color);
-}
-
-.nav-btn .material-symbols-outlined {
-    font-size: 24px;
-}
-
 /* ============ تحسينات لوحة المفاتيح ============ */
 
-/* مساحة إضافية للوحة المفاتيح */
-.keyboard-space {
-    display: none;
-    height: 300px;
-    width: 100%;
-    background: transparent;
-    pointer-events: none;
-}
-
-/* عند فتح لوحة المفاتيح */
-body.keyboard-open {
-    height: 100vh !important;
-    overflow: hidden !important;
+/* عند ظهور لوحة المفاتيح */
+body.keyboard-open #editorPage {
     position: fixed !important;
-    width: 100% !important;
-}
-
-#editorPage.keyboard-open {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    overflow: hidden !important;
     height: 100vh !important;
 }
 
-.editor-container.keyboard-open {
-    height: calc(100vh + 300px) !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
+body.keyboard-open .editor-main-content {
+    flex: 1;
+    overflow: hidden;
 }
 
-.keyboard-open .keyboard-space {
-    display: block;
+body.keyboard-open .image-container {
+    flex-shrink: 0;
+    height: calc(100vh - 200px); /* ارتفاع ثابت للصورة */
+    min-height: 300px;
 }
 
-.keyboard-open .canvas-wrapper-fixed {
-    position: relative !important;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    min-height: 400px;
+body.keyboard-open #canvas {
+    height: 100%;
+    max-height: 100%;
 }
 
-.keyboard-open #canvas {
-    max-height: 70vh !important;
-    transition: all 0.3s ease;
-}
-
-.keyboard-open .text-overlay {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    transform: none !important;
-    margin: 20px auto;
-    max-height: 50vh;
+body.keyboard-open .text-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-height: 70%;
     overflow-y: auto;
     font-size: calc(min(32px, 4vw)) !important;
 }
 
-.keyboard-open .editor-toolbar {
-    position: relative !important;
-    bottom: auto !important;
-    margin-top: auto;
-    margin-bottom: 10px;
+/* شريط التمرير للنص */
+.text-overlay::-webkit-scrollbar {
+    width: 4px;
 }
 
-.keyboard-open .bottom-nav {
-    position: relative !important;
-    bottom: auto !important;
-    margin-top: auto;
+.text-overlay::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.1);
 }
 
-/* تحسينات للمس والتمرير */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+.text-overlay::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
 }
 
-::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.05);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-color);
-    opacity: 0.8;
-}
-
-/* تحسينات للشاشات الصغيرة */
-@media (max-height: 700px) {
-    .editor-container {
-        bottom: 130px !important;
-        height: calc(100vh - 201px) !important;
-    }
-    
-    .editor-container.keyboard-open {
-        bottom: 130px !important;
-        height: calc(100vh + 250px) !important;
-    }
-    
-    .keyboard-space {
-        height: 250px;
-    }
-    
-    #canvas.keyboard-open {
-        max-height: 60vh !important;
-    }
-    
-    .text-overlay.keyboard-open {
-        max-height: calc(100vh - 300px) !important;
-        font-size: calc(min(28px, 3.5vw)) !important;
-    }
-    
-    .editor-toolbar, .editor-toolbar.keyboard-open {
-        bottom: 60px !important;
-        height: 60px !important;
-    }
-    
-    .tool-panel.active, .tool-panel.active.keyboard-open {
-        bottom: 120px !important;
-    }
-    
-    .bottom-nav, .bottom-nav.keyboard-open {
-        height: 60px !important;
-    }
-}
-
-@media (max-height: 500px) {
-    .editor-container {
-        bottom: 110px !important;
-        height: calc(100vh - 181px) !important;
-    }
-    
-    .editor-container.keyboard-open {
-        bottom: 110px !important;
-        height: calc(100vh + 200px) !important;
-    }
-    
-    .keyboard-space {
-        height: 200px;
-    }
-    
-    #canvas.keyboard-open {
-        max-height: 50vh !important;
-    }
-    
-    .text-overlay.keyboard-open {
-        max-height: calc(100vh - 260px) !important;
-        font-size: calc(min(24px, 3vw)) !important;
-    }
-    
-    .editor-toolbar, .editor-toolbar.keyboard-open {
-        bottom: 50px !important;
-        height: 50px !important;
-    }
-    
-    .tool-panel.active, .tool-panel.active.keyboard-open {
-        bottom: 100px !important;
-    }
-    
-    .bottom-nav, .bottom-nav.keyboard-open {
-        height: 50px !important;
-    }
-}
-
-/* تحسين للأجهزة الجوالة */
+/* ============ تحسينات للشاشات الصغيرة ============ */
 @media (max-width: 768px) {
     .categories-grid,
     .image-grid {
@@ -857,7 +664,6 @@ body.keyboard-open {
     
     .tool-btn {
         font-size: 9px;
-        padding: 6px;
         min-width: 50px;
     }
     
@@ -869,10 +675,6 @@ body.keyboard-open {
         font-size: 36px;
     }
     
-    .text-overlay.keyboard-open {
-        font-size: calc(min(28px, 3.5vw)) !important;
-    }
-    
     .nav-btn {
         min-width: 60px;
         font-size: 10px;
@@ -882,21 +684,16 @@ body.keyboard-open {
         font-size: 20px;
     }
     
-    .editor-container {
-        top: 60px !important;
-        bottom: 120px !important;
-        height: calc(100vh - 180px) !important;
-    }
-    
     .editor-toolbar {
-        height: 60px !important;
-        bottom: 60px !important;
-        padding: 8px;
+        height: 60px;
     }
     
     .bottom-nav {
-        height: 60px !important;
-        padding: 6px;
+        height: 60px;
+    }
+    
+    body.keyboard-open .image-container {
+        height: calc(100vh - 180px);
     }
 }
 
@@ -918,13 +715,8 @@ body.keyboard-open {
         font-size: 16px;
     }
     
-    .editor-toolbar {
-        padding: 5px;
-    }
-    
     .tool-btn {
         font-size: 8px;
-        padding: 4px;
         min-width: 45px;
     }
     
@@ -934,7 +726,6 @@ body.keyboard-open {
     
     .nav-btn {
         font-size: 9px;
-        padding: 6px;
         min-width: 55px;
     }
     
@@ -946,8 +737,8 @@ body.keyboard-open {
         font-size: 28px;
     }
     
-    .text-overlay.keyboard-open {
-        font-size: calc(min(22px, 3vw)) !important;
+    body.keyboard-open .text-overlay {
+        font-size: calc(min(24px, 3vw)) !important;
     }
 }
 
@@ -1026,7 +817,7 @@ body.keyboard-open {
     font-size: 16px;
 }
 
-/* تحسينات إضافية */
+/* ============ تحسينات إضافية ============ */
 button {
     transition: all 0.2s ease;
 }
@@ -1059,4 +850,25 @@ canvas {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
     image-rendering: pixelated;
+}
+
+/* شريط التمرير العام */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+    opacity: 0.8;
 }
