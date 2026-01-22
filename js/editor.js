@@ -31,36 +31,27 @@ function setupEventListeners() {
     if (fontSize) {
         fontSize.addEventListener('input', (e) => {
             document.getElementById('fontSizeDisplay').textContent = e.target.value;
-            if (window.currentText) {
-                renderTextOnCanvas(false);
-            }
+            updateTextOnCanvas();
         });
     }
     
     if (strokeWidth) {
         strokeWidth.addEventListener('input', (e) => {
             document.getElementById('strokeWidthDisplay').textContent = e.target.value;
-            if (window.currentText) {
-                renderTextOnCanvas(false);
-            }
+            updateTextOnCanvas();
         });
     }
     
-    if (fontFamily) fontFamily.addEventListener('change', () => {
-        if (window.currentText) {
-            renderTextOnCanvas(false);
-        }
-    });
-    if (shadowEnabled) shadowEnabled.addEventListener('change', () => {
-        if (window.currentText) {
-            renderTextOnCanvas(false);
-        }
-    });
-    if (cardEnabled) cardEnabled.addEventListener('change', () => {
-        if (window.currentText) {
-            renderTextOnCanvas(false);
-        }
-    });
+    if (fontFamily) fontFamily.addEventListener('change', updateTextOnCanvas);
+    if (shadowEnabled) shadowEnabled.addEventListener('change', updateTextOnCanvas);
+    if (cardEnabled) cardEnabled.addEventListener('change', updateTextOnCanvas);
+}
+
+// تحديث النص على Canvas فوراً
+function updateTextOnCanvas() {
+    if (window.currentText && window.currentText.trim() !== '') {
+        renderTextOnCanvas(false);
+    }
 }
 
 // تحميل الصورة
@@ -178,6 +169,11 @@ function renderTextOnCanvas(forExport = false) {
         const cardEnabled = document.getElementById('cardEnabled')?.checked || false;
         const text = window.currentText || '';
         
+        // الحصول على الألوان الحالية
+        const textColor = window.currentTextColor || '#FFFFFF';
+        const strokeColor = window.currentStrokeColor || '#000000';
+        const cardColor = window.currentCardColor || '#000000';
+        
         // حساب حجم الخط المناسب
         let finalFontSize = fontSize;
         if (forExport) {
@@ -249,7 +245,7 @@ function renderTextOnCanvas(forExport = false) {
                 const bgY = y - (adjustedFontSize / 2) - (padding / 2);
                 
                 targetCtx.save();
-                targetCtx.fillStyle = currentCardColor || '#000000';
+                targetCtx.fillStyle = cardColor;
                 targetCtx.globalAlpha = 0.7;
                 targetCtx.fillRect(bgX, bgY, bgWidth, bgHeight);
                 targetCtx.restore();
@@ -257,13 +253,13 @@ function renderTextOnCanvas(forExport = false) {
             
             // رسم حواف النص
             if (strokeWidth > 0) {
-                targetCtx.strokeStyle = currentStrokeColor || '#000000';
+                targetCtx.strokeStyle = strokeColor;
                 targetCtx.lineWidth = strokeWidth * (forExport ? 3 : 1);
                 targetCtx.strokeText(line, x, y);
             }
             
             // رسم النص نفسه
-            targetCtx.fillStyle = currentTextColor || '#FFFFFF';
+            targetCtx.fillStyle = textColor;
             targetCtx.fillText(line, x, y);
         });
         
