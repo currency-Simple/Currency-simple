@@ -4,54 +4,76 @@ let currentImage = null;
 let imageLoaded = false;
 let originalImageWidth = 0;
 let originalImageHeight = 0;
-let highQualityImage = null;
 
 // تهيئة المحرر
 window.addEventListener('DOMContentLoaded', () => {
+    console.log('Editor initializing...');
+    
     canvas = document.getElementById('canvas');
-    ctx = canvas.getContext('2d', { alpha: false });
+    if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+    }
+    
+    ctx = canvas.getContext('2d');
     
     // تحسين جودة الرسم
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     
-    initializeFonts();
-    initializeColors();
-    setupEventListeners();
-    
-    // إضافة زر حذف النص
-    if (typeof addDeleteTextButton === 'function') {
-        setTimeout(addDeleteTextButton, 500);
+    // تهيئة الخطوط والألوان
+    if (typeof initializeFonts === 'function') {
+        initializeFonts();
     }
+    
+    if (typeof initializeColors === 'function') {
+        initializeColors();
+    }
+    
+    setupEventListeners();
     
     console.log('Editor initialized');
 });
 
 // إعداد الأحداث
 function setupEventListeners() {
-    const fontFamily = document.getElementById('fontFamily');
     const fontSize = document.getElementById('fontSize');
     const strokeWidth = document.getElementById('strokeWidth');
+    const fontFamily = document.getElementById('fontFamily');
     const shadowEnabled = document.getElementById('shadowEnabled');
     const cardEnabled = document.getElementById('cardEnabled');
 
     if (fontSize) {
         fontSize.addEventListener('input', (e) => {
-            document.getElementById('fontSizeDisplay').textContent = e.target.value;
+            const display = document.getElementById('fontSizeDisplay');
+            if (display) {
+                display.textContent = e.target.value;
+            }
             updateTextOnCanvas();
         });
     }
     
     if (strokeWidth) {
         strokeWidth.addEventListener('input', (e) => {
-            document.getElementById('strokeWidthDisplay').textContent = e.target.value;
+            const display = document.getElementById('strokeWidthDisplay');
+            if (display) {
+                display.textContent = e.target.value;
+            }
             updateTextOnCanvas();
         });
     }
     
-    if (fontFamily) fontFamily.addEventListener('change', updateTextOnCanvas);
-    if (shadowEnabled) shadowEnabled.addEventListener('change', updateTextOnCanvas);
-    if (cardEnabled) cardEnabled.addEventListener('change', updateTextOnCanvas);
+    if (fontFamily) {
+        fontFamily.addEventListener('change', updateTextOnCanvas);
+    }
+    
+    if (shadowEnabled) {
+        shadowEnabled.addEventListener('change', updateTextOnCanvas);
+    }
+    
+    if (cardEnabled) {
+        cardEnabled.addEventListener('change', updateTextOnCanvas);
+    }
 }
 
 // تحديث النص على Canvas فوراً
@@ -61,14 +83,16 @@ function updateTextOnCanvas() {
     }
 }
 
-// تحميل الصورة بجودة عالية
+// تحميل الصورة
 function loadImageToEditor(imageUrl) {
-    showLoadingIndicator('جاري تحميل الصورة...');
+    console.log('Loading image to editor:', imageUrl);
     
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
     img.onload = function() {
+        console.log('Image loaded successfully');
+        
         currentImage = img;
         imageLoaded = true;
         
@@ -76,95 +100,75 @@ function loadImageToEditor(imageUrl) {
         originalImageWidth = img.naturalWidth || img.width;
         originalImageHeight = img.naturalHeight || img.height;
         
-        console.log(`أبعاد الصورة الأصلية: ${originalImageWidth}x${originalImageHeight}`);
+        console.log(`Original image dimensions: ${originalImageWidth}x${originalImageHeight}`);
         
-        // تحميل نسخة عالية الجودة للتصدير
-        loadHighQualityImage(imageUrl);
-        
-        // حساب الحجم المناسب للعرض في المحرر
+        // حساب الحجم المناسب للعرض
         const container = document.querySelector('.canvas-wrapper-fixed');
         if (!container) {
-            hideLoadingIndicator();
+            console.error('Canvas container not found');
             return;
         }
         
         const containerWidth = container.clientWidth - 20;
         const containerHeight = container.clientHeight - 20;
         
-        // حساب نسبة التكبير/التصغير مع الحفاظ على نسبة 4:5
+        // حساب نسبة التكبير/التصغير
         const widthRatio = containerWidth / originalImageWidth;
         const heightRatio = containerHeight / originalImageHeight;
         const scale = Math.min(widthRatio, heightRatio, 1);
         
-        // أبعاد العرض مع الحفاظ على الجودة
+        // أبعاد العرض
         const displayWidth = Math.round(originalImageWidth * scale);
         const displayHeight = Math.round(originalImageHeight * scale);
         
-        // ضبط أبعاد Canvas للعرض فقط
+        // ضبط أبعاد Canvas
         canvas.width = displayWidth;
         canvas.height = displayHeight;
         
-        // تعزيز جودة الرسم
+        // تحسين جودة الرسم
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
-        // رسم الصورة الأصلية بجودة عالية
+        // رسم الصورة
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+        
+        console.log(`Display dimensions: ${displayWidth}x${displayHeight}`);
         
         // إعادة رسم النص إذا كان موجوداً
         if (window.currentText) {
             renderTextOnCanvas(false);
         }
-        
-        hideLoadingIndicator();
-        console.log(`أبعاد العرض: ${displayWidth}x${displayHeight}`);
     };
     
     img.onerror = function(error) {
-        console.error('فشل تحميل الصورة:', error);
-        hideLoadingIndicator();
+        console.error('Failed to load image:', error);
         showAlert('فشل تحميل الصورة. الرجاء المحاولة مرة أخرى.', 'error');
     };
     
-    // إضافة timestamp لمنع الكاش
-    img.src = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+    img.src = imageUrl;
 }
 
-// تحميل نسخة عالية الجودة للتصدير
-function loadHighQualityImage(imageUrl) {
-    highQualityImage = new Image();
-    highQualityImage.crossOrigin = 'anonymous';
-    
-    highQualityImage.onload = function() {
-        console.log('تم تحميل الصورة عالية الجودة للتصدير');
-    };
-    
-    highQualityImage.onerror = function() {
-        console.warn('لم يتمكن من تحميل الصورة عالية الجودة، سيتم استخدام النسخة العادية');
-        highQualityImage = currentImage;
-    };
-    
-    // إضافة معلمات لجودة أفضل من Cloudinary
-    let highQualityUrl = imageUrl;
-    if (imageUrl.includes('cloudinary.com')) {
-        // إضافة معلمات لتحسين الجودة
-        highQualityUrl = imageUrl.replace(/\/upload\//, '/upload/q_auto:best,f_auto/');
-    }
-    
-    highQualityImage.src = highQualityUrl + (highQualityUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
-}
-
-// دالة رسم النص (للعرض في المحرر)
+// دالة رسم النص
 function renderTextOnCanvas(forExport = false) {
     if (!imageLoaded || !currentImage) {
-        console.error('لم يتم تحميل صورة');
+        console.error('No image loaded');
         return false;
     }
     
-    // إذا لم يكن هناك نص، فقط ارسم الصورة
+    // إذا لم يكن هناك نص، ارسم الصورة فقط
     if (!window.currentText || window.currentText.trim() === '') {
         if (forExport) {
-            return prepareHighQualityExport();
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = originalImageWidth;
+            exportCanvas.height = originalImageHeight;
+            const exportCtx = exportCanvas.getContext('2d');
+            
+            exportCtx.imageSmoothingEnabled = true;
+            exportCtx.imageSmoothingQuality = 'high';
+            exportCtx.drawImage(currentImage, 0, 0, originalImageWidth, originalImageHeight);
+            
+            return exportCanvas;
         } else {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
@@ -176,21 +180,18 @@ function renderTextOnCanvas(forExport = false) {
         let targetCanvas, targetCtx, targetWidth, targetHeight;
         
         if (forExport) {
-            // للتصدير: نستخدم الأبعاد الأصلية للصورة
+            // للتصدير: استخدام الأبعاد الأصلية
             targetWidth = originalImageWidth;
             targetHeight = originalImageHeight;
             targetCanvas = document.createElement('canvas');
             targetCanvas.width = targetWidth;
             targetCanvas.height = targetHeight;
-            targetCtx = targetCanvas.getContext('2d', { alpha: false });
+            targetCtx = targetCanvas.getContext('2d');
             targetCtx.imageSmoothingEnabled = true;
             targetCtx.imageSmoothingQuality = 'high';
-            
-            // استخدام الصورة عالية الجودة للرسم
-            const exportImage = highQualityImage || currentImage;
-            targetCtx.drawImage(exportImage, 0, 0, targetWidth, targetHeight);
+            targetCtx.drawImage(currentImage, 0, 0, targetWidth, targetHeight);
         } else {
-            // للعرض: نستخدم Canvas الحالي
+            // للعرض: استخدام Canvas الحالي
             targetCanvas = canvas;
             targetCtx = ctx;
             targetWidth = canvas.width;
@@ -201,7 +202,7 @@ function renderTextOnCanvas(forExport = false) {
             ctx.drawImage(currentImage, 0, 0, targetWidth, targetHeight);
         }
         
-        // إعداد النص
+        // الحصول على إعدادات النص
         const fontFamily = document.getElementById('fontFamily')?.value || "'Amiri', serif";
         const fontSize = parseInt(document.getElementById('fontSize')?.value || "48");
         const strokeWidth = parseInt(document.getElementById('strokeWidth')?.value || "3");
@@ -209,15 +210,15 @@ function renderTextOnCanvas(forExport = false) {
         const cardEnabled = document.getElementById('cardEnabled')?.checked || false;
         const text = window.currentText || '';
         
-        // الحصول على الألوان الحالية
+        // الحصول على الألوان
         const textColor = window.currentTextColor || '#FFFFFF';
         const strokeColor = window.currentStrokeColor || '#000000';
         const cardColor = window.currentCardColor || '#000000';
         
-        // حساب حجم الخط المناسب ليتناسب مع عرض الصورة
+        // حساب حجم الخط المناسب
         let finalFontSize = fontSize;
         if (forExport) {
-            // تكبير النص للتصدير ليناسب حجم الصورة الكبير
+            // تكبير النص للتصدير
             const scale = targetWidth / canvas.width;
             finalFontSize = Math.round(fontSize * scale);
         }
@@ -232,38 +233,35 @@ function renderTextOnCanvas(forExport = false) {
         targetCtx.lineCap = 'round';
         targetCtx.direction = 'rtl';
         
-        // تقسيم النص إلى أسطر مع عرض أكبر (90% من عرض الصورة)
-        const maxLineWidth = targetWidth * 0.9; // 90% من العرض بدلاً من 80%
+        // تقسيم النص إلى أسطر (90% من عرض الصورة)
+        const maxLineWidth = targetWidth * 0.9;
         const lines = wrapText(text, maxLineWidth, targetCtx, finalFontSize);
         
-        // ضبط حجم الخط ليتناسب مع العرض مع منع التصغير المفرط
+        // ضبط حجم الخط
         let adjustedFontSize = finalFontSize;
         let adjustedLines = lines;
         
-        // تكرار لضبط حجم الخط
-        let attempts = 0;
-        while (attempts < 10) {
-            const testWidth = Math.max(...adjustedLines.map(line => targetCtx.measureText(line).width));
-            if (testWidth <= maxLineWidth) {
+        for (let i = 0; i < 10; i++) {
+            const maxWidth = Math.max(...adjustedLines.map(line => targetCtx.measureText(line).width));
+            if (maxWidth <= maxLineWidth) {
                 break;
             }
             adjustedFontSize -= Math.max(1, Math.floor(adjustedFontSize * 0.05));
             targetCtx.font = 'bold ' + adjustedFontSize + 'px ' + fontFamily;
             adjustedLines = wrapText(text, maxLineWidth, targetCtx, adjustedFontSize);
-            attempts++;
         }
         
-        // حساب ارتفاع النص الكلي مع تباعد أكبر
-        const lineHeight = adjustedFontSize * 1.5; // زيادة التباعد بين الأسطر
+        // حساب ارتفاع النص
+        const lineHeight = adjustedFontSize * 1.4;
         const totalHeight = adjustedLines.length * lineHeight;
         const startY = (targetHeight / 2) - (totalHeight / 2) + (lineHeight / 2);
         
         // إعداد الظل
         if (shadowEnabled) {
-            targetCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-            targetCtx.shadowBlur = forExport ? 12 : 8; // ظل أكبر للتصدير
-            targetCtx.shadowOffsetX = forExport ? 6 : 4;
-            targetCtx.shadowOffsetY = forExport ? 6 : 4;
+            targetCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            targetCtx.shadowBlur = forExport ? 10 : 6;
+            targetCtx.shadowOffsetX = forExport ? 5 : 3;
+            targetCtx.shadowOffsetY = forExport ? 5 : 3;
         } else {
             targetCtx.shadowColor = 'transparent';
             targetCtx.shadowBlur = 0;
@@ -281,7 +279,7 @@ function renderTextOnCanvas(forExport = false) {
             
             // رسم خلفية النص
             if (cardEnabled) {
-                const padding = adjustedFontSize * 0.6; // زيادة padding
+                const padding = adjustedFontSize * 0.5;
                 const bgWidth = textMetrics.width + (padding * 2);
                 const bgHeight = adjustedFontSize + padding;
                 const bgX = x - (bgWidth / 2);
@@ -289,20 +287,19 @@ function renderTextOnCanvas(forExport = false) {
                 
                 targetCtx.save();
                 targetCtx.fillStyle = cardColor;
-                targetCtx.globalAlpha = 0.8; // زيادة العتامة
+                targetCtx.globalAlpha = 0.7;
                 targetCtx.fillRect(bgX, bgY, bgWidth, bgHeight);
                 targetCtx.restore();
             }
             
             // رسم حواف النص
             if (strokeWidth > 0) {
-                const exportStrokeWidth = forExport ? strokeWidth * 2 : strokeWidth;
                 targetCtx.strokeStyle = strokeColor;
-                targetCtx.lineWidth = exportStrokeWidth;
+                targetCtx.lineWidth = forExport ? strokeWidth * 2 : strokeWidth;
                 targetCtx.strokeText(line, x, y);
             }
             
-            // رسم النص نفسه
+            // رسم النص
             targetCtx.fillStyle = textColor;
             targetCtx.fillText(line, x, y);
         });
@@ -312,13 +309,15 @@ function renderTextOnCanvas(forExport = false) {
         return forExport ? targetCanvas : true;
         
     } catch (error) {
-        console.error('خطأ في رسم النص:', error);
+        console.error('Error rendering text:', error);
         return false;
     }
 }
 
 // دالة لتقسيم النص إلى أسطر
 function wrapText(text, maxWidth, ctx, fontSize) {
+    if (!text) return [];
+    
     const words = text.split(' ');
     const lines = [];
     let currentLine = words[0] || '';
@@ -334,6 +333,7 @@ function wrapText(text, maxWidth, ctx, fontSize) {
             currentLine = word;
         }
     }
+    
     if (currentLine) {
         lines.push(currentLine);
     }
@@ -341,128 +341,13 @@ function wrapText(text, maxWidth, ctx, fontSize) {
     return lines;
 }
 
-// دالة خاصة للتصدير بجودة عالية
-function prepareHighQualityExport() {
-    if (!imageLoaded || !currentImage) {
-        console.error('لم يتم تحميل صورة');
-        return null;
-    }
-    
-    try {
-        // إنشاء Canvas بنفس حجم الصورة الأصلية
-        const exportCanvas = document.createElement('canvas');
-        exportCanvas.width = originalImageWidth;
-        exportCanvas.height = originalImageHeight;
-        const exportCtx = exportCanvas.getContext('2d', { alpha: false });
-        
-        // تعزيز جودة الرسم للتصدير
-        exportCtx.imageSmoothingEnabled = true;
-        exportCtx.imageSmoothingQuality = 'high';
-        
-        // استخدام الصورة عالية الجودة إذا كانت متاحة
-        const sourceImage = highQualityImage || currentImage;
-        
-        // رسم الصورة الأصلية بحجمها الكامل
-        exportCtx.drawImage(sourceImage, 0, 0, originalImageWidth, originalImageHeight);
-        
-        // إذا كان هناك نص، إضافته
-        if (window.currentText && window.currentText.trim() !== '') {
-            // حساب النسبة بين حجم العرض وحجم التصدير
-            const displayScale = canvas.width / originalImageWidth;
-            
-            // إعداد النص مع الأبعاد الأصلية
-            const fontFamily = document.getElementById('fontFamily')?.value || "'Amiri', serif";
-            const fontSize = parseInt(document.getElementById('fontSize')?.value || "48");
-            const strokeWidth = parseInt(document.getElementById('strokeWidth')?.value || "3");
-            const shadowEnabled = document.getElementById('shadowEnabled')?.checked || false;
-            const cardEnabled = document.getElementById('cardEnabled')?.checked || false;
-            const text = window.currentText || '';
-            
-            // تكبير حجم الخط ليتناسب مع الصورة الأصلية
-            const exportFontSize = Math.round(fontSize / displayScale);
-            
-            // الحصول على الألوان الحالية
-            const textColor = window.currentTextColor || '#FFFFFF';
-            const strokeColor = window.currentStrokeColor || '#000000';
-            const cardColor = window.currentCardColor || '#000000';
-            
-            exportCtx.save();
-            
-            // إعداد الخط
-            exportCtx.font = 'bold ' + exportFontSize + 'px ' + fontFamily;
-            exportCtx.textAlign = 'center';
-            exportCtx.textBaseline = 'middle';
-            exportCtx.lineJoin = 'round';
-            exportCtx.lineCap = 'round';
-            exportCtx.direction = 'rtl';
-            
-            // تقسيم النص إلى أسطر
-            const maxLineWidth = originalImageWidth * 0.9; // 90% من العرض
-            const lines = wrapText(text, maxLineWidth, exportCtx, exportFontSize);
-            
-            // حساب ارتفاع النص الكلي
-            const lineHeight = exportFontSize * 1.5;
-            const totalHeight = lines.length * lineHeight;
-            const startY = (originalImageHeight / 2) - (totalHeight / 2) + (lineHeight / 2);
-            
-            // إعداد الظل
-            if (shadowEnabled) {
-                exportCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                exportCtx.shadowBlur = 12;
-                exportCtx.shadowOffsetX = 6;
-                exportCtx.shadowOffsetY = 6;
-            } else {
-                exportCtx.shadowColor = 'transparent';
-                exportCtx.shadowBlur = 0;
-                exportCtx.shadowOffsetX = 0;
-                exportCtx.shadowOffsetY = 0;
-            }
-            
-            // رسم كل سطر
-            lines.forEach((line, index) => {
-                const y = startY + (index * lineHeight);
-                const x = originalImageWidth / 2;
-                
-                // قياس عرض النص
-                const textMetrics = exportCtx.measureText(line);
-                
-                // رسم خلفية النص
-                if (cardEnabled) {
-                    const padding = exportFontSize * 0.6;
-                    const bgWidth = textMetrics.width + (padding * 2);
-                    const bgHeight = exportFontSize + padding;
-                    const bgX = x - (bgWidth / 2);
-                    const bgY = y - (exportFontSize / 2) - (padding / 2);
-                    
-                    exportCtx.save();
-                    exportCtx.fillStyle = cardColor;
-                    exportCtx.globalAlpha = 0.8;
-                    exportCtx.fillRect(bgX, bgY, bgWidth, bgHeight);
-                    exportCtx.restore();
-                }
-                
-                // رسم حواف النص
-                if (strokeWidth > 0) {
-                    exportCtx.strokeStyle = strokeColor;
-                    exportCtx.lineWidth = strokeWidth * 2; // حواف أسمك للتصدير
-                    exportCtx.strokeText(line, x, y);
-                }
-                
-                // رسم النص نفسه
-                exportCtx.fillStyle = textColor;
-                exportCtx.fillText(line, x, y);
-            });
-            
-            exportCtx.restore();
-        }
-        
-        return exportCanvas;
-        
-    } catch (error) {
-        console.error('خطأ في تحضير الصورة للتصدير:', error);
-        return null;
-    }
+// دالة خاصة للتصدير
+function prepareImageForExport() {
+    return renderTextOnCanvas(true);
 }
 
 // جعل الدالة متاحة عالمياً
-window.prepareHighQualityExport = prepareHighQualityExport;
+window.prepareImageForExport = prepareImageForExport;
+window.renderTextOnCanvas = renderTextOnCanvas;
+window.updateTextOnCanvas = updateTextOnCanvas;
+window.loadImageToEditor = loadImageToEditor;
