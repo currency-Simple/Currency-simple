@@ -111,17 +111,14 @@ function applyLanguage(lang) {
         }
     });
     
-    const textOverlay = document.getElementById('textOverlay');
-    if (textOverlay) {
+    const textInput = document.getElementById('textCardInput');
+    if (textInput) {
         const placeholders = {
-            ar: 'اكتب هنا...',
-            en: 'Type here...',
-            fr: 'Écrivez ici...'
+            ar: 'اكتب النص هنا...',
+            en: 'Type your text here...',
+            fr: 'Écrivez votre texte ici...'
         };
-        textOverlay.setAttribute('data-placeholder', placeholders[lang]);
-        if (!textOverlay.textContent.trim() || textOverlay.textContent === 'اكتب هنا...') {
-            textOverlay.textContent = placeholders[lang];
-        }
+        textInput.placeholder = placeholders[lang];
     }
     
     document.querySelectorAll('.lang-btn').forEach(btn => {
