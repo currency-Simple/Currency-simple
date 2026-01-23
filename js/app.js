@@ -1,3 +1,8 @@
+// ============================================
+// تطبيق محرر النصوص على الصور - النسخة النهائية
+// يدعم 40 خط من Google Fonts
+// ============================================
+
 // متغيرات عامة
 let categories = [];
 let currentCategory = null;
@@ -7,19 +12,46 @@ let textCardVisible = false;
 
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('App starting...');
+    console.log('🚀 بدء تشغيل التطبيق...');
+    
+    // تهيئة الخطوط أولاً
+    if (typeof initializeFonts === 'function') {
+        initializeFonts();
+        console.log('✅ الخطوط مهيأة');
+    }
+    
+    // تهيئة الألوان
+    if (typeof initializeColors === 'function') {
+        initializeColors();
+        console.log('✅ الألوان مهيأة');
+    }
+    
+    // تحميل الإعدادات
+    if (typeof loadSettings === 'function') {
+        loadSettings();
+        console.log('✅ الإعدادات محملة');
+    }
+    
+    // تحميل الفئات
     loadCategories();
+    
+    // عرض صفحة الفئات
     showPage('categories');
     
+    // إعداد مستمعات لوحة المفاتيح
     setupKeyboardListeners();
     
-    // إعداد بطاقة النص بعد تحميل الصفحة
+    // إعداد بطاقة النص
     setTimeout(() => {
         setupTextCard();
         addTextCardButton();
+        console.log('✅ بطاقة النص مهيأة');
     }, 1000);
+    
+    console.log('🎉 التطبيق جاهز للاستخدام');
 });
 
+// ============== بطاقة النص ==============
 // إعداد بطاقة النص الجديدة
 function setupTextCard() {
     // حذف عنصر النص القديم إذا كان موجوداً
@@ -63,7 +95,6 @@ function setupTextCard() {
     `;
     
     canvasWrapper.appendChild(textCard);
-    console.log('Text card setup complete');
 }
 
 // إضافة زر بطاقة النص إلى شريط الأدوات
@@ -97,8 +128,6 @@ function addTextCardButton() {
     } else {
         editorToolbar.insertAdjacentElement('afterbegin', textBtn);
     }
-    
-    console.log('Text button added to toolbar');
 }
 
 // فتح/إغلاق بطاقة النص
@@ -136,8 +165,6 @@ function openTextCard() {
         setTimeout(() => {
             textInput.focus();
         }, 100);
-        
-        console.log('Text card opened');
     }
 }
 
@@ -148,7 +175,6 @@ function closeTextCard() {
     if (textCard && textInput) {
         textCard.style.display = 'none';
         textCardVisible = false;
-        console.log('Text card closed');
     }
 }
 
@@ -182,8 +208,6 @@ function clearTextFromCard() {
     
     // التركيز على حقل النص
     textInput.focus();
-    
-    console.log('Text cleared from card');
 }
 
 // تطبيق النص على الصورة
@@ -213,8 +237,6 @@ function applyTextToImage() {
     } else {
         showAlert('تم حذف النص من الصورة', 'success');
     }
-    
-    console.log('Text applied to image:', text);
 }
 
 // حذف النص من الصورة
@@ -225,8 +247,6 @@ function clearTextFromImage() {
     if (typeof renderTextOnCanvas === 'function') {
         renderTextOnCanvas(false);
     }
-    
-    console.log('Text cleared from image');
 }
 
 // إضافة زر حذف النص في لوحة التأثيرات
@@ -245,9 +265,9 @@ function addDeleteTextButton() {
     `;
     
     effectsPanel.innerHTML += deleteBtnHtml;
-    console.log('Delete text button added to effects panel');
 }
 
+// ============== لوحة المفاتيح ==============
 // إعداد مستمعات لوحة المفاتيح
 function setupKeyboardListeners() {
     window.addEventListener('resize', () => {
@@ -269,7 +289,6 @@ function setupKeyboardListeners() {
 function handleKeyboardOpen() {
     if (keyboardOpen) return;
     keyboardOpen = true;
-    console.log('Keyboard opened');
     
     document.body.classList.add('keyboard-open');
 }
@@ -278,20 +297,20 @@ function handleKeyboardOpen() {
 function handleKeyboardClose() {
     if (!keyboardOpen) return;
     keyboardOpen = false;
-    console.log('Keyboard closed');
     
     document.body.classList.remove('keyboard-open');
 }
 
-// تحميل الفئات (معدل لتحميل 100 فئة)
+// ============== إدارة الفئات والصور ==============
+// تحميل الفئات
 async function loadCategories() {
     categories = [];
-    console.log('Loading categories...');
+    console.log('📂 جاري تحميل الفئات...');
     
     try {
-        // محاولة تحميل جميع الفئات من 1 إلى 100
+        // محاولة تحميل أول فئتين فقط
         const promises = [];
-        for (let i = 1; i <= 100; i++) {
+        for (let i = 1; i <= 2; i++) {
             promises.push(
                 fetch(`data/images${i}.json`)
                     .then(res => res.ok ? res.json() : null)
@@ -318,16 +337,16 @@ async function loadCategories() {
             displayCategories();
         }
         
-        console.log('Categories loaded:', categories.length);
+        console.log(`✅ تم تحميل ${categories.length} فئة`);
     } catch (error) {
-        console.error('Error loading categories:', error);
+        console.error('❌ خطأ في تحميل الفئات:', error);
         loadDemoCategories();
     }
 }
 
 // فئات تجريبية
 function loadDemoCategories() {
-    console.log('Loading demo categories...');
+    console.log('📝 جاري تحميل فئات تجريبية...');
     
     for (let i = 1; i <= 4; i++) {
         const images = [];
@@ -353,7 +372,7 @@ function loadDemoCategories() {
 function displayCategories() {
     const grid = document.getElementById('categoriesGrid');
     if (!grid) {
-        console.error('Categories grid not found');
+        console.error('❌ شبكة الفئات غير موجودة');
         return;
     }
     
@@ -371,8 +390,6 @@ function displayCategories() {
         `;
         grid.appendChild(item);
     });
-    
-    console.log('Categories displayed:', categories.length);
 }
 
 // فتح فئة
@@ -387,15 +404,13 @@ function openCategory(cat) {
     
     displayImages();
     showPage('images');
-    
-    console.log('Category opened:', cat.name);
 }
 
 // عرض الصور
 function displayImages() {
     const grid = document.getElementById('imageGrid');
     if (!grid) {
-        console.error('Image grid not found');
+        console.error('❌ شبكة الصور غير موجودة');
         return;
     }
     
@@ -414,13 +429,11 @@ function displayImages() {
         item.appendChild(imgEl);
         grid.appendChild(item);
     });
-    
-    console.log('Images displayed:', currentImages.length);
 }
 
 // اختيار صورة
 function selectImage(img) {
-    console.log('Image selected:', img.id);
+    console.log('🖼️ تم اختيار الصورة:', img.id);
     
     localStorage.setItem('selectedImage', JSON.stringify(img));
     showPage('editor');
@@ -439,8 +452,6 @@ function selectImage(img) {
 
 // التنقل بين الصفحات
 function showPage(pageName) {
-    console.log('Navigating to:', pageName);
-    
     const pages = document.querySelectorAll('.page');
     pages.forEach(p => p.classList.remove('active'));
     
@@ -484,10 +495,10 @@ function goBackToImages() {
     }
 }
 
-// ============== دالة التنزيل ==============
+// ============== تنزيل الصور ==============
 async function downloadImage() {
     try {
-        console.log('بدء عملية التنزيل...');
+        console.log('💾 بدء عملية التنزيل...');
         
         // التحقق من وجود صورة
         const canvas = document.getElementById('canvas');
@@ -513,6 +524,9 @@ async function downloadImage() {
             showAlert('دالة الرسم غير متوفرة', 'error');
             return;
         }
+        
+        // انتظار تحميل الخطوط
+        await waitForFonts();
         
         // انتظار الرسم
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -543,23 +557,29 @@ async function downloadImage() {
             setTimeout(() => URL.revokeObjectURL(url), 1000);
             
             hideLoadingIndicator();
-            showAlert('تم تنزيل الصورة بنجاح!', 'success');
-            
-            console.log('Download completed');
+            showAlert('✅ تم تنزيل الصورة بنجاح!', 'success');
             
         }, 'image/png', 1.0);
         
     } catch (error) {
-        console.error('خطأ في التنزيل:', error);
+        console.error('❌ خطأ في التنزيل:', error);
         hideLoadingIndicator();
         showAlert('حدث خطأ أثناء التنزيل', 'error');
     }
 }
 
-// ============== دالة المشاركة ==============
+// انتظار تحميل الخطوط
+async function waitForFonts() {
+    if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+        console.log('✅ جميع الخطوط محملة');
+    }
+}
+
+// ============== مشاركة الصور ==============
 async function shareImage() {
     try {
-        console.log('بدء عملية المشاركة...');
+        console.log('📤 بدء عملية المشاركة...');
         
         // التحقق من وجود صورة
         const canvas = document.getElementById('canvas');
@@ -591,6 +611,9 @@ async function shareImage() {
             showAlert('دالة الرسم غير متوفرة', 'error');
             return;
         }
+        
+        // انتظار تحميل الخطوط
+        await waitForFonts();
         
         // انتظار الرسم
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -625,8 +648,7 @@ async function shareImage() {
                 });
                 
                 hideLoadingIndicator();
-                showAlert('تم المشاركة بنجاح!', 'success');
-                console.log('تمت المشاركة بنجاح');
+                showAlert('✅ تم المشاركة بنجاح!', 'success');
                 
             } catch (shareError) {
                 hideLoadingIndicator();
@@ -636,7 +658,7 @@ async function shareImage() {
                     return;
                 }
                 
-                console.error('خطأ في المشاركة:', shareError);
+                console.error('❌ خطأ في المشاركة:', shareError);
                 showAlert('فشلت المشاركة', 'error');
                 downloadImage();
             }
@@ -644,7 +666,7 @@ async function shareImage() {
         }, 'image/png', 1.0);
         
     } catch (error) {
-        console.error('خطأ في المشاركة:', error);
+        console.error('❌ خطأ في المشاركة:', error);
         hideLoadingIndicator();
         showAlert('حدث خطأ أثناء المشاركة', 'error');
     }
