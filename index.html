@@ -11,10 +11,8 @@
     <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     
-    <!-- === رابط الـ 40 خط من Google Fonts === -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Agu+Display&family=Alkalami&family=Amatic+SC:wght@400;700&family=Anton&family=Archivo+Black&family=Archivo:ital,wght@0,100..900;1,100..900&family=Audiowide&family=Badeen+Display&family=Bangers&family=Bebas+Neue&family=Bitcount+Single:wght@100..900&family=Buda:wght@300&family=Cairo+Play:wght@200..1000&family=Creepster&family=Dancing+Script:wght@400..700&family=Eater&family=Edu+SA+Hand:wght@400..700&family=Fjalla+One&family=Fredericka+the+Great&family=Gravitas+One&family=Lalezar&family=Lobster+Two:ital,wght@0,400;0,700;1,400;1,700&family=Macondo&family=Mada:wght@200..900&family=Momo+Signature&family=Monoton&family=Moo+Lah+Lah&family=Noto+Nastaliq+Urdu:wght@400..700&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Pacifico&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Playwrite+GB+J+Guides:ital@0;1&family=Reem+Kufi:wght@400..700&family=Rock+Salt&family=Rubik+Storm&family=Ruwudu:wght@400;500;600;700&family=Special+Gothic+Condensed+One&family=Special+Gothic+Expanded+One&family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <!-- Google Fonts العربية -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Lateef&family=Noto+Kufi+Arabic:wght@400;700&family=Cairo:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -23,9 +21,6 @@
     <div id="categoriesPage" class="page active">
         <div class="header">
             <h1>اختر فئة</h1>
-            <div id="categoriesCounter" style="font-size: 14px; color: #86868b; margin-top: 5px;">
-                جاري التحميل...
-            </div>
         </div>
         <div class="categories-grid" id="categoriesGrid"></div>
     </div>
@@ -67,8 +62,6 @@
             
             <!-- أدوات التحرير -->
             <div class="editor-toolbar">
-                <!-- زر بطاقة النص (يضاف تلقائياً) -->
-                
                 <button class="tool-btn" onclick="toggleToolPanel('fontPanel')">
                     <span class="material-symbols-outlined">brand_family</span>
                     <span data-lang="font">الخط</span>
@@ -97,7 +90,7 @@
 
             <!-- لوحات الأدوات المنبثقة -->
             <div id="fontPanel" class="tool-panel">
-                <div class="font-grid" id="fontGrid"></div>
+                <select id="fontFamily" class="tool-select"></select>
             </div>
 
             <div id="sizePanel" class="tool-panel">
@@ -144,6 +137,7 @@
                     <button class="theme-btn" onclick="changeTheme('dark')" data-theme="dark">
                         <span data-lang="dark">داكن</span>
                     </button>
+                    <!-- تم حذف السمة الزرقاء -->
                 </div>
             </div>
 
@@ -206,7 +200,6 @@
     </div>
 
     <!-- تحميل الملفات بالترتيب الصحيح -->
-    <script src="js/fonts-data.js"></script>
     <script src="js/fonts.js"></script>
     <script src="js/colors.js"></script>
     <script src="js/settings.js"></script>
