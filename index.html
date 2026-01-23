@@ -184,12 +184,12 @@
             <!-- لوحة حواف الصورة -->
             <div id="borderPanel" class="tool-panel">
                 <div class="tool-section">
-                    <h4>سُمك الحواف</h4>
-                    <input type="range" id="borderSlider" min="0" max="50" value="0" class="size-slider">
+                    <h4>سُمك حواف الصورة</h4>
+                    <input type="range" id="borderSlider" min="0" max="50" value="0" class="border-slider">
                     <span id="borderDisplay">0</span>
                 </div>
                 <div class="tool-section">
-                    <h4>لون الحواف</h4>
+                    <h4>لون حواف الصورة</h4>
                     <div class="color-grid" id="borderColorGrid"></div>
                 </div>
             </div>
@@ -216,33 +216,71 @@
             
             <!-- لوحة الخطوط -->
             <div id="fontPanel" class="tool-panel">
-                <select id="fontFamily" class="tool-select"></select>
+                <div class="tool-section">
+                    <h4>اختيار الخط</h4>
+                    <select id="fontFamily" class="tool-select"></select>
+                </div>
             </div>
 
+            <!-- لوحة الحجم -->
             <div id="sizePanel" class="tool-panel">
-                <input type="range" id="fontSize" min="20" max="120" value="48" class="size-slider">
-                <span id="fontSizeDisplay">48</span>
+                <div class="tool-section">
+                    <h4>حجم النص</h4>
+                    <input type="range" id="fontSize" min="20" max="120" value="48" class="size-slider">
+                    <span id="fontSizeDisplay">48</span>
+                </div>
             </div>
 
+            <!-- لوحة لون النص -->
             <div id="colorPanel" class="tool-panel">
-                <div class="color-grid" id="colorGrid"></div>
+                <div class="tool-section">
+                    <h4>لون النص</h4>
+                    <div class="color-grid" id="colorGrid"></div>
+                </div>
             </div>
 
+            <!-- لوحة حواف النص -->
             <div id="strokePanel" class="tool-panel">
-                <div class="color-grid" id="strokeColorGrid"></div>
-                <input type="range" id="strokeWidth" min="0" max="10" value="3" class="stroke-slider">
-                <span id="strokeWidthDisplay">3</span>
+                <div class="tool-section">
+                    <h4>لون حواف النص</h4>
+                    <div class="color-grid" id="strokeColorGrid"></div>
+                </div>
+                <div class="tool-section">
+                    <h4>سُمك حواف النص</h4>
+                    <input type="range" id="strokeWidth" min="0" max="10" value="3" class="stroke-slider">
+                    <span id="strokeWidthDisplay">3</span>
+                </div>
             </div>
 
+            <!-- لوحة التأثيرات (محدثة) -->
             <div id="effectsPanel" class="tool-panel">
-                <label class="effect-option">
-                    <input type="checkbox" id="shadowEnabled" checked>
-                    <span>ظل النص</span>
-                </label>
-                <label class="effect-option">
-                    <input type="checkbox" id="cardEnabled">
-                    <span>خلفية النص</span>
-                </label>
+                <div class="tool-section">
+                    <label class="effect-option">
+                        <input type="checkbox" id="shadowEnabled" checked>
+                        <span>ظل النص</span>
+                    </label>
+                    <label class="effect-option">
+                        <input type="checkbox" id="cardEnabled">
+                        <span>خلفية النص</span>
+                    </label>
+                </div>
+                
+                <div class="tool-section">
+                    <h4>قوة الظل</h4>
+                    <input type="range" id="shadowSlider" min="0" max="20" value="5" class="shadow-slider">
+                    <span id="shadowDisplay">5</span>
+                </div>
+                
+                <div class="tool-section">
+                    <h4>شفافية خلفية النص</h4>
+                    <input type="range" id="bgOpacitySlider" min="10" max="100" value="70" class="bg-opacity-slider">
+                    <span id="bgOpacityDisplay">70</span>
+                </div>
+                
+                <div class="tool-section">
+                    <h4>لون خلفية النص</h4>
+                    <div class="color-grid" id="cardColorGrid"></div>
+                </div>
             </div>
         </div>
     </div>
