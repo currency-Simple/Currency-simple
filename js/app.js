@@ -339,7 +339,8 @@ async function loadCategories() {
     
     try {
         const promises = [];
-        for (let i = 1; i <= 2; i++) {
+        // تحميل 100 فئة
+        for (let i = 1; i <= 100; i++) {
             promises.push(
                 fetch(`data/images${i}.json`)
                     .then(res => res.ok ? res.json() : null)
