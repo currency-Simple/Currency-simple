@@ -194,10 +194,10 @@ body[dir="ltr"] {
     top: 71px;
     left: 0;
     right: 0;
-    bottom: 180px; /* تغيير من 140px إلى 180px */
+    bottom: 180px;
     background: transparent !important;
     overflow: hidden;
-    height: calc(100vh - 251px); /* تغيير من 211px إلى 251px */
+    height: calc(100vh - 251px);
 }
 
 .canvas-wrapper-fixed {
@@ -221,7 +221,6 @@ body[dir="ltr"] {
     width: auto;
     height: auto;
     object-fit: contain;
-    aspect-ratio: 4/5;
     display: block;
     margin: auto;
     background: transparent !important;
@@ -404,7 +403,7 @@ body[dir="ltr"] {
     bottom: 70px;
     left: 0;
     right: 0;
-    height: 140px; /* ارتفاع مضاعف */
+    height: 140px;
     z-index: 10001;
     background: var(--card-bg);
     border-top: 1px solid var(--border-color);
@@ -461,20 +460,39 @@ body[dir="ltr"] {
 .tool-panel {
     display: none;
     position: fixed;
-    bottom: 210px; /* تعديل من 200px إلى 210px */
+    bottom: 210px;
     left: 0;
     right: 0;
     background: var(--card-bg);
     padding: 15px;
     border-top: 1px solid var(--border-color);
     z-index: 10000;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
 }
 
 .tool-panel.active {
     display: block;
+}
+
+.tool-section {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tool-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.tool-section h4 {
+    color: var(--text-color);
+    font-size: 14px;
+    margin-bottom: 10px;
+    font-weight: bold;
 }
 
 .tool-select {
@@ -488,13 +506,19 @@ body[dir="ltr"] {
 }
 
 .size-slider,
-.stroke-slider {
+.stroke-slider,
+.shadow-slider,
+.bg-opacity-slider,
+.border-slider {
     width: calc(100% - 60px);
     margin-left: 10px;
 }
 
 #fontSizeDisplay,
-#strokeWidthDisplay {
+#strokeWidthDisplay,
+#shadowDisplay,
+#bgOpacityDisplay,
+#borderDisplay {
     display: inline-block;
     width: 40px;
     text-align: center;
@@ -821,23 +845,6 @@ input[type="checkbox"] {
 }
 
 /* أنماط أدوات الصورة */
-.tool-section {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.tool-section:last-child {
-    border-bottom: none;
-}
-
-.tool-section h4 {
-    color: var(--text-color);
-    font-size: 14px;
-    margin-bottom: 10px;
-    font-weight: bold;
-}
-
 .tool-action-btn {
     width: 100%;
     padding: 12px;
