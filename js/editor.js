@@ -8,7 +8,6 @@ let originalImageHeight = 0;
 // متغيرات التحكم باللمس للنص
 let isDragging = false;
 let isResizing = false;
-let isRotating = false;
 let startX = 0;
 let startY = 0;
 let textX = 0.5;
@@ -25,6 +24,30 @@ let stickerDragging = false;
 let stickerStartX = 0;
 let stickerStartY = 0;
 
+// متغيرات تأثيرات الصورة
+let imageBlur = 0;
+let imageRotation = 0;
+let imageFlipH = false;
+let imageFlipV = false;
+let imageBorderWidth = 0;
+let imageBorderColor = '#000000';
+let currentFilter = 'none';
+
+// الفلاتر المتاحة
+const FILTERS = {
+    'none': { name: 'بدون فلتر', filter: 'none' },
+    'grayscale': { name: 'أبيض وأسود', filter: 'grayscale(100%)' },
+    'sepia': { name: 'سيبيا', filter: 'sepia(100%)' },
+    'invert': { name: 'عكس الألوان', filter: 'invert(100%)' },
+    'brightness': { name: 'سطوع', filter: 'brightness(150%)' },
+    'contrast': { name: 'تباين', filter: 'contrast(150%)' },
+    'saturate': { name: 'تشبع', filter: 'saturate(200%)' },
+    'hue': { name: 'تدوير الألوان', filter: 'hue-rotate(180deg)' },
+    'vintage': { name: 'قديم', filter: 'sepia(50%) contrast(120%) brightness(110%)' },
+    'warm': { name: 'دافئ', filter: 'sepia(30%) saturate(130%)' },
+    'cool': { name: 'بارد', filter: 'hue-rotate(180deg) saturate(120%)' }
+};
+
 window.addEventListener('DOMContentLoaded', () => {
     console.log('Editor initializing...');
     
@@ -34,7 +57,10 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
-    ctx = canvas.getContext('2d');
+    ctx = canvas.getContext('2d', { 
+        willReadFrequently: true,
+        alpha: true 
+    });
     
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
@@ -49,9 +75,102 @@ window.addEventListener('DOMContentLoaded', () => {
     
     setupEventListeners();
     setupTouchControls();
+    setupImageControls();
     
     console.log('Editor initialized');
 });
+
+function setupImageControls() {
+    // زر رفع الصورة
+    const uploadBtn = document.getElementById('uploadImageBtn');
+    const uploadInput = document.getElementById('uploadImageInput');
+    
+    if (uploadBtn && uploadInput) {
+        uploadBtn.addEventListener('click', () => uploadInput.click());
+        uploadInput.addEventListener('change', handleImageUpload);
+    }
+    
+    // التحكم بالضبابية
+    const blurSlider = document.getElementById('blurSlider');
+    if (blurSlider) {
+        blurSlider.addEventListener('input', (e) => {
+            imageBlur = parseInt(e.target.value);
+            const display = document.getElementById('blurDisplay');
+            if (display) display.textContent = imageBlur;
+            renderCanvas();
+        });
+    }
+    
+    // التحكم بحواف الصورة
+    const borderSlider = document.getElementById('borderSlider');
+    if (borderSlider) {
+        borderSlider.addEventListener('input', (e) => {
+            imageBorderWidth = parseInt(e.target.value);
+            const display = document.getElementById('borderDisplay');
+            if (display) display.textContent = imageBorderWidth;
+            renderCanvas();
+        });
+    }
+    
+    // اختيار لون الحواف
+    const borderColorGrid = document.getElementById('borderColorGrid');
+    if (borderColorGrid && window.COLORS) {
+        borderColorGrid.innerHTML = '';
+        window.COLORS.forEach(color => {
+            const item = document.createElement('div');
+            item.className = 'color-item';
+            item.style.backgroundColor = color;
+            item.onclick = () => {
+                imageBorderColor = color;
+                renderCanvas();
+            };
+            borderColorGrid.appendChild(item);
+        });
+    }
+}
+
+function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        showAlert('يرجى اختيار ملف صورة', 'error');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        loadImageToEditor(event.target.result);
+        showAlert('تم رفع الصورة بنجاح', 'success');
+    };
+    reader.readAsDataURL(file);
+}
+
+function rotateImage() {
+    imageRotation = (imageRotation + 90) % 360;
+    renderCanvas();
+    showAlert('تم تدوير الصورة', 'success');
+}
+
+function flipImageH() {
+    imageFlipH = !imageFlipH;
+    renderCanvas();
+    showAlert('تم قلب الصورة أفقياً', 'success');
+}
+
+function flipImageV() {
+    imageFlipV = !imageFlipV;
+    renderCanvas();
+    showAlert('تم قلب الصورة عمودياً', 'success');
+}
+
+function applyFilter(filterName) {
+    currentFilter = filterName;
+    renderCanvas();
+    
+    const filterDisplay = FILTERS[filterName] ? FILTERS[filterName].name : 'بدون فلتر';
+    showAlert(`تم تطبيق فلتر: ${filterDisplay}`, 'success');
+}
 
 function setupEventListeners() {
     const fontSize = document.getElementById('fontSize');
@@ -96,15 +215,11 @@ function setupEventListeners() {
     }
 }
 
-// إعداد التحكم باللمس
 function setupTouchControls() {
-    let lastTap = 0;
-    
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
     
-    // دعم الماوس أيضاً
     canvas.addEventListener('mousedown', (e) => {
         const touch = { clientX: e.clientX, clientY: e.clientY };
         handleTouchStart({ touches: [touch], preventDefault: () => e.preventDefault() });
@@ -131,7 +246,6 @@ function handleTouchStart(e) {
         const x = (touch.clientX - rect.left) / canvas.width;
         const y = (touch.clientY - rect.top) / canvas.height;
         
-        // التحقق من النقر على ملصق
         for (let i = canvasStickers.length - 1; i >= 0; i--) {
             const sticker = canvasStickers[i];
             if (isTouchOnSticker(x * canvas.width, y * canvas.height, sticker)) {
@@ -144,7 +258,6 @@ function handleTouchStart(e) {
             }
         }
         
-        // التحكم بالنص
         if (window.currentText && window.currentText.trim() !== '') {
             isDragging = true;
             startX = touch.clientX;
@@ -220,7 +333,6 @@ function handleTouchEnd(e) {
     e.preventDefault();
     isDragging = false;
     isResizing = false;
-    isRotating = false;
     stickerDragging = false;
     selectedSticker = null;
 }
@@ -230,7 +342,6 @@ function isTouchOnSticker(x, y, sticker) {
            y >= sticker.y && y <= sticker.y + sticker.height;
 }
 
-// إضافة ملصق
 function addSticker(url) {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -251,6 +362,18 @@ function addSticker(url) {
         renderCanvas();
     };
     img.src = url;
+}
+
+function deleteSelectedSticker() {
+    if (selectedSticker) {
+        const index = canvasStickers.indexOf(selectedSticker);
+        if (index > -1) {
+            canvasStickers.splice(index, 1);
+            selectedSticker = null;
+            renderCanvas();
+            showAlert('تم حذف الملصق', 'success');
+        }
+    }
 }
 
 function updateTextOnCanvas() {
@@ -298,7 +421,15 @@ function loadImageToEditor(imageUrl) {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
+        // إعادة تعيين التأثيرات
+        imageBlur = 0;
+        imageRotation = 0;
+        imageFlipH = false;
+        imageFlipV = false;
+        imageBorderWidth = 0;
+        currentFilter = 'none';
         canvasStickers = [];
+        
         renderCanvas();
         
         console.log(`Display dimensions: ${displayWidth}x${displayHeight}`);
@@ -316,7 +447,39 @@ function renderCanvas() {
     if (!imageLoaded || !currentImage) return;
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+    
+    ctx.save();
+    
+    // تطبيق التحولات
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(imageRotation * Math.PI / 180);
+    
+    if (imageFlipH) ctx.scale(-1, 1);
+    if (imageFlipV) ctx.scale(1, -1);
+    
+    // تطبيق الضبابية
+    if (imageBlur > 0) {
+        ctx.filter = `blur(${imageBlur}px)`;
+    }
+    
+    // تطبيق الفلتر
+    if (currentFilter !== 'none' && FILTERS[currentFilter]) {
+        const currentFilterValue = ctx.filter !== 'none' ? ctx.filter + ' ' : '';
+        ctx.filter = currentFilterValue + FILTERS[currentFilter].filter;
+    }
+    
+    ctx.drawImage(currentImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+    
+    ctx.filter = 'none';
+    ctx.restore();
+    
+    // رسم الحواف
+    if (imageBorderWidth > 0) {
+        ctx.strokeStyle = imageBorderColor;
+        ctx.lineWidth = imageBorderWidth;
+        ctx.strokeRect(imageBorderWidth / 2, imageBorderWidth / 2, 
+                      canvas.width - imageBorderWidth, canvas.height - imageBorderWidth);
+    }
     
     // رسم الملصقات
     canvasStickers.forEach(sticker => {
@@ -325,7 +488,6 @@ function renderCanvas() {
         ctx.rotate(sticker.rotation * Math.PI / 180);
         ctx.drawImage(sticker.img, -sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
         
-        // رسم حدود للملصق المحدد
         if (sticker === selectedSticker) {
             ctx.strokeStyle = '#0a84ff';
             ctx.lineWidth = 2;
@@ -347,29 +509,7 @@ function renderTextOnCanvas(forExport = false) {
     
     if (!window.currentText || window.currentText.trim() === '') {
         if (forExport) {
-            const exportCanvas = document.createElement('canvas');
-            exportCanvas.width = originalImageWidth;
-            exportCanvas.height = originalImageHeight;
-            const exportCtx = exportCanvas.getContext('2d');
-            
-            exportCtx.imageSmoothingEnabled = true;
-            exportCtx.imageSmoothingQuality = 'high';
-            exportCtx.drawImage(currentImage, 0, 0, originalImageWidth, originalImageHeight);
-            
-            const scale = originalImageWidth / canvas.width;
-            canvasStickers.forEach(sticker => {
-                exportCtx.save();
-                const x = sticker.x * scale;
-                const y = sticker.y * scale;
-                const w = sticker.width * scale;
-                const h = sticker.height * scale;
-                exportCtx.translate(x + w / 2, y + h / 2);
-                exportCtx.rotate(sticker.rotation * Math.PI / 180);
-                exportCtx.drawImage(sticker.img, -w / 2, -h / 2, w, h);
-                exportCtx.restore();
-            });
-            
-            return exportCanvas;
+            return createExportCanvas();
         } else {
             renderCanvas();
             return true;
@@ -380,49 +520,19 @@ function renderTextOnCanvas(forExport = false) {
         let targetCanvas, targetCtx, targetWidth, targetHeight, scale = 1;
         
         if (forExport) {
-            targetWidth = originalImageWidth;
-            targetHeight = originalImageHeight;
-            targetCanvas = document.createElement('canvas');
-            targetCanvas.width = targetWidth;
-            targetCanvas.height = targetHeight;
+            const exportResult = createExportCanvas();
+            targetCanvas = exportResult;
             targetCtx = targetCanvas.getContext('2d');
-            targetCtx.imageSmoothingEnabled = true;
-            targetCtx.imageSmoothingQuality = 'high';
-            targetCtx.drawImage(currentImage, 0, 0, targetWidth, targetHeight);
+            targetWidth = targetCanvas.width;
+            targetHeight = targetCanvas.height;
             scale = targetWidth / canvas.width;
-            
-            canvasStickers.forEach(sticker => {
-                targetCtx.save();
-                const x = sticker.x * scale;
-                const y = sticker.y * scale;
-                const w = sticker.width * scale;
-                const h = sticker.height * scale;
-                targetCtx.translate(x + w / 2, y + h / 2);
-                targetCtx.rotate(sticker.rotation * Math.PI / 180);
-                targetCtx.drawImage(sticker.img, -w / 2, -h / 2, w, h);
-                targetCtx.restore();
-            });
         } else {
             targetCanvas = canvas;
             targetCtx = ctx;
             targetWidth = canvas.width;
             targetHeight = canvas.height;
             
-            ctx.clearRect(0, 0, targetWidth, targetHeight);
-            ctx.drawImage(currentImage, 0, 0, targetWidth, targetHeight);
-            
-            canvasStickers.forEach(sticker => {
-                ctx.save();
-                ctx.translate(sticker.x + sticker.width / 2, sticker.y + sticker.height / 2);
-                ctx.rotate(sticker.rotation * Math.PI / 180);
-                ctx.drawImage(sticker.img, -sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
-                if (sticker === selectedSticker) {
-                    ctx.strokeStyle = '#0a84ff';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(-sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
-                }
-                ctx.restore();
-            });
+            renderCanvas();
         }
         
         const fontFamily = document.getElementById('fontFamily')?.value || "'Amiri', serif";
@@ -526,6 +636,71 @@ function renderTextOnCanvas(forExport = false) {
     }
 }
 
+function createExportCanvas() {
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = originalImageWidth;
+    exportCanvas.height = originalImageHeight;
+    const exportCtx = exportCanvas.getContext('2d', { 
+        willReadFrequently: true,
+        alpha: true 
+    });
+    
+    exportCtx.imageSmoothingEnabled = true;
+    exportCtx.imageSmoothingQuality = 'high';
+    
+    exportCtx.save();
+    
+    // تطبيق نفس التحولات
+    exportCtx.translate(exportCanvas.width / 2, exportCanvas.height / 2);
+    exportCtx.rotate(imageRotation * Math.PI / 180);
+    
+    if (imageFlipH) exportCtx.scale(-1, 1);
+    if (imageFlipV) exportCtx.scale(1, -1);
+    
+    // تطبيق الضبابية والفلاتر
+    if (imageBlur > 0) {
+        const scaledBlur = imageBlur * (originalImageWidth / canvas.width);
+        exportCtx.filter = `blur(${scaledBlur}px)`;
+    }
+    
+    if (currentFilter !== 'none' && FILTERS[currentFilter]) {
+        const currentFilterValue = exportCtx.filter !== 'none' ? exportCtx.filter + ' ' : '';
+        exportCtx.filter = currentFilterValue + FILTERS[currentFilter].filter;
+    }
+    
+    exportCtx.drawImage(currentImage, -exportCanvas.width / 2, -exportCanvas.height / 2, 
+                       exportCanvas.width, exportCanvas.height);
+    
+    exportCtx.filter = 'none';
+    exportCtx.restore();
+    
+    // رسم الحواف
+    if (imageBorderWidth > 0) {
+        const scaledBorder = imageBorderWidth * (originalImageWidth / canvas.width);
+        exportCtx.strokeStyle = imageBorderColor;
+        exportCtx.lineWidth = scaledBorder;
+        exportCtx.strokeRect(scaledBorder / 2, scaledBorder / 2, 
+                            exportCanvas.width - scaledBorder, 
+                            exportCanvas.height - scaledBorder);
+    }
+    
+    // رسم الملصقات
+    const scale = originalImageWidth / canvas.width;
+    canvasStickers.forEach(sticker => {
+        exportCtx.save();
+        const x = sticker.x * scale;
+        const y = sticker.y * scale;
+        const w = sticker.width * scale;
+        const h = sticker.height * scale;
+        exportCtx.translate(x + w / 2, y + h / 2);
+        exportCtx.rotate(sticker.rotation * Math.PI / 180);
+        exportCtx.drawImage(sticker.img, -w / 2, -h / 2, w, h);
+        exportCtx.restore();
+    });
+    
+    return exportCanvas;
+}
+
 function wrapText(text, maxWidth, ctx, fontSize) {
     if (!text) return [];
     
@@ -561,3 +736,9 @@ window.renderTextOnCanvas = renderTextOnCanvas;
 window.updateTextOnCanvas = updateTextOnCanvas;
 window.loadImageToEditor = loadImageToEditor;
 window.addSticker = addSticker;
+window.deleteSelectedSticker = deleteSelectedSticker;
+window.rotateImage = rotateImage;
+window.flipImageH = flipImageH;
+window.flipImageV = flipImageV;
+window.applyFilter = applyFilter;
+window.FILTERS = FILTERS;
