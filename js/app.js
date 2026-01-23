@@ -4,11 +4,14 @@ let currentCategory = null;
 let currentImages = [];
 let keyboardOpen = false;
 let textCardVisible = false;
+let stickers = [];
+let currentStickers = [];
 
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
     console.log('App starting...');
     loadCategories();
+    loadStickers();
     showPage('categories');
     
     setupKeyboardListeners();
@@ -22,25 +25,21 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // إعداد بطاقة النص الجديدة
 function setupTextCard() {
-    // حذف عنصر النص القديم إذا كان موجوداً
     const oldTextOverlay = document.getElementById('textOverlay');
     if (oldTextOverlay) {
         oldTextOverlay.remove();
     }
     
-    // إنشاء عنصر بطاقة النص
     const canvasWrapper = document.getElementById('canvasWrapperFixed');
     if (!canvasWrapper) {
         console.error('canvasWrapperFixed not found');
         return;
     }
     
-    // التحقق من عدم وجود البطاقة مسبقاً
     if (document.getElementById('textCard')) {
         return;
     }
     
-    // إنشاء عنصر div لبطاقة النص
     const textCard = document.createElement('div');
     textCard.id = 'textCard';
     textCard.className = 'text-card';
@@ -66,7 +65,6 @@ function setupTextCard() {
     console.log('Text card setup complete');
 }
 
-// إضافة زر بطاقة النص إلى شريط الأدوات
 function addTextCardButton() {
     const editorToolbar = document.querySelector('.editor-toolbar');
     if (!editorToolbar) {
@@ -74,13 +72,11 @@ function addTextCardButton() {
         return;
     }
     
-    // التحقق من عدم وجود الزر مسبقاً
     const existingBtn = document.querySelector('.tool-btn[data-tool="text"]');
     if (existingBtn) {
         return;
     }
     
-    // إنشاء زر جديد للنص
     const textBtn = document.createElement('button');
     textBtn.className = 'tool-btn';
     textBtn.setAttribute('data-tool', 'text');
@@ -90,7 +86,6 @@ function addTextCardButton() {
     `;
     textBtn.onclick = () => toggleTextCard();
     
-    // إدراج الزر بعد زر الخط مباشرة
     const fontBtn = document.querySelector('.tool-btn[onclick*="fontPanel"]');
     if (fontBtn) {
         fontBtn.insertAdjacentElement('afterend', textBtn);
@@ -101,7 +96,6 @@ function addTextCardButton() {
     console.log('Text button added to toolbar');
 }
 
-// فتح/إغلاق بطاقة النص
 function toggleTextCard() {
     const textCard = document.getElementById('textCard');
     if (!textCard) {
@@ -121,7 +115,6 @@ function openTextCard() {
     const textInput = document.getElementById('textCardInput');
     
     if (textCard && textInput) {
-        // تعبئة الحقل بالنص الحالي إذا كان موجوداً
         if (window.currentText) {
             textInput.value = window.currentText;
         }
@@ -129,10 +122,8 @@ function openTextCard() {
         textCard.style.display = 'block';
         textCardVisible = true;
         
-        // تحديث حالة زر الحذف
         updateDeleteButtonState();
         
-        // التركيز على حقل النص
         setTimeout(() => {
             textInput.focus();
         }, 100);
@@ -152,7 +143,6 @@ function closeTextCard() {
     }
 }
 
-// تحديث حالة زر الحذف
 function updateDeleteButtonState() {
     const deleteBtn = document.getElementById('deleteTextFromCardBtn');
     const textInput = document.getElementById('textCardInput');
@@ -166,48 +156,32 @@ function updateDeleteButtonState() {
     }
 }
 
-// حذف النص من بطاقة النص
 function clearTextFromCard() {
     const textInput = document.getElementById('textCardInput');
     if (!textInput) return;
     
-    // مسح النص من الحقل
     textInput.value = '';
-    
-    // حذف النص من الصورة
     clearTextFromImage();
-    
-    // تحديث حالة زر الحذف
     updateDeleteButtonState();
-    
-    // التركيز على حقل النص
     textInput.focus();
     
     console.log('Text cleared from card');
 }
 
-// تطبيق النص على الصورة
 function applyTextToImage() {
     const textInput = document.getElementById('textCardInput');
     if (!textInput) return;
     
     const text = textInput.value.trim();
-    
-    // تخزين النص في متغير لتستخدمه دالة الرسم
     window.currentText = text;
     
-    // تحديث الصورة بالنص الجديد
     if (typeof renderTextOnCanvas === 'function') {
         renderTextOnCanvas(false);
     }
     
-    // تحديث حالة زر الحذف
     updateDeleteButtonState();
-    
-    // إغلاق بطاقة النص
     closeTextCard();
     
-    // عرض رسالة نجاح
     if (text) {
         showAlert('تم إضافة النص إلى الصورة', 'success');
     } else {
@@ -217,11 +191,9 @@ function applyTextToImage() {
     console.log('Text applied to image:', text);
 }
 
-// حذف النص من الصورة
 function clearTextFromImage() {
     window.currentText = '';
     
-    // إعادة رسم الصورة بدون نص
     if (typeof renderTextOnCanvas === 'function') {
         renderTextOnCanvas(false);
     }
@@ -229,26 +201,6 @@ function clearTextFromImage() {
     console.log('Text cleared from image');
 }
 
-// إضافة زر حذف النص في لوحة التأثيرات
-function addDeleteTextButton() {
-    const effectsPanel = document.getElementById('effectsPanel');
-    if (!effectsPanel) return;
-    
-    // التحقق من عدم وجود الزر مسبقاً
-    if (document.getElementById('deleteTextBtn')) return;
-    
-    const deleteBtnHtml = `
-        <button class="effect-option delete-text-btn" id="deleteTextBtn" onclick="clearTextFromImage()">
-            <span class="material-symbols-outlined">delete</span>
-            <span>حذف النص</span>
-        </button>
-    `;
-    
-    effectsPanel.innerHTML += deleteBtnHtml;
-    console.log('Delete text button added to effects panel');
-}
-
-// إعداد مستمعات لوحة المفاتيح
 function setupKeyboardListeners() {
     window.addEventListener('resize', () => {
         setTimeout(() => {
@@ -265,7 +217,6 @@ function setupKeyboardListeners() {
     });
 }
 
-// التعامل مع فتح لوحة المفاتيح
 function handleKeyboardOpen() {
     if (keyboardOpen) return;
     keyboardOpen = true;
@@ -274,7 +225,6 @@ function handleKeyboardOpen() {
     document.body.classList.add('keyboard-open');
 }
 
-// التعامل مع إغلاق لوحة المفاتيح
 function handleKeyboardClose() {
     if (!keyboardOpen) return;
     keyboardOpen = false;
@@ -283,13 +233,111 @@ function handleKeyboardClose() {
     document.body.classList.remove('keyboard-open');
 }
 
-// تحميل الفئات
+// تحميل الملصقات
+async function loadStickers() {
+    stickers = [];
+    console.log('Loading stickers...');
+    
+    try {
+        const promises = [];
+        for (let i = 1; i <= 7; i++) {
+            promises.push(
+                fetch(`data/stickers${i}.json`)
+                    .then(res => res.ok ? res.json() : null)
+                    .then(data => {
+                        if (data && data.stickers && data.stickers.length > 0) {
+                            stickers.push({
+                                id: i,
+                                name: data.name || `مجموعة ${i}`,
+                                stickers: data.stickers
+                            });
+                        }
+                    })
+                    .catch(() => null)
+            );
+        }
+        
+        await Promise.allSettled(promises);
+        
+        stickers.sort((a, b) => a.id - b.id);
+        displayStickerCategories();
+        
+        console.log('Stickers loaded:', stickers.length);
+    } catch (error) {
+        console.error('Error loading stickers:', error);
+    }
+}
+
+// عرض فئات الملصقات
+function displayStickerCategories() {
+    const grid = document.getElementById('stickerCategoriesGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    stickers.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'sticker-category-item';
+        item.onclick = () => openStickerCategory(cat);
+        item.innerHTML = `
+            <img src="${cat.stickers[0].url}" alt="${cat.name}" loading="lazy">
+            <div class="category-overlay">
+                <div class="category-title">${cat.name}</div>
+            </div>
+        `;
+        grid.appendChild(item);
+    });
+}
+
+// فتح فئة ملصقات
+function openStickerCategory(cat) {
+    currentStickers = cat.stickers;
+    
+    const categoryTitle = document.getElementById('stickerCategoryTitle');
+    if (categoryTitle) {
+        categoryTitle.textContent = cat.name;
+    }
+    
+    displayStickers();
+    showPage('sticker-selection');
+}
+
+// عرض الملصقات
+function displayStickers() {
+    const grid = document.getElementById('stickerGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    currentStickers.forEach(sticker => {
+        const item = document.createElement('div');
+        item.className = 'sticker-item';
+        item.onclick = () => addStickerToCanvas(sticker);
+        
+        const imgEl = document.createElement('img');
+        imgEl.src = sticker.url;
+        imgEl.alt = sticker.title || 'ملصق';
+        imgEl.loading = 'lazy';
+        
+        item.appendChild(imgEl);
+        grid.appendChild(item);
+    });
+}
+
+// إضافة ملصق إلى الصورة
+function addStickerToCanvas(sticker) {
+    if (typeof addSticker === 'function') {
+        addSticker(sticker.url);
+        showPage('editor');
+        showAlert('تم إضافة الملصق', 'success');
+    }
+}
+
 async function loadCategories() {
     categories = [];
     console.log('Loading categories...');
     
     try {
-        // محاولة تحميل أول فئتين فقط
         const promises = [];
         for (let i = 1; i <= 2; i++) {
             promises.push(
@@ -325,7 +373,6 @@ async function loadCategories() {
     }
 }
 
-// فئات تجريبية
 function loadDemoCategories() {
     console.log('Loading demo categories...');
     
@@ -349,7 +396,6 @@ function loadDemoCategories() {
     displayCategories();
 }
 
-// عرض الفئات
 function displayCategories() {
     const grid = document.getElementById('categoriesGrid');
     if (!grid) {
@@ -375,7 +421,6 @@ function displayCategories() {
     console.log('Categories displayed:', categories.length);
 }
 
-// فتح فئة
 function openCategory(cat) {
     currentCategory = cat;
     currentImages = cat.images;
@@ -391,7 +436,6 @@ function openCategory(cat) {
     console.log('Category opened:', cat.name);
 }
 
-// عرض الصور
 function displayImages() {
     const grid = document.getElementById('imageGrid');
     if (!grid) {
@@ -418,7 +462,6 @@ function displayImages() {
     console.log('Images displayed:', currentImages.length);
 }
 
-// اختيار صورة
 function selectImage(img) {
     console.log('Image selected:', img.id);
     
@@ -429,15 +472,9 @@ function selectImage(img) {
         if (typeof loadImageToEditor === 'function') {
             loadImageToEditor(img.url);
         }
-        
-        // إضافة زر حذف النص
-        if (typeof addDeleteTextButton === 'function') {
-            setTimeout(addDeleteTextButton, 500);
-        }
     }, 100);
 }
 
-// التنقل بين الصفحات
 function showPage(pageName) {
     console.log('Navigating to:', pageName);
     
@@ -451,7 +488,9 @@ function showPage(pageName) {
         'categories': 'categoriesPage',
         'images': 'imagesPage',
         'editor': 'editorPage',
-        'settings': 'settingsPage'
+        'settings': 'settingsPage',
+        'stickers': 'stickersPage',
+        'sticker-selection': 'stickerSelectionPage'
     };
     
     const page = document.getElementById(pageMap[pageName]);
@@ -462,7 +501,8 @@ function showPage(pageName) {
     const navMap = {
         'categories': 'navCategories',
         'editor': 'navEditor',
-        'settings': 'navSettings'
+        'settings': 'navSettings',
+        'stickers': 'navStickers'
     };
     
     const btn = document.getElementById(navMap[pageName]);
@@ -475,7 +515,6 @@ function showPage(pageName) {
     }
 }
 
-// العودة
 function goBackToImages() {
     if (currentCategory) {
         showPage('images');
@@ -484,22 +523,22 @@ function goBackToImages() {
     }
 }
 
-// ============== دالة التنزيل ==============
+function goBackToStickers() {
+    showPage('stickers');
+}
+
 async function downloadImage() {
     try {
         console.log('بدء عملية التنزيل...');
         
-        // التحقق من وجود صورة
         const canvas = document.getElementById('canvas');
         if (!canvas || canvas.width === 0) {
             showAlert('يرجى اختيار صورة أولاً', 'error');
             return;
         }
         
-        // إظهار مؤشر تحميل
         showLoadingIndicator('جاري إنشاء الصورة النهائية...');
         
-        // استخدام دالة التصدير
         let exportCanvas;
         if (typeof prepareImageForExport === 'function') {
             exportCanvas = prepareImageForExport();
@@ -514,14 +553,11 @@ async function downloadImage() {
             return;
         }
         
-        // انتظار الرسم
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // إنشاء ملف للتنزيل
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const filename = `صورة-مع-نص-${timestamp}.png`;
         
-        // تحويل Canvas إلى Blob
         exportCanvas.toBlob((blob) => {
             if (!blob) {
                 hideLoadingIndicator();
@@ -534,12 +570,10 @@ async function downloadImage() {
             link.download = filename;
             link.href = url;
             
-            // إضافة الرابط والنقر عليه
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            // تحرير الذاكرة
             setTimeout(() => URL.revokeObjectURL(url), 1000);
             
             hideLoadingIndicator();
@@ -556,28 +590,23 @@ async function downloadImage() {
     }
 }
 
-// ============== دالة المشاركة ==============
 async function shareImage() {
     try {
         console.log('بدء عملية المشاركة...');
         
-        // التحقق من وجود صورة
         const canvas = document.getElementById('canvas');
         if (!canvas || canvas.width === 0) {
             showAlert('يرجى اختيار صورة أولاً', 'error');
             return;
         }
         
-        // التحقق من دعم المشاركة
         if (!navigator.share) {
             showAlert('المشاركة غير مدعومة في هذا المتصفح', 'info');
             return downloadImage();
         }
         
-        // إظهار مؤشر تحميل
         showLoadingIndicator('جاري تحضير الصورة للمشاركة...');
         
-        // استخدام دالة التصدير
         let exportCanvas;
         if (typeof prepareImageForExport === 'function') {
             exportCanvas = prepareImageForExport();
@@ -592,10 +621,8 @@ async function shareImage() {
             return;
         }
         
-        // انتظار الرسم
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // تحويل Canvas إلى Blob
         exportCanvas.toBlob(async (blob) => {
             if (!blob) {
                 hideLoadingIndicator();
@@ -603,21 +630,18 @@ async function shareImage() {
                 return;
             }
             
-            // إنشاء ملف من Blob
             const file = new File([blob], 'صورة-مع-نص.png', { 
                 type: 'image/png',
                 lastModified: Date.now()
             });
             
             try {
-                // التحقق من إمكانية المشاركة
                 if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
                     hideLoadingIndicator();
                     showAlert('لا يمكن مشاركة الملف في هذا الجهاز', 'info');
                     return downloadImage();
                 }
                 
-                // مشاركة الملف
                 await navigator.share({
                     files: [file],
                     title: 'صورة مع نص',
@@ -650,15 +674,12 @@ async function shareImage() {
     }
 }
 
-// ============== دوال مساعدة ==============
 function showAlert(message, type = 'info') {
-    // إزالة أي رسالة سابقة
     const existingAlert = document.querySelector('.custom-alert');
     if (existingAlert) {
         existingAlert.remove();
     }
     
-    // إنشاء عنصر الرسالة
     const alert = document.createElement('div');
     alert.className = `custom-alert ${type}`;
     alert.innerHTML = `
@@ -675,7 +696,6 @@ function showAlert(message, type = 'info') {
     
     document.body.appendChild(alert);
     
-    // إزالة الرسالة تلقائياً بعد 5 ثواني
     setTimeout(() => {
         if (alert.parentElement) {
             alert.remove();
@@ -684,13 +704,11 @@ function showAlert(message, type = 'info') {
 }
 
 function showLoadingIndicator(message = 'جاري المعالجة...') {
-    // إزالة أي مؤشر سابق
     const existingLoader = document.querySelector('.custom-loader');
     if (existingLoader) {
         existingLoader.remove();
     }
     
-    // إنشاء عنصر التحميل
     const loader = document.createElement('div');
     loader.className = 'custom-loader';
     loader.innerHTML = `
@@ -710,5 +728,4 @@ function hideLoadingIndicator() {
     }
 }
 
-// تهيئة النص
 window.currentText = '';
