@@ -102,7 +102,11 @@ function setupTextEffectsControls() {
             if (display) display.textContent = shadowIntensity;
             
             clearTimeout(shadowTimeout);
-            shadowTimeout = setTimeout(() => updateTextOnCanvas(), 50);
+            shadowTimeout = setTimeout(() => {
+                if (window.currentText && window.currentText.trim() !== '') {
+                    renderFullCanvas();
+                }
+            }, 50);
         });
     }
     
@@ -116,23 +120,11 @@ function setupTextEffectsControls() {
             if (display) display.textContent = bgOpacity;
             
             clearTimeout(bgOpacityTimeout);
-            bgOpacityTimeout = setTimeout(() => updateTextOnCanvas(), 50);
-        });
-    }
-    
-    // شبكة ألوان خلفية النص
-    const cardColorGrid = document.getElementById('cardColorGrid');
-    if (cardColorGrid && window.COLORS) {
-        cardColorGrid.innerHTML = '';
-        window.COLORS.forEach(color => {
-            const item = document.createElement('div');
-            item.className = 'color-item';
-            item.style.backgroundColor = color;
-            item.onclick = () => {
-                window.currentCardColor = color;
-                updateTextOnCanvas();
-            };
-            cardColorGrid.appendChild(item);
+            bgOpacityTimeout = setTimeout(() => {
+                if (window.currentText && window.currentText.trim() !== '') {
+                    renderFullCanvas();
+                }
+            }, 50);
         });
     }
 }
@@ -157,7 +149,7 @@ function setupImageControls() {
             if (display) display.textContent = imageBlur;
             
             clearTimeout(blurTimeout);
-            blurTimeout = setTimeout(() => renderCanvas(), 50);
+            blurTimeout = setTimeout(() => renderFullCanvas(), 50);
         });
     }
     
@@ -170,24 +162,9 @@ function setupImageControls() {
             const display = document.getElementById('borderDisplay');
             if (display) display.textContent = imageBorderWidth;
             
+            adjustImageForBorder();
             clearTimeout(borderTimeout);
-            borderTimeout = setTimeout(() => renderCanvas(), 50);
-        });
-    }
-    
-    // اختيار لون الحواف
-    const borderColorGrid = document.getElementById('borderColorGrid');
-    if (borderColorGrid && window.COLORS) {
-        borderColorGrid.innerHTML = '';
-        window.COLORS.forEach(color => {
-            const item = document.createElement('div');
-            item.className = 'color-item';
-            item.style.backgroundColor = color;
-            item.onclick = () => {
-                imageBorderColor = color;
-                renderCanvas();
-            };
-            borderColorGrid.appendChild(item);
+            borderTimeout = setTimeout(() => renderFullCanvas(), 50);
         });
     }
 }
@@ -211,25 +188,25 @@ function handleImageUpload(e) {
 
 function rotateImage() {
     imageRotation = (imageRotation + 90) % 360;
-    renderCanvas();
+    renderFullCanvas();
     showAlert('تم تدوير الصورة', 'success');
 }
 
 function flipImageH() {
     imageFlipH = !imageFlipH;
-    renderCanvas();
+    renderFullCanvas();
     showAlert('تم قلب الصورة أفقياً', 'success');
 }
 
 function flipImageV() {
     imageFlipV = !imageFlipV;
-    renderCanvas();
+    renderFullCanvas();
     showAlert('تم قلب الصورة عمودياً', 'success');
 }
 
 function applyFilter(filterName) {
     currentFilter = filterName;
-    renderCanvas();
+    renderFullCanvas();
     
     const filterDisplay = FILTERS[filterName] ? FILTERS[filterName].name : 'بدون فلتر';
     showAlert(`تم تطبيق فلتر: ${filterDisplay}`, 'success');
@@ -253,7 +230,11 @@ function setupEventListeners() {
             fontCache.clear();
             
             clearTimeout(fontSizeTimeout);
-            fontSizeTimeout = setTimeout(() => updateTextOnCanvas(), 50);
+            fontSizeTimeout = setTimeout(() => {
+                if (window.currentText && window.currentText.trim() !== '') {
+                    renderFullCanvas();
+                }
+            }, 50);
         });
     }
     
@@ -266,7 +247,11 @@ function setupEventListeners() {
             }
             
             clearTimeout(strokeTimeout);
-            strokeTimeout = setTimeout(() => updateTextOnCanvas(), 50);
+            strokeTimeout = setTimeout(() => {
+                if (window.currentText && window.currentText.trim() !== '') {
+                    renderFullCanvas();
+                }
+            }, 50);
         });
     }
     
@@ -276,18 +261,32 @@ function setupEventListeners() {
             
             fontCache.clear();
             
-            loadFonts();
+            if (typeof loadFonts === 'function') {
+                loadFonts();
+            }
             
-            setTimeout(() => updateTextOnCanvas(), 100);
+            setTimeout(() => {
+                if (window.currentText && window.currentText.trim() !== '') {
+                    renderFullCanvas();
+                }
+            }, 100);
         });
     }
     
     if (shadowEnabled) {
-        shadowEnabled.addEventListener('change', updateTextOnCanvas);
+        shadowEnabled.addEventListener('change', () => {
+            if (window.currentText && window.currentText.trim() !== '') {
+                renderFullCanvas();
+            }
+        });
     }
     
     if (cardEnabled) {
-        cardEnabled.addEventListener('change', updateTextOnCanvas);
+        cardEnabled.addEventListener('change', () => {
+            if (window.currentText && window.currentText.trim() !== '') {
+                renderFullCanvas();
+            }
+        });
     }
 }
 
@@ -329,7 +328,7 @@ function handleTouchStart(e) {
                 stickerDragging = true;
                 stickerStartX = x * canvas.width - sticker.x;
                 stickerStartY = y * canvas.height - sticker.y;
-                renderCanvas();
+                renderFullCanvas();
                 return;
             }
         }
@@ -372,28 +371,23 @@ function handleTouchMove(e) {
         selectedSticker.x = x - stickerStartX;
         selectedSticker.y = y - stickerStartY;
         
-        renderCanvas();
+        lastRenderTime = now;
+        renderFullCanvas();
         return;
     }
     
     if (e.touches.length === 1 && isDragging) {
         const touch = e.touches[0];
-        const dx = touch.clientX - startX;
-        const dy = touch.clientY - startY;
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.max(0.1, Math.min(0.9, (touch.clientX - rect.left) / canvas.width));
+        const y = Math.max(0.1, Math.min(0.9, (touch.clientY - rect.top) / canvas.height));
         
-        textX += dx / canvas.width;
-        textY += dy / canvas.height;
+        textX = x;
+        textY = y;
         
-        textX = Math.max(0.1, Math.min(0.9, textX));
-        textY = Math.max(0.1, Math.min(0.9, textY));
+        lastRenderTime = now;
+        renderFullCanvas();
         
-        startX = touch.clientX;
-        startY = touch.clientY;
-        
-        // إصلاح: تحديث النص مباشرة دون إعادة رسم كامل
-        if (window.currentText && window.currentText.trim() !== '') {
-            renderTextOnly();
-        }
     } else if (e.touches.length === 2 && isResizing) {
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
@@ -403,9 +397,13 @@ function handleTouchMove(e) {
         const distance = Math.sqrt(dx * dx + dy * dy);
         const angle = Math.atan2(dy, dx);
         
+        if (initialDistance === 0) {
+            initialDistance = distance;
+            initialAngle = angle;
+        }
+        
         const scaleChange = distance / initialDistance;
-        textScale *= scaleChange;
-        textScale = Math.max(0.5, Math.min(3, textScale));
+        textScale = Math.max(0.5, Math.min(3, textScale * scaleChange));
         
         const angleChange = angle - initialAngle;
         textRotation += angleChange * (180 / Math.PI);
@@ -413,10 +411,8 @@ function handleTouchMove(e) {
         initialDistance = distance;
         initialAngle = angle;
         
-        // إصلاح: تحديث النص مباشرة دون إعادة رسم كامل
-        if (window.currentText && window.currentText.trim() !== '') {
-            renderTextOnly();
-        }
+        lastRenderTime = now;
+        renderFullCanvas();
     }
 }
 
@@ -426,6 +422,8 @@ function handleTouchEnd(e) {
     isResizing = false;
     stickerDragging = false;
     selectedSticker = null;
+    initialDistance = 0;
+    initialAngle = 0;
 }
 
 function isTouchOnSticker(x, y, sticker) {
@@ -450,7 +448,7 @@ function addSticker(url) {
         };
         
         canvasStickers.push(sticker);
-        renderCanvas();
+        renderFullCanvas();
     };
     img.src = url;
 }
@@ -461,7 +459,7 @@ function deleteSelectedSticker() {
         if (index > -1) {
             canvasStickers.splice(index, 1);
             selectedSticker = null;
-            renderCanvas();
+            renderFullCanvas();
             showAlert('تم حذف الملصق', 'success');
         }
     }
@@ -469,12 +467,84 @@ function deleteSelectedSticker() {
 
 function updateTextOnCanvas() {
     if (window.currentText && window.currentText.trim() !== '') {
-        renderTextOnCanvas(false);
+        renderFullCanvas();
     }
 }
 
-// إضافة دالة جديدة: رسم النص فقط (لإصلاح مشكلة التكرار)
-function renderTextOnly() {
+// دالة لضبط الصورة مع الحواف
+function adjustImageForBorder() {
+    if (!currentImage || !imageLoaded) return;
+    
+    const container = document.querySelector('.canvas-wrapper-fixed');
+    if (!container) return;
+    
+    const containerWidth = container.clientWidth - 20;
+    const containerHeight = container.clientHeight - 20;
+    
+    // حساب حجم الصورة مع مراعاة الحواف
+    const borderSpace = imageBorderWidth * 2;
+    const availableWidth = containerWidth - borderSpace;
+    const availableHeight = containerHeight - borderSpace;
+    
+    const widthRatio = availableWidth / originalImageWidth;
+    const heightRatio = availableHeight / originalImageHeight;
+    const scale = Math.min(widthRatio, heightRatio);
+    
+    const displayWidth = Math.max(100, Math.round(originalImageWidth * scale));
+    const displayHeight = Math.max(100, Math.round(originalImageHeight * scale));
+    
+    canvas.width = displayWidth + borderSpace;
+    canvas.height = displayHeight + borderSpace;
+    canvas.style.width = (displayWidth + borderSpace) + 'px';
+    canvas.style.height = (displayHeight + borderSpace) + 'px';
+}
+
+function loadImageToEditor(imageUrl) {
+    console.log('Loading image to editor:', imageUrl);
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = function() {
+        console.log('Image loaded successfully');
+        
+        currentImage = img;
+        imageLoaded = true;
+        
+        originalImageWidth = img.naturalWidth || img.width;
+        originalImageHeight = img.naturalHeight || img.height;
+        
+        adjustImageForBorder();
+        
+        // إعادة تعيين التأثيرات
+        imageBlur = 0;
+        imageRotation = 0;
+        imageFlipH = false;
+        imageFlipV = false;
+        imageBorderWidth = 0;
+        currentFilter = 'none';
+        canvasStickers = [];
+        
+        // إعادة تعيين موضع النص
+        textX = 0.5;
+        textY = 0.5;
+        textScale = 1;
+        textRotation = 0;
+        
+        renderFullCanvas();
+        
+        console.log(`Display dimensions: ${canvas.width}x${canvas.height}`);
+    };
+    
+    img.onerror = function(error) {
+        console.error('Failed to load image:', error);
+        showAlert('فشل تحميل الصورة. الرجاء المحاولة مرة أخرى.', 'error');
+    };
+    
+    img.src = imageUrl;
+}
+
+function renderFullCanvas() {
     if (!imageLoaded || !currentImage || isRendering) return;
     
     const now = Date.now();
@@ -483,24 +553,83 @@ function renderTextOnly() {
     }
     
     isRendering = true;
-    lastRenderTime = now;
     
     try {
-        // حفظ الحالة الحالية للكانفاس
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        // مسح الكانفاس بالكامل
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // مسح المنطقة التي كان النص فيها سابقاً (إذا كان هناك نص)
-        ctx.putImageData(imageData, 0, 0);
+        // رسم الصورة
+        if (imageLoaded && currentImage) {
+            ctx.save();
+            
+            // حساب مساحة الصورة داخل الحواف
+            const borderSpace = imageBorderWidth;
+            const imageWidth = canvas.width - (borderSpace * 2);
+            const imageHeight = canvas.height - (borderSpace * 2);
+            
+            // تطبيق التحولات على الصورة فقط
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(imageRotation * Math.PI / 180);
+            
+            if (imageFlipH) ctx.scale(-1, 1);
+            if (imageFlipV) ctx.scale(1, -1);
+            
+            if (imageBlur > 0) {
+                ctx.filter = `blur(${imageBlur}px)`;
+            }
+            
+            if (currentFilter !== 'none' && FILTERS[currentFilter]) {
+                const currentFilterValue = ctx.filter !== 'none' ? ctx.filter + ' ' : '';
+                ctx.filter = currentFilterValue + FILTERS[currentFilter].filter;
+            }
+            
+            // رسم الصورة مع مراعاة الحواف
+            ctx.drawImage(currentImage, -imageWidth / 2, -imageHeight / 2, imageWidth, imageHeight);
+            ctx.filter = 'none';
+            ctx.restore();
+            
+            // رسم حواف الصورة (مربعة)
+            if (imageBorderWidth > 0) {
+                ctx.strokeStyle = imageBorderColor;
+                ctx.lineWidth = imageBorderWidth;
+                ctx.lineCap = 'square';
+                ctx.lineJoin = 'miter';
+                
+                // رسم مربع حواف بسيط
+                ctx.strokeRect(
+                    imageBorderWidth / 2,
+                    imageBorderWidth / 2,
+                    canvas.width - imageBorderWidth,
+                    canvas.height - imageBorderWidth
+                );
+            }
+        }
         
-        // رسم النص الجديد
+        // رسم الملصقات
+        canvasStickers.forEach(sticker => {
+            ctx.save();
+            ctx.translate(sticker.x + sticker.width / 2, sticker.y + sticker.height / 2);
+            ctx.rotate(sticker.rotation * Math.PI / 180);
+            ctx.drawImage(sticker.img, -sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
+            
+            if (sticker === selectedSticker) {
+                ctx.strokeStyle = '#0a84ff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
+            }
+            ctx.restore();
+        });
+        
+        // رسم النص
         if (window.currentText && window.currentText.trim() !== '') {
             renderTextContent();
         }
+        
     } catch (error) {
-        console.error('Error rendering text only:', error);
-        renderCanvas();
+        console.error('Error rendering canvas:', error);
     } finally {
         isRendering = false;
+        lastRenderTime = now;
     }
 }
 
@@ -604,315 +733,6 @@ function renderTextContent() {
     ctx.restore();
 }
 
-function loadImageToEditor(imageUrl) {
-    console.log('Loading image to editor:', imageUrl);
-    
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    
-    img.onload = function() {
-        console.log('Image loaded successfully');
-        
-        currentImage = img;
-        imageLoaded = true;
-        
-        originalImageWidth = img.naturalWidth || img.width;
-        originalImageHeight = img.naturalHeight || img.height;
-        
-        console.log(`Original image dimensions: ${originalImageWidth}x${originalImageHeight}`);
-        
-        const container = document.querySelector('.canvas-wrapper-fixed');
-        if (!container) {
-            console.error('Canvas container not found');
-            return;
-        }
-        
-        // إصلاح: حساب الحجم المناسب لاستيعاب الصورة كاملة
-        const containerWidth = container.clientWidth - 20;
-        const containerHeight = container.clientHeight - 20;
-        
-        const widthRatio = containerWidth / originalImageWidth;
-        const heightRatio = containerHeight / originalImageHeight;
-        const scale = Math.min(widthRatio, heightRatio);
-        
-        const displayWidth = Math.round(originalImageWidth * scale);
-        const displayHeight = Math.round(originalImageHeight * scale);
-        
-        // إصلاح: ضبط أبعاد الكانفاس لاستيعاب الصورة كاملة
-        canvas.width = Math.max(displayWidth, 100);
-        canvas.height = Math.max(displayHeight, 100);
-        canvas.style.width = displayWidth + 'px';
-        canvas.style.height = displayHeight + 'px';
-        
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        
-        // إعادة تعيين التأثيرات
-        imageBlur = 0;
-        imageRotation = 0;
-        imageFlipH = false;
-        imageFlipV = false;
-        imageBorderWidth = 0;
-        currentFilter = 'none';
-        canvasStickers = [];
-        
-        // إعادة تعيين موضع النص
-        textX = 0.5;
-        textY = 0.5;
-        textScale = 1;
-        textRotation = 0;
-        
-        renderCanvas();
-        
-        console.log(`Display dimensions: ${displayWidth}x${displayHeight}`);
-    };
-    
-    img.onerror = function(error) {
-        console.error('Failed to load image:', error);
-        showAlert('فشل تحميل الصورة. الرجاء المحاولة مرة أخرى.', 'error');
-    };
-    
-    img.src = imageUrl;
-}
-
-function renderCanvas() {
-    if (!imageLoaded || !currentImage || isRendering) return;
-    
-    const now = Date.now();
-    if (now - lastRenderTime < renderThrottleDelay) {
-        return;
-    }
-    
-    isRendering = true;
-    lastRenderTime = now;
-    
-    try {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.save();
-        
-        // تطبيق التحولات
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(imageRotation * Math.PI / 180);
-        
-        if (imageFlipH) ctx.scale(-1, 1);
-        if (imageFlipV) ctx.scale(1, -1);
-        
-        // تطبيق الضبابية
-        if (imageBlur > 0) {
-            ctx.filter = `blur(${imageBlur}px)`;
-        }
-        
-        // تطبيق الفلتر
-        if (currentFilter !== 'none' && FILTERS[currentFilter]) {
-            const currentFilterValue = ctx.filter !== 'none' ? ctx.filter + ' ' : '';
-            ctx.filter = currentFilterValue + FILTERS[currentFilter].filter;
-        }
-        
-        // إصلاح: رسم الصورة بالحجم المناسب
-        ctx.drawImage(currentImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
-        
-        ctx.filter = 'none';
-        ctx.restore();
-        
-        // إصلاح: رسم الحواف بشكل صحيح (حواف على جميع الجوانب)
-        if (imageBorderWidth > 0) {
-            ctx.strokeStyle = imageBorderColor;
-            ctx.lineWidth = imageBorderWidth;
-            
-            // رسم حواف على جميع الجوانب
-            ctx.beginPath();
-            // الأعلى
-            ctx.moveTo(0, imageBorderWidth / 2);
-            ctx.lineTo(canvas.width, imageBorderWidth / 2);
-            // اليمين
-            ctx.moveTo(canvas.width - imageBorderWidth / 2, 0);
-            ctx.lineTo(canvas.width - imageBorderWidth / 2, canvas.height);
-            // الأسفل
-            ctx.moveTo(0, canvas.height - imageBorderWidth / 2);
-            ctx.lineTo(canvas.width, canvas.height - imageBorderWidth / 2);
-            // اليسار
-            ctx.moveTo(imageBorderWidth / 2, 0);
-            ctx.lineTo(imageBorderWidth / 2, canvas.height);
-            ctx.stroke();
-            
-            // رسم زوايا (اختياري)
-            ctx.beginPath();
-            // الزاوية اليسرى العليا
-            ctx.moveTo(imageBorderWidth, imageBorderWidth);
-            ctx.lineTo(imageBorderWidth * 2, imageBorderWidth);
-            ctx.lineTo(imageBorderWidth, imageBorderWidth * 2);
-            // الزاوية اليمنى العليا
-            ctx.moveTo(canvas.width - imageBorderWidth, imageBorderWidth);
-            ctx.lineTo(canvas.width - imageBorderWidth * 2, imageBorderWidth);
-            ctx.lineTo(canvas.width - imageBorderWidth, imageBorderWidth * 2);
-            // الزاوية اليمنى السفلى
-            ctx.moveTo(canvas.width - imageBorderWidth, canvas.height - imageBorderWidth);
-            ctx.lineTo(canvas.width - imageBorderWidth * 2, canvas.height - imageBorderWidth);
-            ctx.lineTo(canvas.width - imageBorderWidth, canvas.height - imageBorderWidth * 2);
-            // الزاوية اليسرى السفلى
-            ctx.moveTo(imageBorderWidth, canvas.height - imageBorderWidth);
-            ctx.lineTo(imageBorderWidth * 2, canvas.height - imageBorderWidth);
-            ctx.lineTo(imageBorderWidth, canvas.height - imageBorderWidth * 2);
-            ctx.stroke();
-        }
-        
-        // رسم الملصقات
-        canvasStickers.forEach(sticker => {
-            ctx.save();
-            ctx.translate(sticker.x + sticker.width / 2, sticker.y + sticker.height / 2);
-            ctx.rotate(sticker.rotation * Math.PI / 180);
-            ctx.drawImage(sticker.img, -sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
-            
-            if (sticker === selectedSticker) {
-                ctx.strokeStyle = '#0a84ff';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(-sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
-            }
-            ctx.restore();
-        });
-        
-        if (window.currentText && window.currentText.trim() !== '') {
-            renderTextContent();
-        }
-    } catch (error) {
-        console.error('Error rendering canvas:', error);
-    } finally {
-        isRendering = false;
-    }
-}
-
-function renderTextOnCanvas(forExport = false) {
-    if (!imageLoaded || !currentImage) {
-        console.error('No image loaded');
-        return false;
-    }
-    
-    if (!window.currentText || window.currentText.trim() === '') {
-        if (forExport) {
-            return createExportCanvas();
-        } else {
-            renderCanvas();
-            return true;
-        }
-    }
-    
-    try {
-        let targetCanvas, targetCtx, targetWidth, targetHeight, scale = 1;
-        
-        if (forExport) {
-            const exportResult = createExportCanvas();
-            targetCanvas = exportResult;
-            targetCtx = targetCanvas.getContext('2d');
-            targetWidth = targetCanvas.width;
-            targetHeight = targetCanvas.height;
-            scale = targetWidth / canvas.width;
-        } else {
-            targetCanvas = canvas;
-            targetCtx = ctx;
-            targetWidth = canvas.width;
-            targetHeight = canvas.height;
-            
-            // إصلاح: استدعاء renderCanvas فقط إذا لم يكن هناك نص مرسوم بالفعل
-            if (!isRendering) {
-                renderCanvas();
-            }
-            return true;
-        }
-        
-        // ... (بقية الكود كما هو للتصدير)
-        
-        return forExport ? targetCanvas : true;
-        
-    } catch (error) {
-        console.error('Error rendering text:', error);
-        
-        if (typeof loadFonts === 'function') {
-            loadFonts();
-        }
-        
-        return false;
-    }
-}
-
-function createExportCanvas() {
-    const exportCanvas = document.createElement('canvas');
-    exportCanvas.width = originalImageWidth;
-    exportCanvas.height = originalImageHeight;
-    const exportCtx = exportCanvas.getContext('2d', { 
-        willReadFrequently: false,
-        alpha: true 
-    });
-    
-    exportCtx.imageSmoothingEnabled = true;
-    exportCtx.imageSmoothingQuality = 'high';
-    
-    exportCtx.save();
-    
-    // تطبيق نفس التحولات
-    exportCtx.translate(exportCanvas.width / 2, exportCanvas.height / 2);
-    exportCtx.rotate(imageRotation * Math.PI / 180);
-    
-    if (imageFlipH) exportCtx.scale(-1, 1);
-    if (imageFlipV) exportCtx.scale(1, -1);
-    
-    // تطبيق الضبابية والفلاتر
-    if (imageBlur > 0) {
-        const scaledBlur = imageBlur * (originalImageWidth / canvas.width);
-        exportCtx.filter = `blur(${scaledBlur}px)`;
-    }
-    
-    if (currentFilter !== 'none' && FILTERS[currentFilter]) {
-        const currentFilterValue = exportCtx.filter !== 'none' ? exportCtx.filter + ' ' : '';
-        exportCtx.filter = currentFilterValue + FILTERS[currentFilter].filter;
-    }
-    
-    exportCtx.drawImage(currentImage, -exportCanvas.width / 2, -exportCanvas.height / 2, 
-                       exportCanvas.width, exportCanvas.height);
-    
-    exportCtx.filter = 'none';
-    exportCtx.restore();
-    
-    // رسم حواف الصورة (الجديدة)
-    if (imageBorderWidth > 0) {
-        const scaledBorder = imageBorderWidth * (originalImageWidth / canvas.width);
-        exportCtx.strokeStyle = imageBorderColor;
-        exportCtx.lineWidth = scaledBorder;
-        
-        // رسم حواف على جميع الجوانب
-        exportCtx.beginPath();
-        // الأعلى
-        exportCtx.moveTo(0, scaledBorder / 2);
-        exportCtx.lineTo(exportCanvas.width, scaledBorder / 2);
-        // اليمين
-        exportCtx.moveTo(exportCanvas.width - scaledBorder / 2, 0);
-        exportCtx.lineTo(exportCanvas.width - scaledBorder / 2, exportCanvas.height);
-        // الأسفل
-        exportCtx.moveTo(0, exportCanvas.height - scaledBorder / 2);
-        exportCtx.lineTo(exportCanvas.width, exportCanvas.height - scaledBorder / 2);
-        // اليسار
-        exportCtx.moveTo(scaledBorder / 2, 0);
-        exportCtx.lineTo(scaledBorder / 2, exportCanvas.height);
-        exportCtx.stroke();
-    }
-    
-    // رسم الملصقات
-    const scale = originalImageWidth / canvas.width;
-    canvasStickers.forEach(sticker => {
-        exportCtx.save();
-        const x = sticker.x * scale;
-        const y = sticker.y * scale;
-        const w = sticker.width * scale;
-        const h = sticker.height * scale;
-        exportCtx.translate(x + w / 2, y + h / 2);
-        exportCtx.rotate(sticker.rotation * Math.PI / 180);
-        exportCtx.drawImage(sticker.img, -w / 2, -h / 2, w, h);
-        exportCtx.restore();
-    });
-    
-    return exportCanvas;
-}
-
 function wrapText(text, maxWidth, ctx, fontSize) {
     if (!text) return [];
     
@@ -946,11 +766,162 @@ function wrapText(text, maxWidth, ctx, fontSize) {
 }
 
 function prepareImageForExport() {
-    return renderTextOnCanvas(true);
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = originalImageWidth;
+    exportCanvas.height = originalImageHeight;
+    const exportCtx = exportCanvas.getContext('2d', { 
+        willReadFrequently: false,
+        alpha: true 
+    });
+    
+    exportCtx.imageSmoothingEnabled = true;
+    exportCtx.imageSmoothingQuality = 'high';
+    
+    exportCtx.save();
+    
+    // حساب الحواف للتصدير
+    const scale = originalImageWidth / (canvas.width - (imageBorderWidth * 2));
+    const scaledBorder = imageBorderWidth * scale;
+    
+    // مساحة الصورة داخل الحواف
+    const imageWidth = originalImageWidth;
+    const imageHeight = originalImageHeight;
+    
+    // تطبيق التحولات
+    exportCtx.translate(exportCanvas.width / 2, exportCanvas.height / 2);
+    exportCtx.rotate(imageRotation * Math.PI / 180);
+    
+    if (imageFlipH) exportCtx.scale(-1, 1);
+    if (imageFlipV) exportCtx.scale(1, -1);
+    
+    // تطبيق الضبابية والفلاتر
+    if (imageBlur > 0) {
+        const scaledBlur = imageBlur * scale;
+        exportCtx.filter = `blur(${scaledBlur}px)`;
+    }
+    
+    if (currentFilter !== 'none' && FILTERS[currentFilter]) {
+        const currentFilterValue = exportCtx.filter !== 'none' ? exportCtx.filter + ' ' : '';
+        exportCtx.filter = currentFilterValue + FILTERS[currentFilter].filter;
+    }
+    
+    exportCtx.drawImage(currentImage, -imageWidth / 2, -imageHeight / 2, imageWidth, imageHeight);
+    
+    exportCtx.filter = 'none';
+    exportCtx.restore();
+    
+    // رسم حواف الصورة
+    if (scaledBorder > 0) {
+        exportCtx.strokeStyle = imageBorderColor;
+        exportCtx.lineWidth = scaledBorder;
+        exportCtx.lineCap = 'square';
+        exportCtx.lineJoin = 'miter';
+        
+        exportCtx.strokeRect(
+            scaledBorder / 2,
+            scaledBorder / 2,
+            exportCanvas.width - scaledBorder,
+            exportCanvas.height - scaledBorder
+        );
+    }
+    
+    // رسم الملصقات
+    canvasStickers.forEach(sticker => {
+        exportCtx.save();
+        const x = sticker.x * scale;
+        const y = sticker.y * scale;
+        const w = sticker.width * scale;
+        const h = sticker.height * scale;
+        exportCtx.translate(x + w / 2, y + h / 2);
+        exportCtx.rotate(sticker.rotation * Math.PI / 180);
+        exportCtx.drawImage(sticker.img, -w / 2, -h / 2, w, h);
+        exportCtx.restore();
+    });
+    
+    // رسم النص
+    if (window.currentText && window.currentText.trim() !== '') {
+        exportCtx.save();
+        
+        const fontSize = parseInt(document.getElementById('fontSize')?.value || "48");
+        const strokeWidth = parseInt(document.getElementById('strokeWidth')?.value || "3");
+        const shadowEnabled = document.getElementById('shadowEnabled')?.checked !== false;
+        const cardEnabled = document.getElementById('cardEnabled')?.checked || false;
+        const fontFamily = document.getElementById('fontFamily')?.value || "'Amiri', serif";
+        
+        const textColor = window.currentTextColor || '#FFFFFF';
+        const strokeColor = window.currentStrokeColor || '#000000';
+        const cardColor = window.currentCardColor || '#000000';
+        
+        const scaledFontSize = fontSize * textScale * scale;
+        const scaledStrokeWidth = strokeWidth * scale;
+        
+        exportCtx.font = 'bold ' + scaledFontSize + 'px ' + fontFamily;
+        exportCtx.textAlign = 'center';
+        exportCtx.textBaseline = 'middle';
+        exportCtx.direction = 'rtl';
+        
+        const maxLineWidth = exportCanvas.width * 0.9;
+        const lines = wrapText(window.currentText, maxLineWidth, exportCtx, scaledFontSize);
+        
+        const lineHeight = scaledFontSize * 1.4;
+        const totalHeight = lines.length * lineHeight;
+        const centerX = textX * exportCanvas.width;
+        const centerY = textY * exportCanvas.height;
+        
+        exportCtx.translate(centerX, centerY);
+        exportCtx.rotate(textRotation * Math.PI / 180);
+        
+        if (shadowEnabled) {
+            exportCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            exportCtx.shadowBlur = shadowIntensity * scale;
+            exportCtx.shadowOffsetX = (shadowIntensity / 2) * scale;
+            exportCtx.shadowOffsetY = (shadowIntensity / 2) * scale;
+        }
+        
+        lines.forEach((line, index) => {
+            const y = -(totalHeight / 2) + (index * lineHeight) + (lineHeight / 2);
+            const x = 0;
+            
+            const textMetrics = exportCtx.measureText(line);
+            
+            if (cardEnabled) {
+                const padding = scaledFontSize * 0.5;
+                const bgWidth = textMetrics.width + (padding * 2);
+                const bgHeight = scaledFontSize + padding;
+                const bgX = -(bgWidth / 2);
+                const bgY = y - (scaledFontSize / 2) - (padding / 2);
+                
+                exportCtx.save();
+                exportCtx.fillStyle = cardColor;
+                exportCtx.globalAlpha = bgOpacity / 100;
+                exportCtx.fillRect(bgX, bgY, bgWidth, bgHeight);
+                exportCtx.restore();
+            }
+            
+            if (scaledStrokeWidth > 0) {
+                exportCtx.strokeStyle = strokeColor;
+                exportCtx.lineWidth = scaledStrokeWidth;
+                exportCtx.strokeText(line, x, y);
+            }
+            
+            exportCtx.fillStyle = textColor;
+            exportCtx.fillText(line, x, y);
+        });
+        
+        exportCtx.restore();
+    }
+    
+    return exportCanvas;
+}
+
+function setBorderColor(color) {
+    imageBorderColor = color;
+    renderFullCanvas();
 }
 
 window.prepareImageForExport = prepareImageForExport;
-window.renderTextOnCanvas = renderTextOnCanvas;
+window.renderFullCanvas = renderFullCanvas;
+window.renderTextOnCanvas = renderFullCanvas;
 window.updateTextOnCanvas = updateTextOnCanvas;
 window.loadImageToEditor = loadImageToEditor;
 window.addSticker = addSticker;
@@ -959,4 +930,5 @@ window.rotateImage = rotateImage;
 window.flipImageH = flipImageH;
 window.flipImageV = flipImageV;
 window.applyFilter = applyFilter;
+window.setBorderColor = setBorderColor;
 window.FILTERS = FILTERS;
