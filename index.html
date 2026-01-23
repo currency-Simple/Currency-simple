@@ -23,6 +23,9 @@
     <div id="categoriesPage" class="page active">
         <div class="header">
             <h1>اختر فئة</h1>
+            <div id="categoriesCounter" style="font-size: 14px; color: #86868b; margin-top: 5px;">
+                جاري التحميل...
+            </div>
         </div>
         <div class="categories-grid" id="categoriesGrid"></div>
     </div>
@@ -94,7 +97,7 @@
 
             <!-- لوحات الأدوات المنبثقة -->
             <div id="fontPanel" class="tool-panel">
-                <select id="fontFamily" class="tool-select"></select>
+                <div class="font-grid" id="fontGrid"></div>
             </div>
 
             <div id="sizePanel" class="tool-panel">
@@ -203,6 +206,7 @@
     </div>
 
     <!-- تحميل الملفات بالترتيب الصحيح -->
+    <script src="js/fonts-data.js"></script>
     <script src="js/fonts.js"></script>
     <script src="js/colors.js"></script>
     <script src="js/settings.js"></script>
