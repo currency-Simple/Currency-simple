@@ -1,6 +1,6 @@
 /* ============================================
-   تطبيق محرر النصوص على الصور - النسخة النهائية
-   تصميم متكامل مع جميع التعديلات
+   تطبيق محرر النصوص على الصور - النسخة النهائية المحدثة
+   مع إصلاح جميع المشاكل
    ============================================ */
 
 :root {
@@ -15,6 +15,7 @@
     --error-color: #ff3b30;
     --warning-color: #ff9500;
     --info-color: #5ac8fa;
+    --shadow-color: rgba(0,0,0,0.1);
 }
 
 [data-theme="dark"] {
@@ -29,6 +30,7 @@
     --error-color: #ff453a;
     --warning-color: #ff9f0a;
     --info-color: #64d2ff;
+    --shadow-color: rgba(0,0,0,0.3);
 }
 
 * {
@@ -91,7 +93,7 @@ body[dir="ltr"] {
 .header {
     background: var(--card-bg);
     padding: 15px 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px var(--shadow-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -159,13 +161,13 @@ body[dir="ltr"] {
     cursor: pointer;
     aspect-ratio: 4/5;
     background: var(--card-bg);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px var(--shadow-color);
     transition: all 0.3s ease;
 }
 
 .category-item:hover {
     transform: translateY(-5px) scale(1.03);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 20px var(--shadow-color);
 }
 
 .category-item img {
@@ -210,14 +212,14 @@ body[dir="ltr"] {
     overflow: hidden;
     cursor: pointer;
     background: var(--card-bg);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 6px var(--shadow-color);
     aspect-ratio: 4/5;
     transition: all 0.3s ease;
 }
 
 .image-item:hover {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 16px var(--shadow-color);
 }
 
 .image-item img {
@@ -285,6 +287,91 @@ body[dir="ltr"] {
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     background-color: rgba(44, 44, 46, 0.5);
+}
+
+/* ============== نص قابل للسحب والتدوير ============== */
+.text-overlay {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    touch-action: none;
+    z-index: 100;
+    transform-origin: center center;
+    transition: transform 0.1s ease;
+    min-width: 100px;
+    min-height: 50px;
+}
+
+.text-content {
+    padding: 15px;
+    border-radius: 10px;
+    position: relative;
+    font-weight: bold;
+    text-align: center;
+    word-wrap: break-word;
+    max-width: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    background: rgba(255, 255, 255, 0.9);
+    color: #000;
+    border: 2px solid transparent;
+}
+
+.text-content:hover {
+    border: 2px solid var(--primary-color);
+}
+
+.text-controls {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    display: flex;
+    gap: 5px;
+}
+
+.text-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+}
+
+.text-btn:hover {
+    transform: scale(1.2);
+    background: var(--primary-dark);
+}
+
+.resize-handle {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    width: 20px;
+    height: 20px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    cursor: nwse-resize;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.rotate-handle {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    background: var(--warning-color);
+    border-radius: 50%;
+    cursor: grab;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
 #canvas {
@@ -453,7 +540,7 @@ body[dir="ltr"] {
     border-top: 1px solid var(--border-color);
     z-index: 10001;
     height: 70px;
-    box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 -4px 12px var(--shadow-color);
 }
 
 .tool-btn {
@@ -482,7 +569,7 @@ body[dir="ltr"] {
 .tool-btn.active {
     background: var(--bg-color);
     color: var(--primary-color);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px var(--shadow-color);
 }
 
 .tool-btn .material-symbols-outlined {
@@ -502,7 +589,7 @@ body[dir="ltr"] {
     z-index: 10000;
     max-height: 300px;
     overflow-y: auto;
-    box-shadow: 0 -8px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 -8px 20px var(--shadow-color);
     animation: slideInUp 0.3s ease;
 }
 
@@ -628,12 +715,12 @@ body[dir="ltr"] {
     border: 2px solid var(--border-color);
     touch-action: manipulation;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .color-item:hover {
     transform: scale(1.15);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px var(--shadow-color);
     z-index: 1;
 }
 
@@ -699,7 +786,7 @@ body[dir="ltr"] {
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px var(--shadow-color);
     border: 1px solid var(--border-color);
 }
 
@@ -785,7 +872,7 @@ body[dir="ltr"] {
     display: flex;
     justify-content: space-around;
     padding: 10px;
-    box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 -4px 12px var(--shadow-color);
     z-index: 10002;
     height: 70px;
     border-top: 1px solid var(--border-color);
@@ -818,7 +905,7 @@ body[dir="ltr"] {
 .nav-btn.active {
     color: var(--primary-color);
     background: var(--bg-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .nav-btn .material-symbols-outlined {
@@ -1272,15 +1359,7 @@ button:active {
 .tool-panel,
 .bottom-nav,
 .editor-toolbar {
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-}
-
-[data-theme="dark"] .header,
-[data-theme="dark"] .setting-card,
-[data-theme="dark"] .tool-panel,
-[data-theme="dark"] .bottom-nav,
-[data-theme="dark"] .editor-toolbar {
-    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 12px var(--shadow-color);
 }
 
 /* تحسين الحدود */
