@@ -57,7 +57,6 @@
         <div class="editor-container">
             <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
                 <canvas id="canvas"></canvas>
-                <!-- سيتم إضافة بطاقة النص هنا من خلال JavaScript -->
             </div>
             
             <!-- أدوات التحرير -->
@@ -122,6 +121,90 @@
         </div>
     </div>
 
+    <!-- صفحة الملون -->
+    <div id="coloredPage" class="page">
+        <div class="header">
+            <h1>ملون</h1>
+        </div>
+        
+        <div class="colored-content">
+            <!-- قسم الأشكال -->
+            <div class="colored-section">
+                <h2>الأشكال</h2>
+                <div class="shapes-grid" id="shapesGrid"></div>
+            </div>
+
+            <!-- قسم ألوان الخلفية -->
+            <div class="colored-section">
+                <h2>ألوان الخلفية</h2>
+                <div class="color-grid" id="backgroundColorsGrid"></div>
+            </div>
+
+            <!-- قسم أدوات النص -->
+            <div class="colored-section">
+                <h2>النص</h2>
+                <div class="text-tools">
+                    <!-- الخط -->
+                    <div class="text-tool-item">
+                        <label>الخط</label>
+                        <select id="coloredFontFamily" class="tool-select">
+                            <option value="'Amiri', serif">Amiri - السلام</option>
+                            <option value="'Lateef', serif">Lateef - مرحبا</option>
+                            <option value="'Noto Kufi Arabic', sans-serif">Noto Kufi Arabic - شكرا</option>
+                            <option value="'Cairo', sans-serif">Cairo - أهلا</option>
+                            <option value="'Tajawal', sans-serif">Tajawal - صباح</option>
+                            <option value="Arial, sans-serif">Arial - Hello</option>
+                            <option value="'Times New Roman', serif">Times New Roman - World</option>
+                            <option value="'Courier New', monospace">Courier New - Code</option>
+                        </select>
+                    </div>
+
+                    <!-- حجم الخط -->
+                    <div class="text-tool-item">
+                        <label>حجم الخط: <span id="coloredFontSizeDisplay">48</span></label>
+                        <input type="range" id="coloredFontSize" min="20" max="120" value="48">
+                    </div>
+
+                    <!-- لون النص -->
+                    <div class="text-tool-item">
+                        <label>لون النص</label>
+                        <div class="small-color-grid" id="coloredTextColorsGrid"></div>
+                    </div>
+
+                    <!-- حواف النص -->
+                    <div class="text-tool-item">
+                        <label>حجم الحواف: <span id="coloredStrokeWidthDisplay">3</span></label>
+                        <input type="range" id="coloredStrokeWidth" min="0" max="10" value="3">
+                    </div>
+
+                    <!-- لون الحواف -->
+                    <div class="text-tool-item">
+                        <label>لون الحواف</label>
+                        <div class="small-color-grid" id="coloredStrokeColorsGrid"></div>
+                    </div>
+
+                    <!-- التأثيرات -->
+                    <div class="text-tool-item">
+                        <label class="effect-option">
+                            <input type="checkbox" id="coloredShadowEnabled" checked>
+                            <span>ظل</span>
+                        </label>
+                        <label class="effect-option">
+                            <input type="checkbox" id="coloredCardEnabled">
+                            <span>خلفية</span>
+                        </label>
+                    </div>
+
+                    <!-- تطبيق على المحرر -->
+                    <button onclick="applyColoredToEditor()" class="apply-btn">
+                        <span class="material-symbols-outlined">check_circle</span>
+                        تطبيق على المحرر
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- صفحة الإعدادات -->
     <div id="settingsPage" class="page">
         <div class="header">
@@ -137,7 +220,6 @@
                     <button class="theme-btn" onclick="changeTheme('dark')" data-theme="dark">
                         <span data-lang="dark">داكن</span>
                     </button>
-                    <!-- تم حذف السمة الزرقاء -->
                 </div>
             </div>
 
@@ -177,7 +259,7 @@
 
             <div class="setting-card">
                 <p style="text-align: center; color: #86868b; font-size: 14px;">
-                    <span data-lang="version">الإصدار</span> 5.0
+                    <span data-lang="version">الإصدار</span> 6.0
                 </p>
             </div>
         </div>
@@ -193,6 +275,10 @@
             <span class="material-symbols-outlined">edit</span>
             <span data-lang="editor">التحرير</span>
         </button>
+        <button onclick="showPage('colored')" class="nav-btn" id="navColored">
+            <span class="material-symbols-outlined">palette</span>
+            <span>ملون</span>
+        </button>
         <button onclick="showPage('settings')" class="nav-btn" id="navSettings">
             <span class="material-symbols-outlined">settings</span>
             <span data-lang="settings">الإعدادات</span>
@@ -202,6 +288,7 @@
     <!-- تحميل الملفات بالترتيب الصحيح -->
     <script src="js/fonts.js"></script>
     <script src="js/colors.js"></script>
+    <script src="js/colored.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/app.js"></script>
