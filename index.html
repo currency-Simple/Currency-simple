@@ -8,10 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>محرر النصوص على الصور</title>
     
-    <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
-    
-    <!-- Google Fonts العربية -->
     <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Lateef&family=Noto+Kufi+Arabic:wght@400;700&family=Cairo:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/style.css">
@@ -36,6 +33,25 @@
         <div class="image-grid" id="imageGrid"></div>
     </div>
 
+    <!-- صفحة الملصقات -->
+    <div id="stickersPage" class="page">
+        <div class="header">
+            <h1>الملصقات</h1>
+        </div>
+        <div class="categories-grid" id="stickerCategoriesGrid"></div>
+    </div>
+
+    <!-- صفحة اختيار الملصقات -->
+    <div id="stickerSelectionPage" class="page">
+        <div class="header">
+            <button onclick="goBackToStickers()" class="icon-btn back-btn">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h1 id="stickerCategoryTitle">ملصقات</h1>
+        </div>
+        <div class="image-grid" id="stickerGrid"></div>
+    </div>
+
     <!-- صفحة المحرر -->
     <div id="editorPage" class="page">
         <div class="header">
@@ -43,21 +59,25 @@
                 <span class="material-symbols-outlined">arrow_back</span>
             </button>
             <h1 data-lang="edit">تحرير</h1>
-            <div class="header-actions">
-                <button onclick="shareImage()" class="icon-btn" title="مشاركة" id="shareBtn">
-                    <span class="material-symbols-outlined">share</span>
-                </button>
-                <button onclick="downloadImage()" class="icon-btn" title="تنزيل" id="downloadBtn">
-                    <span class="material-symbols-outlined">download</span>
-                </button>
-            </div>
         </div>
         
         <!-- حاوية المحرر -->
         <div class="editor-container">
             <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
                 <canvas id="canvas"></canvas>
-                <!-- سيتم إضافة بطاقة النص هنا من خلال JavaScript -->
+                
+                <!-- أزرار التحكم العائمة -->
+                <div class="floating-controls">
+                    <button onclick="shareImage()" class="floating-btn share-btn" title="مشاركة">
+                        <span class="material-symbols-outlined">share</span>
+                    </button>
+                    <button onclick="downloadImage()" class="floating-btn download-btn" title="تنزيل">
+                        <span class="material-symbols-outlined">download</span>
+                    </button>
+                    <button onclick="deleteSelectedSticker()" class="floating-btn delete-btn" id="deleteStickerBtn" style="display: none;" title="حذف الملصق">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </div>
             </div>
             
             <!-- أدوات التحرير -->
@@ -117,7 +137,6 @@
                     <input type="checkbox" id="cardEnabled">
                     <span data-lang="background">خلفية</span>
                 </label>
-                <!-- سيتم إضافة زر حذف النص هنا من خلال JavaScript -->
             </div>
         </div>
     </div>
@@ -137,7 +156,6 @@
                     <button class="theme-btn" onclick="changeTheme('dark')" data-theme="dark">
                         <span data-lang="dark">داكن</span>
                     </button>
-                    <!-- تم حذف السمة الزرقاء -->
                 </div>
             </div>
 
@@ -177,7 +195,7 @@
 
             <div class="setting-card">
                 <p style="text-align: center; color: #86868b; font-size: 14px;">
-                    <span data-lang="version">الإصدار</span> 5.0
+                    <span data-lang="version">الإصدار</span> 6.0
                 </p>
             </div>
         </div>
@@ -193,13 +211,16 @@
             <span class="material-symbols-outlined">edit</span>
             <span data-lang="editor">التحرير</span>
         </button>
+        <button onclick="showPage('stickers')" class="nav-btn" id="navStickers">
+            <span class="material-symbols-outlined">emoji_emotions</span>
+            <span>ملصقات</span>
+        </button>
         <button onclick="showPage('settings')" class="nav-btn" id="navSettings">
             <span class="material-symbols-outlined">settings</span>
             <span data-lang="settings">الإعدادات</span>
         </button>
     </div>
 
-    <!-- تحميل الملفات بالترتيب الصحيح -->
     <script src="js/fonts.js"></script>
     <script src="js/colors.js"></script>
     <script src="js/settings.js"></script>
