@@ -1,105 +1,143 @@
 // ============================================
-// نظام الخطوط لمحرر النصوص على الصور - النسخة المعدلة
+// نظام الخطوط - يعمل من أول ضغطة
 // ============================================
 
-// قائمة الخطوط (أنت تضيف الخطوط هنا بنفسك)
-const FONTS_LIST = [
-    // هنا ستضع الخطوط التي تريدها
-    // مثال: { name: "اسم الخط", family: "'FontName', serif", demo: "عرض" }
-];
+// متغير لتخزين الخط الحالي
+let currentFont = null;
 
 // تهيئة قائمة الخطوط
 function initializeFonts() {
-    console.log('🎨 جاري تحميل الخطوط...');
+    console.log('🎨 جاري تحميل قائمة الخطوط...');
     
-    const fontSelect = document.getElementById('fontFamily');
-    if (!fontSelect) {
-        console.error('❌ عنصر fontFamily غير موجود');
+    const fontGrid = document.getElementById('fontGrid');
+    if (!fontGrid) {
+        console.error('❌ شبكة الخطوط غير موجودة');
         return;
     }
     
     // مسح المحتوى القديم
-    fontSelect.innerHTML = '';
+    fontGrid.innerHTML = '';
     
-    // إضافة الخطوط
-    FONTS_LIST.forEach(font => {
-        const option = document.createElement('option');
-        option.value = font.family;
-        option.textContent = `${font.name} - ${font.demo}`;
-        option.style.fontFamily = font.family;
-        fontSelect.appendChild(option);
-    });
-    
-    // تعيين الخط الافتراضي
-    if (FONTS_LIST.length > 0) {
-        fontSelect.value = FONTS_LIST[0].family;
+    // التحقق من وجود قائمة الخطوط
+    if (!window.FONTS_LIST || window.FONTS_LIST.length === 0) {
+        console.warn('⚠️ قائمة الخطوط فارغة، جاري تحميل خطوط افتراضية...');
+        loadDefaultFonts();
     }
     
-    console.log(`✅ تم تحميل ${FONTS_LIST.length} خط بنجاح`);
-}
-
-// دالة لتحميل خط معين (تعمل من أول مرة)
-function loadSpecificFont(fontFamily) {
-    return new Promise((resolve) => {
-        // تحقق إذا كان الخط محملاً بالفعل
-        if (document.fonts.check(`12px ${fontFamily}`)) {
-            resolve(true);
-            return;
+    // إضافة الخطوط إلى الشبكة
+    window.FONTS_LIST.forEach((font, index) => {
+        const fontItem = document.createElement('div');
+        fontItem.className = 'font-item';
+        if (index === 0) {
+            fontItem.classList.add('active');
+            currentFont = font.family;
         }
         
-        // تحميل الخط
-        const fontFace = new FontFace(fontFamily, `url(https://fonts.googleapis.com/css2?family=${fontFamily})`);
+        fontItem.innerHTML = `
+            <div class="font-name">${font.name}</div>
+            <div class="font-demo" style="font-family: ${font.family}">${font.demo}</div>
+        `;
         
-        fontFace.load().then(() => {
-            document.fonts.add(fontFace);
-            resolve(true);
-        }).catch(() => {
-            // إذا فشل، حاول بطريقة أخرى
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/'/g, '')}&display=swap`;
-            document.head.appendChild(link);
+        fontItem.onclick = () => {
+            // إزالة النشط من جميع العناصر
+            document.querySelectorAll('.font-item').forEach(item => {
+                item.classList.remove('active');
+            });
             
-            setTimeout(() => resolve(true), 300);
-        });
+            // إضافة النشط للعنصر المحدد
+            fontItem.classList.add('active');
+            
+            // تغيير الخط
+            changeFont(font.family);
+        };
+        
+        fontGrid.appendChild(fontItem);
     });
+    
+    console.log(`✅ تم تحميل ${window.FONTS_LIST.length} خط في الشبكة`);
 }
 
-// تحديث النص عند تغيير الخط
-function updateFontSelection() {
-    const fontSelect = document.getElementById('fontFamily');
-    if (!fontSelect || !window.currentText) return;
+// تحميل خطوط افتراضية
+function loadDefaultFonts() {
+    window.FONTS_LIST = [
+        {
+            name: "Amiri Arabic",
+            family: "'Amiri', serif",
+            demo: "السلام عليكم",
+            category: "arabic"
+        },
+        {
+            name: "Noto Nastaliq Urdu",
+            family: "'Noto Nastaliq Urdu', serif",
+            demo: "مرحبا بك",
+            category: "arabic"
+        },
+        {
+            name: "Reem Kufi",
+            family: "'Reem Kufi', sans-serif",
+            demo: "أهلاً وسهلاً",
+            category: "arabic"
+        },
+        {
+            name: "Pacifico",
+            family: "'Pacifico', cursive",
+            demo: "Hello World",
+            category: "english"
+        },
+        {
+            name: "Dancing Script",
+            family: "'Dancing Script', cursive",
+            demo: "Elegant Text",
+            category: "english"
+        }
+    ];
+}
+
+// تغيير الخط (يعمل من أول مرة)
+function changeFont(fontFamily) {
+    console.log(`🔄 تغيير الخط إلى: ${fontFamily}`);
     
-    const selectedFont = fontSelect.value;
+    // تحديث الخط الحالي
+    currentFont = fontFamily;
     
-    // تحميل الخط أولاً
-    loadSpecificFont(selectedFont).then(() => {
-        // الآن قم بتحديث النص
-        if (typeof updateTextOnCanvas === 'function') {
-            updateTextOnCanvas();
+    // تحديث النص على Canvas مباشرة
+    if (window.currentText && typeof updateTextOnCanvas === 'function') {
+        updateTextOnCanvas();
+    }
+    
+    // إشعار بنجاح التغيير
+    showFontChangeNotification(fontFamily);
+}
+
+// إشعار تغيير الخط
+function showFontChangeNotification(fontFamily) {
+    // يمكنك إضافة إشعار هنا إذا أردت
+    // showAlert(`تم تغيير الخط`, 'success');
+}
+
+// دالة لضمان تحميل الخط قبل الاستخدام
+async function ensureFontLoaded(fontFamily) {
+    return new Promise((resolve) => {
+        // الخطوط من Google Fonts تكون محملة مسبقاً
+        // هذه الدالة للتأكد فقط
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => {
+                resolve(true);
+            });
+        } else {
+            resolve(true);
         }
     });
-}
-
-// إعداد حدث تغيير الخط
-function setupFontChangeListener() {
-    const fontSelect = document.getElementById('fontFamily');
-    if (fontSelect) {
-        fontSelect.addEventListener('change', updateFontSelection);
-    }
 }
 
 // جعل الدوال متاحة عالمياً
 window.initializeFonts = initializeFonts;
-window.loadSpecificFont = loadSpecificFont;
-window.updateFontSelection = updateFontSelection;
-window.setupFontChangeListener = setupFontChangeListener;
+window.changeFont = changeFont;
+window.ensureFontLoaded = ensureFontLoaded;
+window.currentFont = () => currentFont;
 
 // تحميل الخطوط عند بدء التطبيق
 window.addEventListener('DOMContentLoaded', () => {
-    // تهيئة القائمة
-    initializeFonts();
-    
-    // إعداد المستمع
-    setupFontChangeListener();
+    // تأخير قليلاً للتأكد من تحميل الصفحة
+    setTimeout(initializeFonts, 500);
 });
