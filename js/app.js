@@ -185,8 +185,8 @@ function applyTextToImage() {
     const text = textInput.value.trim();
     window.currentText = text;
     
-    if (typeof renderTextOnCanvas === 'function') {
-        renderTextOnCanvas(false);
+    if (typeof renderFullCanvas === 'function') {
+        renderFullCanvas();
     }
     
     updateDeleteButtonState();
@@ -204,8 +204,8 @@ function applyTextToImage() {
 function clearTextFromImage() {
     window.currentText = '';
     
-    if (typeof renderTextOnCanvas === 'function') {
-        renderTextOnCanvas(false);
+    if (typeof renderFullCanvas === 'function') {
+        renderFullCanvas();
     }
     
     console.log('Text cleared from image');
