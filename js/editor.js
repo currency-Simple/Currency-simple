@@ -48,6 +48,11 @@ const FILTERS = {
     'cool': { name: 'بارد', filter: 'hue-rotate(180deg) saturate(120%)' }
 };
 
+// ذاكرة مؤقتة لتحسين الأداء
+let fontCache = new Map();
+let lastRenderTime = 0;
+let renderThrottleDelay = 16; // ~60fps
+
 window.addEventListener('DOMContentLoaded', () => {
     console.log('Editor initializing...');
     
@@ -58,7 +63,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     
     ctx = canvas.getContext('2d', { 
-        willReadFrequently: true,
+        willReadFrequently: false, // تغيير من true إلى false لتحسين الأداء
         alpha: true 
     });
     
@@ -93,22 +98,30 @@ function setupImageControls() {
     // التحكم بالضبابية
     const blurSlider = document.getElementById('blurSlider');
     if (blurSlider) {
+        let blurTimeout;
         blurSlider.addEventListener('input', (e) => {
             imageBlur = parseInt(e.target.value);
             const display = document.getElementById('blurDisplay');
             if (display) display.textContent = imageBlur;
-            renderCanvas();
+            
+            // استخدام throttling لتحسين الأداء
+            clearTimeout(blurTimeout);
+            blurTimeout = setTimeout(() => renderCanvas(), 50);
         });
     }
     
     // التحكم بحواف الصورة
     const borderSlider = document.getElementById('borderSlider');
     if (borderSlider) {
+        let borderTimeout;
         borderSlider.addEventListener('input', (e) => {
             imageBorderWidth = parseInt(e.target.value);
             const display = document.getElementById('borderDisplay');
             if (display) display.textContent = imageBorderWidth;
-            renderCanvas();
+            
+            // استخدام throttling لتحسين الأداء
+            clearTimeout(borderTimeout);
+            borderTimeout = setTimeout(() => renderCanvas(), 50);
         });
     }
     
@@ -180,29 +193,47 @@ function setupEventListeners() {
     const cardEnabled = document.getElementById('cardEnabled');
 
     if (fontSize) {
+        let fontSizeTimeout;
         fontSize.addEventListener('input', (e) => {
             const display = document.getElementById('fontSizeDisplay');
             if (display) {
                 display.textContent = e.target.value;
             }
-            updateTextOnCanvas();
+            
+            // مسح ذاكرة التخزين المؤقت للخط
+            fontCache.clear();
+            
+            // استخدام throttling لتحسين الأداء
+            clearTimeout(fontSizeTimeout);
+            fontSizeTimeout = setTimeout(() => updateTextOnCanvas(), 50);
         });
     }
     
     if (strokeWidth) {
+        let strokeTimeout;
         strokeWidth.addEventListener('input', (e) => {
             const display = document.getElementById('strokeWidthDisplay');
             if (display) {
                 display.textContent = e.target.value;
             }
-            updateTextOnCanvas();
+            
+            // استخدام throttling لتحسين الأداء
+            clearTimeout(strokeTimeout);
+            strokeTimeout = setTimeout(() => updateTextOnCanvas(), 50);
         });
     }
     
     if (fontFamily) {
         fontFamily.addEventListener('change', () => {
             console.log('Font changed to:', fontFamily.value);
-            updateTextOnCanvas();
+            
+            // مسح ذاكرة التخزين المؤقت للخط
+            fontCache.clear();
+            
+            // إعادة تحميل الخطوط
+            loadFonts();
+            
+            setTimeout(() => updateTextOnCanvas(), 100);
         });
     }
     
@@ -277,6 +308,12 @@ function handleTouchStart(e) {
 
 function handleTouchMove(e) {
     e.preventDefault();
+    
+    const now = Date.now();
+    if (now - lastRenderTime < renderThrottleDelay) {
+        return;
+    }
+    lastRenderTime = now;
     
     if (stickerDragging && selectedSticker) {
         const touch = e.touches[0];
@@ -446,6 +483,12 @@ function loadImageToEditor(imageUrl) {
 function renderCanvas() {
     if (!imageLoaded || !currentImage) return;
     
+    const now = Date.now();
+    if (now - lastRenderTime < renderThrottleDelay) {
+        return;
+    }
+    lastRenderTime = now;
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     ctx.save();
@@ -551,9 +594,17 @@ function renderTextOnCanvas(forExport = false) {
             finalFontSize = Math.round(fontSize * textScale * scale);
         }
         
+        // استخدام التخزين المؤقت للخط
+        const fontKey = `${fontFamily}_${finalFontSize}`;
+        if (!fontCache.has(fontKey)) {
+            targetCtx.font = 'bold ' + finalFontSize + 'px ' + fontFamily;
+            fontCache.set(fontKey, true);
+        } else {
+            targetCtx.font = 'bold ' + finalFontSize + 'px ' + fontFamily;
+        }
+        
         targetCtx.save();
         
-        targetCtx.font = 'bold ' + finalFontSize + 'px ' + fontFamily;
         targetCtx.textAlign = 'center';
         targetCtx.textBaseline = 'middle';
         targetCtx.lineJoin = 'round';
@@ -566,14 +617,21 @@ function renderTextOnCanvas(forExport = false) {
         let adjustedFontSize = finalFontSize;
         let adjustedLines = lines;
         
-        for (let i = 0; i < 10; i++) {
-            const maxWidth = Math.max(...adjustedLines.map(line => targetCtx.measureText(line).width));
-            if (maxWidth <= maxLineWidth) {
-                break;
+        // التحقق من حجم النص مع ذاكرة التخزين المؤقت
+        const textMeasureKey = `${text}_${fontFamily}_${adjustedFontSize}_${maxLineWidth}`;
+        if (fontCache.has(textMeasureKey)) {
+            adjustedLines = fontCache.get(textMeasureKey);
+        } else {
+            for (let i = 0; i < 5; i++) { // تقليل عدد المحاولات لتحسين الأداء
+                const maxWidth = Math.max(...adjustedLines.map(line => targetCtx.measureText(line).width));
+                if (maxWidth <= maxLineWidth) {
+                    break;
+                }
+                adjustedFontSize -= Math.max(1, Math.floor(adjustedFontSize * 0.05));
+                targetCtx.font = 'bold ' + adjustedFontSize + 'px ' + fontFamily;
+                adjustedLines = wrapText(text, maxLineWidth, targetCtx, adjustedFontSize);
             }
-            adjustedFontSize -= Math.max(1, Math.floor(adjustedFontSize * 0.05));
-            targetCtx.font = 'bold ' + adjustedFontSize + 'px ' + fontFamily;
-            adjustedLines = wrapText(text, maxLineWidth, targetCtx, adjustedFontSize);
+            fontCache.set(textMeasureKey, adjustedLines);
         }
         
         const lineHeight = adjustedFontSize * 1.4;
@@ -632,6 +690,12 @@ function renderTextOnCanvas(forExport = false) {
         
     } catch (error) {
         console.error('Error rendering text:', error);
+        
+        // إعادة تحميل الخطوط في حالة الخطأ
+        if (typeof loadFonts === 'function') {
+            loadFonts();
+        }
+        
         return false;
     }
 }
@@ -641,7 +705,7 @@ function createExportCanvas() {
     exportCanvas.width = originalImageWidth;
     exportCanvas.height = originalImageHeight;
     const exportCtx = exportCanvas.getContext('2d', { 
-        willReadFrequently: true,
+        willReadFrequently: false, // تغيير من true إلى false
         alpha: true 
     });
     
@@ -704,6 +768,12 @@ function createExportCanvas() {
 function wrapText(text, maxWidth, ctx, fontSize) {
     if (!text) return [];
     
+    // استخدام التخزين المؤقت
+    const cacheKey = `${text}_${maxWidth}_${fontSize}`;
+    if (fontCache.has(cacheKey)) {
+        return fontCache.get(cacheKey);
+    }
+    
     const words = text.split(' ');
     const lines = [];
     let currentLine = words[0] || '';
@@ -724,6 +794,7 @@ function wrapText(text, maxWidth, ctx, fontSize) {
         lines.push(currentLine);
     }
     
+    fontCache.set(cacheKey, lines);
     return lines;
 }
 
