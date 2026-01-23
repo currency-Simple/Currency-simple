@@ -63,16 +63,26 @@ function setupTextCard() {
     
     canvasWrapper.appendChild(textCard);
     console.log('Text card setup complete');
+    
+    // إضافة مستمع لوضع التركيز
+    const textInput = document.getElementById('textCardInput');
+    if (textInput) {
+        textInput.addEventListener('focus', () => {
+            setTimeout(() => {
+                textInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        });
+    }
 }
 
 function addTextCardButton() {
-    const editorToolbar = document.querySelector('.editor-toolbar');
+    const editorToolbar = document.querySelector('.editor-toolbar-bottom');
     if (!editorToolbar) {
         console.error('Editor toolbar not found');
         return;
     }
     
-    const existingBtn = document.querySelector('.tool-btn[data-tool="text"]');
+    const existingBtn = editorToolbar.querySelector('.tool-btn[data-tool="text"]');
     if (existingBtn) {
         return;
     }
@@ -86,12 +96,8 @@ function addTextCardButton() {
     `;
     textBtn.onclick = () => toggleTextCard();
     
-    const fontBtn = document.querySelector('.tool-btn[onclick*="fontPanel"]');
-    if (fontBtn) {
-        fontBtn.insertAdjacentElement('afterend', textBtn);
-    } else {
-        editorToolbar.insertAdjacentElement('afterbegin', textBtn);
-    }
+    // إضافة الزر في البداية
+    editorToolbar.insertBefore(textBtn, editorToolbar.firstChild);
     
     console.log('Text button added to toolbar');
 }
@@ -126,6 +132,7 @@ function openTextCard() {
         
         setTimeout(() => {
             textInput.focus();
+            textInput.select();
         }, 100);
         
         console.log('Text card opened');
