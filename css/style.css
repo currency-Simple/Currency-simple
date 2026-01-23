@@ -1,5 +1,6 @@
 :root {
-    --primary-color: #007aff;
+    --primary-color: #9b87f5;
+    --primary-hover: #8b77e5;
     --bg-color: #f5f5f7;
     --card-bg: #ffffff;
     --text-color: #1d1d1f;
@@ -8,7 +9,8 @@
 }
 
 [data-theme="dark"] {
-    --primary-color: #0a84ff;
+    --primary-color: #a99bff;
+    --primary-hover: #9988ee;
     --bg-color: #000000;
     --card-bg: #121212;
     --text-color: #ffffff;
@@ -229,50 +231,68 @@ body[dir="ltr"] {
     cursor: move;
 }
 
-/* الأزرار العائمة */
+/* الأزرار العائمة - خط أفقي */
 .floating-controls {
     position: absolute;
     top: 10px;
-    right: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 10px;
     z-index: 1000;
 }
 
 .floating-btn {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    height: 45px;
+    padding: 0 20px;
+    border-radius: 25px;
     border: none;
     background: var(--primary-color);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(155, 135, 245, 0.4);
     transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 14px;
 }
 
 .floating-btn:hover {
-    transform: scale(1.1);
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(155, 135, 245, 0.5);
 }
 
 .floating-btn:active {
-    transform: scale(0.95);
+    transform: translateY(0);
 }
 
 .share-btn {
     background: #34c759;
 }
 
+.share-btn:hover {
+    background: #2fb550;
+}
+
 .download-btn {
-    background: #007aff;
+    background: var(--primary-color);
+}
+
+.download-btn:hover {
+    background: var(--primary-hover);
 }
 
 .delete-btn {
     background: #ff3b30;
+}
+
+.delete-btn:hover {
+    background: #e62e24;
 }
 
 .text-card {
@@ -397,36 +417,38 @@ body[dir="ltr"] {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     background: none;
     border: none;
-    padding: 8px;
+    padding: 6px 4px;
     cursor: pointer;
     color: var(--text-secondary);
     border-radius: 8px;
-    font-size: 10px;
+    font-size: 9px;
     touch-action: manipulation;
-    min-width: 60px;
+    min-width: 55px;
     transition: all 0.2s ease;
+    flex: 1;
 }
 
 .tool-btn:hover {
-    background: var(--bg-color);
+    background: rgba(155, 135, 245, 0.1);
+    color: var(--primary-color);
 }
 
 .tool-btn.active {
-    background: var(--bg-color);
+    background: rgba(155, 135, 245, 0.15);
     color: var(--primary-color);
 }
 
 .tool-btn .material-symbols-outlined {
-    font-size: 20px;
+    font-size: 22px;
 }
 
 .tool-panel {
     display: none;
     position: fixed;
-    bottom: 140px;
+    bottom: 200px;
     left: 0;
     right: 0;
     background: var(--card-bg);
@@ -638,12 +660,12 @@ body.keyboard-open {
     bottom: 0 !important;
 }
 
-.keyboard-open .editor-toolbar {
+.keyboard-open .editor-toolbar-container {
     bottom: 70px !important;
 }
 
 .keyboard-open .tool-panel.active {
-    bottom: 140px !important;
+    bottom: 200px !important;
     display: none !important;
 }
 
@@ -759,11 +781,30 @@ input[type="range"]::-webkit-slider-thumb {
     background: var(--primary-color);
     cursor: pointer;
     border: 2px solid white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(155, 135, 245, 0.3);
 }
 
 input[type="checkbox"] {
     accent-color: var(--primary-color);
+}
+
+.text-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: var(--primary-color);
+    color: white;
+    font-weight: bold;
+}
+
+.ok-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+.ok-btn:hover {
+    background: var(--primary-hover);
 }
 
 /* أنماط أدوات الصورة */
@@ -805,6 +846,11 @@ input[type="checkbox"] {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.tool-action-btn .material-symbols-outlined {
+    font-size: 20px;
 }
 
 .tool-buttons-grid {
@@ -834,12 +880,38 @@ input[type="checkbox"] {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
 
 .filter-btn.active {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+}
+
+/* تحسينات الأزرار */
+.theme-btn:hover,
+.lang-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.theme-btn.active,
+.lang-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.nav-btn:hover {
+    background: rgba(155, 135, 245, 0.1);
+}
+
+.nav-btn.active {
+    color: var(--primary-color);
+    background: rgba(155, 135, 245, 0.1);
 }
 
 @media (max-width: 768px) {
