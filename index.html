@@ -66,54 +66,155 @@
             <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
                 <canvas id="canvas"></canvas>
                 
-                <!-- أزرار التحكم العائمة -->
+                <!-- أزرار التحكم العائمة - خط أفقي -->
                 <div class="floating-controls">
                     <button onclick="shareImage()" class="floating-btn share-btn" title="مشاركة">
                         <span class="material-symbols-outlined">share</span>
+                        <span>مشاركة</span>
                     </button>
                     <button onclick="downloadImage()" class="floating-btn download-btn" title="تنزيل">
                         <span class="material-symbols-outlined">download</span>
-                    </button>
-                    <button onclick="deleteSelectedSticker()" class="floating-btn delete-btn" id="deleteStickerBtn" style="display: none;" title="حذف الملصق">
-                        <span class="material-symbols-outlined">delete</span>
+                        <span>تنزيل</span>
                     </button>
                 </div>
             </div>
             
-            <!-- أدوات التحرير -->
-            <div class="editor-toolbar">
-                <button class="tool-btn" onclick="toggleToolPanel('fontPanel')">
-                    <span class="material-symbols-outlined">brand_family</span>
-                    <span>خط</span>
-                </button>
+            <!-- أدوات التحرير - صفين -->
+            <div class="editor-toolbar-container">
+                <!-- الصف الأول -->
+                <div class="editor-toolbar editor-toolbar-top">
+                    <button class="tool-btn" onclick="toggleToolPanel('uploadPanel')">
+                        <span class="material-symbols-outlined">upload</span>
+                        <span>رفع</span>
+                    </button>
 
-                <button class="tool-btn" onclick="toggleToolPanel('sizePanel')">
-                    <span class="material-symbols-outlined">format_size</span>
-                    <span>حجم</span>
-                </button>
+                    <button class="tool-btn" onclick="toggleToolPanel('blurPanel')">
+                        <span class="material-symbols-outlined">blur_on</span>
+                        <span>ضبابية</span>
+                    </button>
 
-                <button class="tool-btn" onclick="toggleToolPanel('colorPanel')">
-                    <span class="material-symbols-outlined">colors</span>
-                    <span>لون</span>
-                </button>
+                    <button class="tool-btn" onclick="toggleToolPanel('rotatePanel')">
+                        <span class="material-symbols-outlined">rotate_right</span>
+                        <span>تدوير</span>
+                    </button>
 
-                <button class="tool-btn" onclick="toggleToolPanel('strokePanel')">
-                    <span class="material-symbols-outlined">format_color_text</span>
-                    <span>حواف نص</span>
-                </button>
+                    <button class="tool-btn" onclick="toggleToolPanel('borderPanel')">
+                        <span class="material-symbols-outlined">border_style</span>
+                        <span>حواف</span>
+                    </button>
 
-                <button class="tool-btn" onclick="toggleToolPanel('effectsPanel')">
-                    <span class="material-symbols-outlined">bedtime</span>
-                    <span>تأثيرات</span>
-                </button>
-                
-                <button class="tool-btn" onclick="toggleToolPanel('imageToolsPanel')">
-                    <span class="material-symbols-outlined">image</span>
-                    <span>أدوات</span>
-                </button>
+                    <button class="tool-btn" onclick="toggleToolPanel('filterPanel')">
+                        <span class="material-symbols-outlined">filter</span>
+                        <span>فلاتر</span>
+                    </button>
+                </div>
+
+                <!-- الصف الثاني -->
+                <div class="editor-toolbar editor-toolbar-bottom">
+                    <button class="tool-btn" onclick="toggleToolPanel('fontPanel')">
+                        <span class="material-symbols-outlined">brand_family</span>
+                        <span>خط</span>
+                    </button>
+
+                    <button class="tool-btn" onclick="toggleToolPanel('sizePanel')">
+                        <span class="material-symbols-outlined">format_size</span>
+                        <span>حجم</span>
+                    </button>
+
+                    <button class="tool-btn" onclick="toggleToolPanel('colorPanel')">
+                        <span class="material-symbols-outlined">colors</span>
+                        <span>لون</span>
+                    </button>
+
+                    <button class="tool-btn" onclick="toggleToolPanel('strokePanel')">
+                        <span class="material-symbols-outlined">format_color_text</span>
+                        <span>حواف نص</span>
+                    </button>
+
+                    <button class="tool-btn" onclick="toggleToolPanel('effectsPanel')">
+                        <span class="material-symbols-outlined">bedtime</span>
+                        <span>تأثيرات</span>
+                    </button>
+                </div>
             </div>
 
             <!-- لوحات الأدوات المنبثقة -->
+            
+            <!-- لوحة رفع الصورة -->
+            <div id="uploadPanel" class="tool-panel">
+                <div class="tool-section">
+                    <button class="tool-action-btn" id="uploadImageBtn">
+                        <span class="material-symbols-outlined">upload</span>
+                        <span>رفع صورة من الجهاز</span>
+                    </button>
+                    <input type="file" id="uploadImageInput" accept="image/*" style="display: none;">
+                </div>
+            </div>
+
+            <!-- لوحة الضبابية -->
+            <div id="blurPanel" class="tool-panel">
+                <div class="tool-section">
+                    <h4>مستوى الضبابية</h4>
+                    <input type="range" id="blurSlider" min="0" max="20" value="0" class="size-slider">
+                    <span id="blurDisplay">0</span>
+                </div>
+            </div>
+
+            <!-- لوحة التدوير والقلب -->
+            <div id="rotatePanel" class="tool-panel">
+                <div class="tool-section">
+                    <h4>تدوير وقلب الصورة</h4>
+                    <div class="tool-buttons-grid">
+                        <button class="tool-action-btn" onclick="rotateImage()">
+                            <span class="material-symbols-outlined">rotate_right</span>
+                            <span>تدوير 90°</span>
+                        </button>
+                        <button class="tool-action-btn" onclick="flipImageH()">
+                            <span class="material-symbols-outlined">flip</span>
+                            <span>قلب أفقي</span>
+                        </button>
+                        <button class="tool-action-btn" onclick="flipImageV()">
+                            <span class="material-symbols-outlined">flip</span>
+                            <span>قلب عمودي</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- لوحة حواف الصورة -->
+            <div id="borderPanel" class="tool-panel">
+                <div class="tool-section">
+                    <h4>سُمك الحواف</h4>
+                    <input type="range" id="borderSlider" min="0" max="50" value="0" class="size-slider">
+                    <span id="borderDisplay">0</span>
+                </div>
+                <div class="tool-section">
+                    <h4>لون الحواف</h4>
+                    <div class="color-grid" id="borderColorGrid"></div>
+                </div>
+            </div>
+
+            <!-- لوحة الفلاتر -->
+            <div id="filterPanel" class="tool-panel">
+                <div class="tool-section">
+                    <h4>الفلاتر</h4>
+                    <div class="filters-grid" id="filtersGrid">
+                        <button class="filter-btn active" onclick="applyFilter('none')">بدون</button>
+                        <button class="filter-btn" onclick="applyFilter('grayscale')">أبيض وأسود</button>
+                        <button class="filter-btn" onclick="applyFilter('sepia')">سيبيا</button>
+                        <button class="filter-btn" onclick="applyFilter('invert')">عكس</button>
+                        <button class="filter-btn" onclick="applyFilter('brightness')">سطوع</button>
+                        <button class="filter-btn" onclick="applyFilter('contrast')">تباين</button>
+                        <button class="filter-btn" onclick="applyFilter('saturate')">تشبع</button>
+                        <button class="filter-btn" onclick="applyFilter('hue')">ألوان</button>
+                        <button class="filter-btn" onclick="applyFilter('vintage')">قديم</button>
+                        <button class="filter-btn" onclick="applyFilter('warm')">دافئ</button>
+                        <button class="filter-btn" onclick="applyFilter('cool')">بارد</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- لوحة الخطوط -->
             <div id="fontPanel" class="tool-panel">
                 <select id="fontFamily" class="tool-select"></select>
             </div>
@@ -142,66 +243,6 @@
                     <input type="checkbox" id="cardEnabled">
                     <span>خلفية النص</span>
                 </label>
-            </div>
-
-            <!-- لوحة أدوات الصورة الجديدة -->
-            <div id="imageToolsPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>رفع صورة</h4>
-                    <button class="tool-action-btn" id="uploadImageBtn">
-                        <span class="material-symbols-outlined">upload</span>
-                        <span>رفع من الجهاز</span>
-                    </button>
-                    <input type="file" id="uploadImageInput" accept="image/*" style="display: none;">
-                </div>
-
-                <div class="tool-section">
-                    <h4>ضبابية</h4>
-                    <input type="range" id="blurSlider" min="0" max="20" value="0" class="size-slider">
-                    <span id="blurDisplay">0</span>
-                </div>
-
-                <div class="tool-section">
-                    <h4>تدوير وقلب</h4>
-                    <div class="tool-buttons-grid">
-                        <button class="tool-action-btn" onclick="rotateImage()">
-                            <span class="material-symbols-outlined">rotate_right</span>
-                            <span>تدوير</span>
-                        </button>
-                        <button class="tool-action-btn" onclick="flipImageH()">
-                            <span class="material-symbols-outlined">flip</span>
-                            <span>قلب أفقي</span>
-                        </button>
-                        <button class="tool-action-btn" onclick="flipImageV()">
-                            <span class="material-symbols-outlined">flip</span>
-                            <span>قلب عمودي</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="tool-section">
-                    <h4>حواف الصورة</h4>
-                    <input type="range" id="borderSlider" min="0" max="50" value="0" class="size-slider">
-                    <span id="borderDisplay">0</span>
-                    <div class="color-grid" id="borderColorGrid"></div>
-                </div>
-
-                <div class="tool-section">
-                    <h4>الفلاتر</h4>
-                    <div class="filters-grid" id="filtersGrid">
-                        <button class="filter-btn active" onclick="applyFilter('none')">بدون</button>
-                        <button class="filter-btn" onclick="applyFilter('grayscale')">أبيض وأسود</button>
-                        <button class="filter-btn" onclick="applyFilter('sepia')">سيبيا</button>
-                        <button class="filter-btn" onclick="applyFilter('invert')">عكس</button>
-                        <button class="filter-btn" onclick="applyFilter('brightness')">سطوع</button>
-                        <button class="filter-btn" onclick="applyFilter('contrast')">تباين</button>
-                        <button class="filter-btn" onclick="applyFilter('saturate')">تشبع</button>
-                        <button class="filter-btn" onclick="applyFilter('hue')">ألوان</button>
-                        <button class="filter-btn" onclick="applyFilter('vintage')">قديم</button>
-                        <button class="filter-btn" onclick="applyFilter('warm')">دافئ</button>
-                        <button class="filter-btn" onclick="applyFilter('cool')">بارد</button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
