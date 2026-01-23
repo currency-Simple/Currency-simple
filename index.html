@@ -6,7 +6,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>محرر النصوص على الصور</title>
+    <title>محرر النصوص على الصور المتقدم</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Lateef&family=Noto+Kufi+Arabic:wght@400;700&family=Cairo:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
@@ -84,27 +84,32 @@
             <div class="editor-toolbar">
                 <button class="tool-btn" onclick="toggleToolPanel('fontPanel')">
                     <span class="material-symbols-outlined">brand_family</span>
-                    <span data-lang="font">الخط</span>
+                    <span>خط</span>
                 </button>
 
                 <button class="tool-btn" onclick="toggleToolPanel('sizePanel')">
                     <span class="material-symbols-outlined">format_size</span>
-                    <span data-lang="size">الحجم</span>
+                    <span>حجم</span>
                 </button>
 
                 <button class="tool-btn" onclick="toggleToolPanel('colorPanel')">
                     <span class="material-symbols-outlined">colors</span>
-                    <span data-lang="color">اللون</span>
+                    <span>لون</span>
                 </button>
 
                 <button class="tool-btn" onclick="toggleToolPanel('strokePanel')">
                     <span class="material-symbols-outlined">format_color_text</span>
-                    <span data-lang="stroke">الحواف</span>
+                    <span>حواف نص</span>
                 </button>
 
                 <button class="tool-btn" onclick="toggleToolPanel('effectsPanel')">
                     <span class="material-symbols-outlined">bedtime</span>
-                    <span data-lang="effects">تأثيرات</span>
+                    <span>تأثيرات</span>
+                </button>
+                
+                <button class="tool-btn" onclick="toggleToolPanel('imageToolsPanel')">
+                    <span class="material-symbols-outlined">image</span>
+                    <span>أدوات</span>
                 </button>
             </div>
 
@@ -131,12 +136,72 @@
             <div id="effectsPanel" class="tool-panel">
                 <label class="effect-option">
                     <input type="checkbox" id="shadowEnabled" checked>
-                    <span data-lang="shadow">ظل</span>
+                    <span>ظل النص</span>
                 </label>
                 <label class="effect-option">
                     <input type="checkbox" id="cardEnabled">
-                    <span data-lang="background">خلفية</span>
+                    <span>خلفية النص</span>
                 </label>
+            </div>
+
+            <!-- لوحة أدوات الصورة الجديدة -->
+            <div id="imageToolsPanel" class="tool-panel">
+                <div class="tool-section">
+                    <h4>رفع صورة</h4>
+                    <button class="tool-action-btn" id="uploadImageBtn">
+                        <span class="material-symbols-outlined">upload</span>
+                        <span>رفع من الجهاز</span>
+                    </button>
+                    <input type="file" id="uploadImageInput" accept="image/*" style="display: none;">
+                </div>
+
+                <div class="tool-section">
+                    <h4>ضبابية</h4>
+                    <input type="range" id="blurSlider" min="0" max="20" value="0" class="size-slider">
+                    <span id="blurDisplay">0</span>
+                </div>
+
+                <div class="tool-section">
+                    <h4>تدوير وقلب</h4>
+                    <div class="tool-buttons-grid">
+                        <button class="tool-action-btn" onclick="rotateImage()">
+                            <span class="material-symbols-outlined">rotate_right</span>
+                            <span>تدوير</span>
+                        </button>
+                        <button class="tool-action-btn" onclick="flipImageH()">
+                            <span class="material-symbols-outlined">flip</span>
+                            <span>قلب أفقي</span>
+                        </button>
+                        <button class="tool-action-btn" onclick="flipImageV()">
+                            <span class="material-symbols-outlined">flip</span>
+                            <span>قلب عمودي</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tool-section">
+                    <h4>حواف الصورة</h4>
+                    <input type="range" id="borderSlider" min="0" max="50" value="0" class="size-slider">
+                    <span id="borderDisplay">0</span>
+                    <div class="color-grid" id="borderColorGrid"></div>
+                </div>
+
+                <div class="tool-section">
+                    <h4>الفلاتر</h4>
+                    <div class="filters-grid" id="filtersGrid">
+                        <button class="filter-btn active" onclick="applyFilter('none')">بدون</button>
+                        <button class="filter-btn" onclick="applyFilter('grayscale')">أبيض وأسود</button>
+                        <button class="filter-btn" onclick="applyFilter('sepia')">سيبيا</button>
+                        <button class="filter-btn" onclick="applyFilter('invert')">عكس</button>
+                        <button class="filter-btn" onclick="applyFilter('brightness')">سطوع</button>
+                        <button class="filter-btn" onclick="applyFilter('contrast')">تباين</button>
+                        <button class="filter-btn" onclick="applyFilter('saturate')">تشبع</button>
+                        <button class="filter-btn" onclick="applyFilter('hue')">ألوان</button>
+                        <button class="filter-btn" onclick="applyFilter('vintage')">قديم</button>
+                        <button class="filter-btn" onclick="applyFilter('warm')">دافئ</button>
+                        <button class="filter-btn" onclick="applyFilter('cool')">بارد</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -195,7 +260,7 @@
 
             <div class="setting-card">
                 <p style="text-align: center; color: #86868b; font-size: 14px;">
-                    <span data-lang="version">الإصدار</span> 6.0
+                    <span data-lang="version">الإصدار</span> 7.0 Pro
                 </p>
             </div>
         </div>
@@ -205,11 +270,11 @@
     <div class="bottom-nav">
         <button onclick="showPage('categories')" class="nav-btn active" id="navCategories">
             <span class="material-symbols-outlined">dashboard</span>
-            <span data-lang="categories">الفئات</span>
+            <span>الفئات</span>
         </button>
         <button onclick="showPage('editor')" class="nav-btn" id="navEditor">
             <span class="material-symbols-outlined">edit</span>
-            <span data-lang="editor">التحرير</span>
+            <span>التحرير</span>
         </button>
         <button onclick="showPage('stickers')" class="nav-btn" id="navStickers">
             <span class="material-symbols-outlined">emoji_emotions</span>
@@ -217,7 +282,7 @@
         </button>
         <button onclick="showPage('settings')" class="nav-btn" id="navSettings">
             <span class="material-symbols-outlined">settings</span>
-            <span data-lang="settings">الإعدادات</span>
+            <span>الإعدادات</span>
         </button>
     </div>
 
