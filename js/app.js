@@ -1,6 +1,6 @@
 // ============================================
 // تطبيق محرر النصوص على الصور - النسخة النهائية
-// يدعم 40 خط من Google Fonts
+// يدعم 100 فئة و 40 خط مع إصلاح جميع المشاكل
 // ============================================
 
 // متغيرات عامة
@@ -9,6 +9,9 @@ let currentCategory = null;
 let currentImages = [];
 let keyboardOpen = false;
 let textCardVisible = false;
+let loadingCategories = false;
+let loadedCategoriesCount = 0;
+const MAX_CATEGORIES = 100; // يمكنك تغيير هذا الرقم
 
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
@@ -16,14 +19,18 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // تهيئة الخطوط أولاً
     if (typeof initializeFonts === 'function') {
-        initializeFonts();
-        console.log('✅ الخطوط مهيأة');
+        setTimeout(() => {
+            initializeFonts();
+            console.log('✅ الخطوط مهيأة');
+        }, 100);
     }
     
     // تهيئة الألوان
     if (typeof initializeColors === 'function') {
-        initializeColors();
-        console.log('✅ الألوان مهيأة');
+        setTimeout(() => {
+            initializeColors();
+            console.log('✅ الألوان مهيأة');
+        }, 200);
     }
     
     // تحميل الإعدادات
@@ -32,8 +39,8 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log('✅ الإعدادات محملة');
     }
     
-    // تحميل الفئات
-    loadCategories();
+    // تحميل الفئات (جميع الفئات 1-100)
+    loadAllCategories();
     
     // عرض صفحة الفئات
     showPage('categories');
@@ -50,6 +57,213 @@ window.addEventListener('DOMContentLoaded', () => {
     
     console.log('🎉 التطبيق جاهز للاستخدام');
 });
+
+// ============== تحميل 100 فئة ==============
+// تحميل جميع الفئات (من 1 إلى 100)
+async function loadAllCategories() {
+    if (loadingCategories) return;
+    
+    loadingCategories = true;
+    categories = [];
+    loadedCategoriesCount = 0;
+    
+    console.log(`📂 جاري تحميل جميع الفئات (1-${MAX_CATEGORIES})...`);
+    updateCategoriesCounter(`جاري التحميل 0/${MAX_CATEGORIES}`);
+    
+    // إنشاء مصفوفة من الوعود لتحميل جميع الملفات
+    const promises = [];
+    
+    for (let i = 1; i <= MAX_CATEGORIES; i++) {
+        promises.push(loadCategoryFile(i));
+    }
+    
+    // استخدام Promise.allSettled للسماح بفشل بعض الملفات
+    const results = await Promise.allSettled(promises);
+    
+    // حساب الفئات المحملة بنجاح
+    loadedCategoriesCount = results.filter(result => result.status === 'fulfilled' && result.value).length;
+    
+    // ترتيب الفئات حسب المعرف
+    categories.sort((a, b) => a.id - b.id);
+    
+    // عرض الفئات المحملة
+    displayCategories();
+    
+    // تحديث العداد
+    updateCategoriesCounter(`تم تحميل ${loadedCategoriesCount} فئة`);
+    
+    console.log(`✅ تم تحميل ${loadedCategoriesCount}/${MAX_CATEGORIES} فئة بنجاح`);
+    loadingCategories = false;
+    
+    // إذا لم يتم تحميل أي فئة، تحميل الفئات التجريبية
+    if (loadedCategoriesCount === 0) {
+        console.log('⚠️ لم يتم تحميل أي فئة، جاري تحميل فئات تجريبية...');
+        loadDemoCategories();
+    }
+}
+
+// تحميل ملف فئة واحد
+async function loadCategoryFile(categoryId) {
+    try {
+        const response = await fetch(`data/images${categoryId}.json`);
+        
+        if (!response.ok) {
+            console.log(`⚠️ ملف images${categoryId}.json غير موجود`);
+            return null;
+        }
+        
+        const data = await response.json();
+        
+        if (data && data.images && data.images.length > 0) {
+            const category = {
+                id: categoryId,
+                name: data.name || `فئة ${categoryId}`,
+                coverImage: data.images[0].url,
+                images: data.images
+            };
+            
+            categories.push(category);
+            console.log(`✅ تم تحميل فئة ${categoryId}: ${category.name}`);
+            return category;
+        }
+        
+        return null;
+    } catch (error) {
+        console.log(`❌ خطأ في تحميل فئة ${categoryId}:`, error.message);
+        return null;
+    }
+}
+
+// تحديث عداد الفئات
+function updateCategoriesCounter(text) {
+    const counter = document.getElementById('categoriesCounter');
+    if (counter) {
+        counter.textContent = text;
+    }
+}
+
+// فئات تجريبية (إذا لم توجد ملفات JSON)
+function loadDemoCategories() {
+    console.log('📝 جاري تحميل فئات تجريبية...');
+    
+    categories = [];
+    
+    for (let i = 1; i <= 8; i++) {
+        const images = [];
+        for (let j = 1; j <= 12; j++) {
+            const id = (i - 1) * 12 + j;
+            images.push({
+                id: id,
+                url: `https://picsum.photos/300/400?random=${id}`,
+                title: `صورة ${id}`
+            });
+        }
+        categories.push({
+            id: i,
+            name: `فئة تجريبية ${i}`,
+            coverImage: images[0].url,
+            images: images
+        });
+    }
+    
+    displayCategories();
+    updateCategoriesCounter(`8 فئات تجريبية`);
+    console.log('✅ تم تحميل 8 فئات تجريبية');
+}
+
+// عرض الفئات
+function displayCategories() {
+    const grid = document.getElementById('categoriesGrid');
+    if (!grid) {
+        console.error('❌ شبكة الفئات غير موجودة');
+        return;
+    }
+    
+    grid.innerHTML = '';
+    
+    if (categories.length === 0) {
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #86868b;">
+                <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 20px;">
+                    folder_off
+                </span>
+                <p>لا توجد فئات متاحة</p>
+            </div>
+        `;
+        return;
+    }
+    
+    categories.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'category-item';
+        item.onclick = () => openCategory(cat);
+        item.innerHTML = `
+            <img src="${cat.coverImage}" alt="${cat.name}" loading="lazy">
+            <div class="category-overlay">
+                <div class="category-title">${cat.name}</div>
+            </div>
+        `;
+        grid.appendChild(item);
+    });
+}
+
+// فتح فئة
+function openCategory(cat) {
+    currentCategory = cat;
+    currentImages = cat.images;
+    
+    const categoryTitle = document.getElementById('categoryTitle');
+    if (categoryTitle) {
+        categoryTitle.textContent = cat.name;
+    }
+    
+    displayImages();
+    showPage('images');
+}
+
+// عرض الصور
+function displayImages() {
+    const grid = document.getElementById('imageGrid');
+    if (!grid) {
+        console.error('❌ شبكة الصور غير موجودة');
+        return;
+    }
+    
+    grid.innerHTML = '';
+    
+    currentImages.forEach(img => {
+        const item = document.createElement('div');
+        item.className = 'image-item';
+        item.onclick = () => selectImage(img);
+        
+        const imgEl = document.createElement('img');
+        imgEl.src = img.url;
+        imgEl.alt = img.title || 'صورة';
+        imgEl.loading = 'lazy';
+        
+        item.appendChild(imgEl);
+        grid.appendChild(item);
+    });
+}
+
+// اختيار صورة
+function selectImage(img) {
+    console.log('🖼️ تم اختيار الصورة:', img.id);
+    
+    localStorage.setItem('selectedImage', JSON.stringify(img));
+    showPage('editor');
+    
+    setTimeout(() => {
+        if (typeof loadImageToEditor === 'function') {
+            loadImageToEditor(img.url);
+        }
+        
+        // إضافة زر حذف النص
+        if (typeof addDeleteTextButton === 'function') {
+            setTimeout(addDeleteTextButton, 500);
+        }
+    }, 100);
+}
 
 // ============== بطاقة النص ==============
 // إعداد بطاقة النص الجديدة
@@ -121,13 +335,8 @@ function addTextCardButton() {
     `;
     textBtn.onclick = () => toggleTextCard();
     
-    // إدراج الزر بعد زر الخط مباشرة
-    const fontBtn = document.querySelector('.tool-btn[onclick*="fontPanel"]');
-    if (fontBtn) {
-        fontBtn.insertAdjacentElement('afterend', textBtn);
-    } else {
-        editorToolbar.insertAdjacentElement('afterbegin', textBtn);
-    }
+    // إدراج الزر في البداية
+    editorToolbar.insertAdjacentElement('afterbegin', textBtn);
 }
 
 // فتح/إغلاق بطاقة النص
@@ -267,189 +476,7 @@ function addDeleteTextButton() {
     effectsPanel.innerHTML += deleteBtnHtml;
 }
 
-// ============== لوحة المفاتيح ==============
-// إعداد مستمعات لوحة المفاتيح
-function setupKeyboardListeners() {
-    window.addEventListener('resize', () => {
-        setTimeout(() => {
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const windowHeight = window.innerHeight;
-            const screenHeight = window.screen.height;
-            
-            if (isMobile && windowHeight < screenHeight * 0.7) {
-                handleKeyboardOpen();
-            } else {
-                handleKeyboardClose();
-            }
-        }, 100);
-    });
-}
-
-// التعامل مع فتح لوحة المفاتيح
-function handleKeyboardOpen() {
-    if (keyboardOpen) return;
-    keyboardOpen = true;
-    
-    document.body.classList.add('keyboard-open');
-}
-
-// التعامل مع إغلاق لوحة المفاتيح
-function handleKeyboardClose() {
-    if (!keyboardOpen) return;
-    keyboardOpen = false;
-    
-    document.body.classList.remove('keyboard-open');
-}
-
-// ============== إدارة الفئات والصور ==============
-// تحميل الفئات
-async function loadCategories() {
-    categories = [];
-    console.log('📂 جاري تحميل الفئات...');
-    
-    try {
-        // محاولة تحميل أول فئتين فقط
-        const promises = [];
-        for (let i = 1; i <= 2; i++) {
-            promises.push(
-                fetch(`data/images${i}.json`)
-                    .then(res => res.ok ? res.json() : null)
-                    .then(data => {
-                        if (data && data.images && data.images.length > 0) {
-                            categories.push({
-                                id: i,
-                                name: data.name || `فئة ${i}`,
-                                coverImage: data.images[0].url,
-                                images: data.images
-                            });
-                        }
-                    })
-                    .catch(() => null)
-            );
-        }
-        
-        await Promise.allSettled(promises);
-        
-        if (categories.length === 0) {
-            loadDemoCategories();
-        } else {
-            categories.sort((a, b) => a.id - b.id);
-            displayCategories();
-        }
-        
-        console.log(`✅ تم تحميل ${categories.length} فئة`);
-    } catch (error) {
-        console.error('❌ خطأ في تحميل الفئات:', error);
-        loadDemoCategories();
-    }
-}
-
-// فئات تجريبية
-function loadDemoCategories() {
-    console.log('📝 جاري تحميل فئات تجريبية...');
-    
-    for (let i = 1; i <= 4; i++) {
-        const images = [];
-        for (let j = 1; j <= 12; j++) {
-            const id = (i - 1) * 12 + j;
-            images.push({
-                id: id,
-                url: `https://picsum.photos/300/400?random=${id}`,
-                title: `صورة ${id}`
-            });
-        }
-        categories.push({
-            id: i,
-            name: `فئة تجريبية ${i}`,
-            coverImage: images[0].url,
-            images: images
-        });
-    }
-    displayCategories();
-}
-
-// عرض الفئات
-function displayCategories() {
-    const grid = document.getElementById('categoriesGrid');
-    if (!grid) {
-        console.error('❌ شبكة الفئات غير موجودة');
-        return;
-    }
-    
-    grid.innerHTML = '';
-    
-    categories.forEach(cat => {
-        const item = document.createElement('div');
-        item.className = 'category-item';
-        item.onclick = () => openCategory(cat);
-        item.innerHTML = `
-            <img src="${cat.coverImage}" alt="${cat.name}" loading="lazy">
-            <div class="category-overlay">
-                <div class="category-title">${cat.name}</div>
-            </div>
-        `;
-        grid.appendChild(item);
-    });
-}
-
-// فتح فئة
-function openCategory(cat) {
-    currentCategory = cat;
-    currentImages = cat.images;
-    
-    const categoryTitle = document.getElementById('categoryTitle');
-    if (categoryTitle) {
-        categoryTitle.textContent = cat.name;
-    }
-    
-    displayImages();
-    showPage('images');
-}
-
-// عرض الصور
-function displayImages() {
-    const grid = document.getElementById('imageGrid');
-    if (!grid) {
-        console.error('❌ شبكة الصور غير موجودة');
-        return;
-    }
-    
-    grid.innerHTML = '';
-    
-    currentImages.forEach(img => {
-        const item = document.createElement('div');
-        item.className = 'image-item';
-        item.onclick = () => selectImage(img);
-        
-        const imgEl = document.createElement('img');
-        imgEl.src = img.url;
-        imgEl.alt = img.title || 'صورة';
-        imgEl.loading = 'lazy';
-        
-        item.appendChild(imgEl);
-        grid.appendChild(item);
-    });
-}
-
-// اختيار صورة
-function selectImage(img) {
-    console.log('🖼️ تم اختيار الصورة:', img.id);
-    
-    localStorage.setItem('selectedImage', JSON.stringify(img));
-    showPage('editor');
-    
-    setTimeout(() => {
-        if (typeof loadImageToEditor === 'function') {
-            loadImageToEditor(img.url);
-        }
-        
-        // إضافة زر حذف النص
-        if (typeof addDeleteTextButton === 'function') {
-            setTimeout(addDeleteTextButton, 500);
-        }
-    }, 100);
-}
-
+// ============== التنقل ==============
 // التنقل بين الصفحات
 function showPage(pageName) {
     const pages = document.querySelectorAll('.page');
@@ -493,6 +520,40 @@ function goBackToImages() {
     } else {
         showPage('categories');
     }
+}
+
+// ============== لوحة المفاتيح ==============
+// إعداد مستمعات لوحة المفاتيح
+function setupKeyboardListeners() {
+    window.addEventListener('resize', () => {
+        setTimeout(() => {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const windowHeight = window.innerHeight;
+            const screenHeight = window.screen.height;
+            
+            if (isMobile && windowHeight < screenHeight * 0.7) {
+                handleKeyboardOpen();
+            } else {
+                handleKeyboardClose();
+            }
+        }, 100);
+    });
+}
+
+// التعامل مع فتح لوحة المفاتيح
+function handleKeyboardOpen() {
+    if (keyboardOpen) return;
+    keyboardOpen = true;
+    
+    document.body.classList.add('keyboard-open');
+}
+
+// التعامل مع إغلاق لوحة المفاتيح
+function handleKeyboardClose() {
+    if (!keyboardOpen) return;
+    keyboardOpen = false;
+    
+    document.body.classList.remove('keyboard-open');
 }
 
 // ============== تنزيل الصور ==============
