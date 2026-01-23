@@ -60,7 +60,22 @@ function initializeColors() {
     console.log(`✓ تم تحميل ${COLORS.length} لون للحواف`);
   }
 
-  // شبكة ألوان الخلفية
+  // شبكة ألوان حواف الصورة
+  const borderGrid = document.getElementById('borderColorGrid');
+  if (borderGrid) {
+    borderGrid.innerHTML = '';
+    COLORS.forEach((color, index) => {
+      const item = createColorItem(color, () => {
+        if (typeof setBorderColor === 'function') {
+          setBorderColor(color);
+        }
+      });
+      borderGrid.appendChild(item);
+    });
+    console.log(`✓ تم تحميل ${COLORS.length} لون لحواف الصورة`);
+  }
+
+  // شبكة ألوان خلفية النص
   const cardGrid = document.getElementById('cardColorGrid');
   if (cardGrid) {
     cardGrid.innerHTML = '';
@@ -68,7 +83,7 @@ function initializeColors() {
       const item = createColorItem(color, () => setCardColor(color));
       cardGrid.appendChild(item);
     });
-    console.log(`✓ تم تحميل ${COLORS.length} لون للخلفية`);
+    console.log(`✓ تم تحميل ${COLORS.length} لون لخلفية النص`);
   }
 }
 
@@ -109,7 +124,7 @@ function setTextColor(color) {
 function setStrokeColor(color) {
   currentStrokeColor = color;
   window.currentStrokeColor = color;
-  console.log('✓ لون الحواف:', color);
+  console.log('✓ لون حواف النص:', color);
   
   // تحديث النمط فوراً
   if (window.currentText) {
@@ -119,11 +134,24 @@ function setStrokeColor(color) {
   }
 }
 
+// تعيين لون حواف الصورة
+function setBorderColor(color) {
+  if (typeof window !== 'undefined' && window.imageBorderColor !== undefined) {
+    window.imageBorderColor = color;
+    console.log('✓ لون حواف الصورة:', color);
+    
+    // تحديث الصورة فوراً
+    if (typeof renderCanvas === 'function') {
+      renderCanvas();
+    }
+  }
+}
+
 // تعيين لون الخلفية
 function setCardColor(color) {
   currentCardColor = color;
   window.currentCardColor = color;
-  console.log('✓ لون الخلفية:', color);
+  console.log('✓ لون خلفية النص:', color);
   
   // تحديث النمط فوراً
   if (window.currentText) {
@@ -132,3 +160,10 @@ function setCardColor(color) {
     }
   }
 }
+
+// تصدير الدوال
+window.setTextColor = setTextColor;
+window.setStrokeColor = setStrokeColor;
+window.setBorderColor = setBorderColor;
+window.setCardColor = setCardColor;
+window.COLORS = COLORS;
