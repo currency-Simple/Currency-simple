@@ -60,7 +60,6 @@ body[dir="ltr"] {
     display: block;
 }
 
-/* Header */
 .header {
     background: var(--card-bg);
     padding: 15px 20px;
@@ -103,7 +102,6 @@ body[dir="ltr"] {
     margin-left: auto;
 }
 
-/* Categories & Images Grid */
 .categories-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -111,7 +109,7 @@ body[dir="ltr"] {
     padding: 15px;
 }
 
-.category-item {
+.category-item, .sticker-category-item {
     position: relative;
     border-radius: 16px;
     overflow: hidden;
@@ -122,16 +120,14 @@ body[dir="ltr"] {
     transition: transform 0.3s ease;
 }
 
-.category-item:hover {
+.category-item:hover, .sticker-category-item:hover {
     transform: scale(1.03);
 }
 
-.category-item img {
+.category-item img, .sticker-category-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
 }
 
 .category-overlay {
@@ -156,7 +152,7 @@ body[dir="ltr"] {
     padding: 15px;
 }
 
-.image-item {
+.image-item, .sticker-item {
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
@@ -166,19 +162,20 @@ body[dir="ltr"] {
     transition: transform 0.3s ease;
 }
 
-.image-item:hover {
+.sticker-item {
+    aspect-ratio: 1;
+}
+
+.image-item:hover, .sticker-item:hover {
     transform: scale(1.02);
 }
 
-.image-item img {
+.image-item img, .sticker-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
 }
 
-/* Editor Page */
 #editorPage {
     position: fixed;
     top: 0;
@@ -228,11 +225,56 @@ body[dir="ltr"] {
     background: transparent !important;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     border-radius: 8px;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
+    touch-action: none;
+    cursor: move;
 }
 
-/* بطاقة النص */
+/* الأزرار العائمة */
+.floating-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.floating-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+
+.floating-btn:hover {
+    transform: scale(1.1);
+}
+
+.floating-btn:active {
+    transform: scale(0.95);
+}
+
+.share-btn {
+    background: #34c759;
+}
+
+.download-btn {
+    background: #007aff;
+}
+
+.delete-btn {
+    background: #ff3b30;
+}
+
 .text-card {
     position: absolute;
     top: 50%;
@@ -336,29 +378,6 @@ body[dir="ltr"] {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* زر حذف النص في لوحة التأثيرات */
-.delete-text-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px;
-    background: #f44336;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    margin-top: 10px;
-    width: 100%;
-    transition: all 0.2s;
-}
-
-.delete-text-btn:hover {
-    background: #d32f2f;
-    transform: translateY(-2px);
-}
-
-/* Toolbar */
 .editor-toolbar {
     position: fixed;
     bottom: 70px;
@@ -404,7 +423,6 @@ body[dir="ltr"] {
     font-size: 20px;
 }
 
-/* Tool Panels */
 .tool-panel {
     display: none;
     position: fixed;
@@ -484,7 +502,6 @@ body[dir="ltr"] {
     cursor: pointer;
 }
 
-/* Settings */
 .settings-content {
     padding: 15px;
 }
@@ -556,7 +573,6 @@ body[dir="ltr"] {
     border-bottom: none;
 }
 
-/* Bottom Nav */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -602,7 +618,6 @@ body[dir="ltr"] {
     font-size: 24px;
 }
 
-/* منع ارتفاع العناصر عند فتح لوحة المفاتيح */
 body.keyboard-open {
     height: 100vh !important;
     overflow: hidden !important;
@@ -610,7 +625,6 @@ body.keyboard-open {
     width: 100% !important;
 }
 
-/* إبقاء جميع الأزرار في مكانها عند ظهور لوحة المفاتيح */
 .keyboard-open .bottom-nav,
 .keyboard-open .editor-toolbar,
 .keyboard-open .tool-panel.active {
@@ -630,181 +644,9 @@ body.keyboard-open {
 
 .keyboard-open .tool-panel.active {
     bottom: 140px !important;
-}
-
-/* إخفاء لوحات الأدوات عند فتح لوحة المفاتيح */
-.keyboard-open .tool-panel.active {
     display: none !important;
 }
 
-/* تحسين جودة الصور */
-.category-item img,
-.image-item img,
-#canvas {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    image-rendering: pixelated;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* تحسينات للهواتف الصغيرة */
-@media (max-height: 700px) {
-    .editor-container {
-        bottom: 130px !important;
-        height: calc(100vh - 201px) !important;
-    }
-    
-    .editor-toolbar {
-        height: 60px !important;
-        bottom: 60px !important;
-    }
-    
-    .tool-panel.active {
-        bottom: 120px !important;
-    }
-    
-    .bottom-nav {
-        height: 60px !important;
-    }
-    
-    .keyboard-open .editor-toolbar {
-        bottom: 60px !important;
-    }
-    
-    .keyboard-open .tool-panel.active {
-        bottom: 120px !important;
-    }
-}
-
-@media (max-width: 768px) {
-    .categories-grid,
-    .image-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        padding: 10px;
-    }
-    
-    .color-grid {
-        grid-template-columns: repeat(6, 1fr);
-    }
-    
-    .header h1 {
-        font-size: 18px;
-    }
-    
-    .tool-btn {
-        font-size: 9px;
-        padding: 6px;
-        min-width: 50px;
-    }
-    
-    .tool-btn .material-symbols-outlined {
-        font-size: 18px;
-    }
-    
-    .nav-btn {
-        min-width: 60px;
-        font-size: 10px;
-    }
-    
-    .nav-btn .material-symbols-outlined {
-        font-size: 20px;
-    }
-    
-    .editor-container {
-        top: 60px !important;
-        bottom: 120px !important;
-        height: calc(100vh - 180px) !important;
-    }
-    
-    .editor-toolbar {
-        height: 60px !important;
-        bottom: 60px !important;
-        padding: 8px;
-    }
-    
-    .bottom-nav {
-        height: 60px !important;
-        padding: 6px;
-    }
-    
-    .text-card {
-        max-width: 95%;
-    }
-}
-
-@media (max-width: 480px) {
-    .categories-grid,
-    .image-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .color-grid {
-        grid-template-columns: repeat(5, 1fr);
-    }
-    
-    .header {
-        padding: 12px 15px;
-    }
-    
-    .header h1 {
-        font-size: 16px;
-    }
-    
-    .editor-toolbar {
-        padding: 5px;
-    }
-    
-    .tool-btn {
-        font-size: 8px;
-        padding: 4px;
-        min-width: 45px;
-    }
-    
-    .tool-btn .material-symbols-outlined {
-        font-size: 16px;
-    }
-    
-    .nav-btn {
-        font-size: 9px;
-        padding: 6px;
-        min-width: 55px;
-    }
-    
-    .nav-btn .material-symbols-outlined {
-        font-size: 18px;
-    }
-    
-    .text-card {
-        max-width: 95%;
-    }
-    
-    .text-card-buttons {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .text-card-btn {
-        width: 100%;
-    }
-}
-
-/* تحسينات للخطوط */
-select#fontFamily option {
-    padding: 8px;
-    font-size: 16px;
-}
-
-select#fontFamily optgroup {
-    font-weight: bold;
-    padding: 10px 0;
-    color: var(--primary-color);
-}
-
-/* إشعارات */
 .custom-alert {
     position: fixed;
     top: 20px;
@@ -878,7 +720,6 @@ select#fontFamily optgroup {
     font-size: 16px;
 }
 
-/* تحسينات عامة */
 * {
     -webkit-touch-callout: none;
     -webkit-user-drag: none;
@@ -925,90 +766,15 @@ input[type="checkbox"] {
     accent-color: var(--primary-color);
 }
 
-.tool-panel::-webkit-scrollbar {
-    width: 6px;
-}
-
-.tool-panel::-webkit-scrollbar-track {
-    background: var(--bg-color);
-    border-radius: 3px;
-}
-
-.tool-panel::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-.tool-panel::-webkit-scrollbar-thumb:hover {
-    background: var(--text-secondary);
-}
-
-/* إضافة نمط لخلفية الصورة */
-.canvas-wrapper-fixed {
-    background: linear-gradient(45deg, var(--bg-color) 25%, transparent 25%),
-                linear-gradient(-45deg, var(--bg-color) 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, var(--bg-color) 75%),
-                linear-gradient(-45deg, transparent 75%, var(--bg-color) 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-    background-color: rgba(245, 245, 247, 0.5);
-}
-
-[data-theme="dark"] .canvas-wrapper-fixed {
-    background: linear-gradient(45deg, #2c2c2e 25%, transparent 25%),
-                linear-gradient(-45deg, #2c2c2e 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, #2c2c2e 75%),
-                linear-gradient(-45deg, transparent 75%, #2c2c2e 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-    background-color: rgba(44, 44, 46, 0.5);
-}
-
-/* تحسينات للصور */
-.image-item img {
-    transition: transform 0.3s ease;
-}
-
-.image-item:hover img {
-    transform: scale(1.03);
-}
-
-.category-item img {
-    transition: transform 0.3s ease;
-}
-
-.category-item:hover img {
-    transform: scale(1.05);
-}
-
-/* إخفاء زر السمة الزرقاء */
-.theme-btn[data-theme="blue"] {
-    display: none !important;
-}
-
-/* تحسين جودة العرض */
-#canvas {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    image-rendering: pixelated;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* تحسين عرض الألوان */
-.color-item {
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.color-item:hover {
-    transform: scale(1.15);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    z-index: 1;
-}
-
-.color-item[style*="border: 2px solid #ccc"] {
-    border-color: #999 !important;
+@media (max-width: 768px) {
+    .categories-grid,
+    .image-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    .color-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
 }
