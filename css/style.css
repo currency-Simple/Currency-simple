@@ -232,6 +232,132 @@ body[dir="ltr"] {
     image-rendering: crisp-edges;
 }
 
+/* بطاقة النص */
+.text-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 400px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.text-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: var(--primary-color);
+    color: white;
+    font-weight: bold;
+}
+
+.close-card-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.close-card-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.text-card-content {
+    padding: 20px;
+}
+
+#textCardInput {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+#textCardInput:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.text-card-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.text-card-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.cancel-btn {
+    background: var(--border-color);
+    color: var(--text-color);
+}
+
+.delete-btn {
+    background: #f44336;
+    color: white;
+}
+
+.ok-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+.text-card-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* زر حذف النص في لوحة التأثيرات */
+.delete-text-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.delete-text-btn:hover {
+    background: #d32f2f;
+    transform: translateY(-2px);
+}
+
 /* Toolbar */
 .editor-toolbar {
     position: fixed;
@@ -358,183 +484,6 @@ body[dir="ltr"] {
     cursor: pointer;
 }
 
-/* صفحة الملون */
-.colored-content {
-    padding: 15px;
-    overflow-y: auto;
-    height: calc(100vh - 140px);
-    padding-bottom: 20px;
-}
-
-.colored-section {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.colored-section h2 {
-    color: var(--text-color);
-    margin-bottom: 15px;
-    font-size: 18px;
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 8px;
-}
-
-/* شبكة الأشكال */
-.shapes-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-}
-
-.shape-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 15px;
-    background: var(--bg-color);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 2px solid var(--border-color);
-}
-
-.shape-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    border-color: var(--primary-color);
-}
-
-.shape-item.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.shape-item.active .shape-icon {
-    color: white;
-}
-
-.shape-icon {
-    font-size: 32px;
-    margin-bottom: 8px;
-    color: var(--text-color);
-}
-
-.shape-label {
-    font-size: 12px;
-    text-align: center;
-    font-weight: bold;
-    color: var(--text-color);
-}
-
-.shape-item.active .shape-label {
-    color: white;
-}
-
-/* أدوات النص */
-.text-tools {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.text-tool-item {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.text-tool-item label {
-    color: var(--text-color);
-    font-weight: bold;
-    font-size: 14px;
-}
-
-.text-tool-item input[type="range"] {
-    width: 100%;
-}
-
-.text-tool-item .tool-select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 16px;
-    background: var(--bg-color);
-    color: var(--text-color);
-}
-
-.small-color-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-    max-height: 120px;
-    overflow-y: auto;
-    padding: 5px;
-    background: var(--bg-color);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.small-color-grid .color-item {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-    min-height: 30px;
-    border-radius: 6px;
-    border: 2px solid transparent;
-    transition: all 0.2s ease;
-}
-
-.small-color-grid .color-item:hover {
-    transform: scale(1.1);
-    border-color: var(--primary-color);
-}
-
-.apply-btn {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 10px;
-    transition: all 0.2s ease;
-    font-size: 14px;
-}
-
-.apply-btn:hover {
-    background: #0056cc;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-.apply-btn .material-symbols-outlined {
-    font-size: 20px;
-}
-
-/* شبكة ألوان الخلفية */
-#backgroundColorsGrid {
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 10px;
-    background: var(--bg-color);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-#backgroundColorsGrid .color-item {
-    border-radius: 8px;
-}
-
 /* Settings */
 .settings-content {
     padding: 15px;
@@ -653,6 +602,54 @@ body[dir="ltr"] {
     font-size: 24px;
 }
 
+/* منع ارتفاع العناصر عند فتح لوحة المفاتيح */
+body.keyboard-open {
+    height: 100vh !important;
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+}
+
+/* إبقاء جميع الأزرار في مكانها عند ظهور لوحة المفاتيح */
+.keyboard-open .bottom-nav,
+.keyboard-open .editor-toolbar,
+.keyboard-open .tool-panel.active {
+    position: fixed !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+.keyboard-open .bottom-nav {
+    bottom: 0 !important;
+}
+
+.keyboard-open .editor-toolbar {
+    bottom: 70px !important;
+}
+
+.keyboard-open .tool-panel.active {
+    bottom: 140px !important;
+}
+
+/* إخفاء لوحات الأدوات عند فتح لوحة المفاتيح */
+.keyboard-open .tool-panel.active {
+    display: none !important;
+}
+
+/* تحسين جودة الصور */
+.category-item img,
+.image-item img,
+#canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 /* تحسينات للهواتف الصغيرة */
 @media (max-height: 700px) {
     .editor-container {
@@ -673,8 +670,12 @@ body[dir="ltr"] {
         height: 60px !important;
     }
     
-    .colored-content {
-        height: calc(100vh - 130px);
+    .keyboard-open .editor-toolbar {
+        bottom: 60px !important;
+    }
+    
+    .keyboard-open .tool-panel.active {
+        bottom: 120px !important;
     }
 }
 
@@ -730,16 +731,8 @@ body[dir="ltr"] {
         padding: 6px;
     }
     
-    .shapes-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .small-color-grid {
-        grid-template-columns: repeat(5, 1fr);
-    }
-    
-    .colored-content {
-        height: calc(100vh - 120px);
+    .text-card {
+        max-width: 95%;
     }
 }
 
@@ -785,17 +778,30 @@ body[dir="ltr"] {
         font-size: 18px;
     }
     
-    .shapes-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .text-card {
+        max-width: 95%;
     }
     
-    .small-color-grid {
-        grid-template-columns: repeat(4, 1fr);
+    .text-card-buttons {
+        flex-direction: column;
+        gap: 10px;
     }
     
-    .colored-content {
-        height: calc(100vh - 110px);
+    .text-card-btn {
+        width: 100%;
     }
+}
+
+/* تحسينات للخطوط */
+select#fontFamily option {
+    padding: 8px;
+    font-size: 16px;
+}
+
+select#fontFamily optgroup {
+    font-weight: bold;
+    padding: 10px 0;
+    color: var(--primary-color);
 }
 
 /* إشعارات */
@@ -872,6 +878,71 @@ body[dir="ltr"] {
     font-size: 16px;
 }
 
+/* تحسينات عامة */
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+*:not(.text-overlay) {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+
+button {
+    transition: all 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border-color);
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+input[type="checkbox"] {
+    accent-color: var(--primary-color);
+}
+
+.tool-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tool-panel::-webkit-scrollbar-track {
+    background: var(--bg-color);
+    border-radius: 3px;
+}
+
+.tool-panel::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.tool-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
 /* إضافة نمط لخلفية الصورة */
 .canvas-wrapper-fixed {
     background: linear-gradient(45deg, var(--bg-color) 25%, transparent 25%),
@@ -891,6 +962,28 @@ body[dir="ltr"] {
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     background-color: rgba(44, 44, 46, 0.5);
+}
+
+/* تحسينات للصور */
+.image-item img {
+    transition: transform 0.3s ease;
+}
+
+.image-item:hover img {
+    transform: scale(1.03);
+}
+
+.category-item img {
+    transition: transform 0.3s ease;
+}
+
+.category-item:hover img {
+    transform: scale(1.05);
+}
+
+/* إخفاء زر السمة الزرقاء */
+.theme-btn[data-theme="blue"] {
+    display: none !important;
 }
 
 /* تحسين جودة العرض */
