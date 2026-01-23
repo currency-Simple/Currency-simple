@@ -1,19 +1,34 @@
+/* ============================================
+   تطبيق محرر النصوص على الصور - النسخة النهائية
+   تصميم متكامل مع جميع التعديلات
+   ============================================ */
+
 :root {
     --primary-color: #007aff;
+    --primary-dark: #0056cc;
     --bg-color: #f5f5f7;
     --card-bg: #ffffff;
     --text-color: #1d1d1f;
     --text-secondary: #86868b;
     --border-color: #d2d2d7;
+    --success-color: #34c759;
+    --error-color: #ff3b30;
+    --warning-color: #ff9500;
+    --info-color: #5ac8fa;
 }
 
 [data-theme="dark"] {
     --primary-color: #0a84ff;
+    --primary-dark: #0062cc;
     --bg-color: #000000;
     --card-bg: #121212;
     --text-color: #ffffff;
     --text-secondary: #b0b0b0;
     --border-color: #333333;
+    --success-color: #30d158;
+    --error-color: #ff453a;
+    --warning-color: #ff9f0a;
+    --info-color: #64d2ff;
 }
 
 * {
@@ -21,6 +36,8 @@
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
 }
 
 html {
@@ -32,7 +49,7 @@ html {
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
     background: var(--bg-color);
     width: 100%;
     height: 100vh;
@@ -41,12 +58,15 @@ body {
     direction: rtl;
     color: var(--text-color);
     touch-action: manipulation;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body[dir="ltr"] {
     direction: ltr;
 }
 
+/* ============== الصفحات ============== */
 .page {
     display: none;
     width: 100%;
@@ -54,13 +74,20 @@ body[dir="ltr"] {
     overflow-y: auto;
     overflow-x: hidden;
     padding-bottom: 70px;
+    background: var(--bg-color);
 }
 
 .page.active {
     display: block;
+    animation: fadeIn 0.3s ease;
 }
 
-/* Header */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ============== الهيدر ============== */
 .header {
     background: var(--card-bg);
     padding: 15px 20px;
@@ -71,6 +98,7 @@ body[dir="ltr"] {
     position: sticky;
     top: 0;
     z-index: 100;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .header h1 {
@@ -79,6 +107,7 @@ body[dir="ltr"] {
     font-weight: 700;
     flex: 1;
     text-align: center;
+    margin: 0;
 }
 
 .header-actions {
@@ -97,13 +126,25 @@ body[dir="ltr"] {
     justify-content: center;
     cursor: pointer;
     color: var(--text-color);
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+}
+
+.icon-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
 }
 
 .back-btn {
     margin-left: auto;
 }
 
-/* Categories & Images Grid */
+/* ============== شبكة الفئات ============== */
 .categories-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -119,19 +160,25 @@ body[dir="ltr"] {
     aspect-ratio: 4/5;
     background: var(--card-bg);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .category-item:hover {
-    transform: scale(1.03);
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
 }
 
 .category-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
+}
+
+.category-item:hover img {
+    transform: scale(1.05);
 }
 
 .category-overlay {
@@ -140,15 +187,17 @@ body[dir="ltr"] {
     left: 0;
     right: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-    padding: 10px;
+    padding: 12px;
     color: white;
 }
 
 .category-title {
     font-size: 14px;
     font-weight: 700;
+    text-align: center;
 }
 
+/* ============== شبكة الصور ============== */
 .image-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -163,22 +212,28 @@ body[dir="ltr"] {
     background: var(--card-bg);
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     aspect-ratio: 4/5;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .image-item:hover {
-    transform: scale(1.02);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
 }
 
 .image-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
 }
 
-/* Editor Page */
+.image-item:hover img {
+    transform: scale(1.05);
+}
+
+/* ============== صفحة المحرر ============== */
 #editorPage {
     position: fixed;
     top: 0;
@@ -210,10 +265,26 @@ body[dir="ltr"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent !important;
+    background: linear-gradient(45deg, var(--bg-color) 25%, transparent 25%),
+                linear-gradient(-45deg, var(--bg-color) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, var(--bg-color) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--bg-color) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    background-color: rgba(245, 245, 247, 0.5);
     padding: 10px;
     box-sizing: border-box;
     overflow: hidden;
+}
+
+[data-theme="dark"] .canvas-wrapper-fixed {
+    background: linear-gradient(45deg, #2c2c2e 25%, transparent 25%),
+                linear-gradient(-45deg, #2c2c2e 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #2c2c2e 75%),
+                linear-gradient(-45deg, transparent 75%, #2c2c2e 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    background-color: rgba(44, 44, 46, 0.5);
 }
 
 #canvas {
@@ -225,36 +296,51 @@ body[dir="ltr"] {
     aspect-ratio: 4/5;
     display: block;
     margin: auto;
-    background: transparent !important;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    border-radius: 8px;
+    background: white !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border-radius: 12px;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
+    backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
-/* بطاقة النص */
+/* ============== بطاقة النص ============== */
 .text-card {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     background: var(--card-bg);
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     width: 90%;
     max-width: 400px;
     z-index: 1000;
     overflow: hidden;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { 
+        transform: translate(-50%, -40%);
+        opacity: 0;
+    }
+    to { 
+        transform: translate(-50%, -50%);
+        opacity: 1;
+    }
 }
 
 .text-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
+    padding: 18px 20px;
     background: var(--primary-color);
     color: white;
     font-weight: bold;
+    font-size: 16px;
 }
 
 .close-card-btn {
@@ -270,11 +356,12 @@ body[dir="ltr"] {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
 }
 
 .close-card-btn:hover {
     background: rgba(255,255,255,0.2);
+    transform: rotate(90deg);
 }
 
 .text-card-content {
@@ -283,37 +370,47 @@ body[dir="ltr"] {
 
 #textCardInput {
     width: 100%;
-    padding: 12px;
+    padding: 15px;
     border: 2px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 16px;
     font-family: inherit;
     resize: vertical;
-    min-height: 100px;
+    min-height: 120px;
     background: var(--bg-color);
     color: var(--text-color);
+    transition: all 0.2s ease;
+    line-height: 1.5;
 }
 
 #textCardInput:focus {
     outline: none;
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
 }
 
 .text-card-buttons {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    margin-top: 15px;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .text-card-btn {
-    padding: 10px 16px;
+    padding: 12px 20px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     font-size: 14px;
+    min-width: 80px;
+    text-align: center;
+}
+
+.text-card-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .cancel-btn {
@@ -321,9 +418,17 @@ body[dir="ltr"] {
     color: var(--text-color);
 }
 
+.cancel-btn:hover {
+    background: #c7c7cc;
+}
+
 .delete-btn {
-    background: #f44336;
+    background: #ff3b30;
     color: white;
+}
+
+.delete-btn:hover {
+    background: #d70015;
 }
 
 .ok-btn {
@@ -331,34 +436,11 @@ body[dir="ltr"] {
     color: white;
 }
 
-.text-card-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+.ok-btn:hover {
+    background: var(--primary-dark);
 }
 
-/* زر حذف النص في لوحة التأثيرات */
-.delete-text-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px;
-    background: #f44336;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    margin-top: 10px;
-    width: 100%;
-    transition: all 0.2s;
-}
-
-.delete-text-btn:hover {
-    background: #d32f2f;
-    transform: translateY(-2px);
-}
-
-/* Toolbar */
+/* ============== شريط الأدوات ============== */
 .editor-toolbar {
     position: fixed;
     bottom: 70px;
@@ -366,45 +448,48 @@ body[dir="ltr"] {
     right: 0;
     display: flex;
     justify-content: space-around;
-    padding: 10px;
+    padding: 12px;
     background: var(--card-bg);
     border-top: 1px solid var(--border-color);
     z-index: 10001;
     height: 70px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
 }
 
 .tool-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     background: none;
     border: none;
-    padding: 8px;
+    padding: 10px;
     cursor: pointer;
     color: var(--text-secondary);
-    border-radius: 8px;
-    font-size: 10px;
+    border-radius: 12px;
+    font-size: 11px;
     touch-action: manipulation;
-    min-width: 60px;
+    min-width: 65px;
     transition: all 0.2s ease;
 }
 
 .tool-btn:hover {
     background: var(--bg-color);
+    color: var(--primary-color);
+    transform: translateY(-3px);
 }
 
 .tool-btn.active {
     background: var(--bg-color);
     color: var(--primary-color);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .tool-btn .material-symbols-outlined {
-    font-size: 20px;
+    font-size: 22px;
 }
 
-/* Tool Panels */
+/* ============== لوحات الأدوات ============== */
 .tool-panel {
     display: none;
     position: fixed;
@@ -412,115 +497,240 @@ body[dir="ltr"] {
     left: 0;
     right: 0;
     background: var(--card-bg);
-    padding: 15px;
+    padding: 20px;
     border-top: 1px solid var(--border-color);
     z-index: 10000;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+    box-shadow: 0 -8px 20px rgba(0,0,0,0.15);
+    animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+    from { 
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .tool-panel.active {
     display: block;
 }
 
-.tool-select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 16px;
-    background: var(--bg-color);
-    color: var(--text-color);
+/* ============== شبكة الخطوط ============== */
+.font-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 5px;
 }
 
+.font-item {
+    padding: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background: var(--bg-color);
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.font-item:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,122,255,0.2);
+}
+
+.font-item.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+}
+
+.font-name {
+    font-weight: 700;
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.font-demo {
+    font-size: 12px;
+    opacity: 0.9;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============== شريط التمرير ============== */
 .size-slider,
 .stroke-slider {
-    width: calc(100% - 60px);
+    width: calc(100% - 70px);
     margin-left: 10px;
+    -webkit-appearance: none;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--border-color);
+    outline: none;
+}
+
+.size-slider::-webkit-slider-thumb,
+.stroke-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 #fontSizeDisplay,
 #strokeWidthDisplay {
     display: inline-block;
-    width: 40px;
+    width: 60px;
     text-align: center;
     font-weight: bold;
     color: var(--primary-color);
+    font-size: 16px;
 }
 
+/* ============== شبكة الألوان ============== */
 .color-grid {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 8px;
-    margin-bottom: 10px;
+    gap: 10px;
+    margin-bottom: 15px;
 }
 
 .color-item {
     width: 100%;
     aspect-ratio: 1;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     border: 2px solid var(--border-color);
     touch-action: manipulation;
-    transition: transform 0.2s ease;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .color-item:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 1;
 }
 
+.color-item[style*="border: 2px solid #ccc"] {
+    border-color: #999 !important;
+}
+
+/* ============== خيارات التأثيرات ============== */
 .effect-option {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px;
+    gap: 12px;
+    padding: 15px;
     font-size: 16px;
-}
-
-.effect-option input[type="checkbox"] {
-    width: 22px;
-    height: 22px;
+    background: var(--bg-color);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
     cursor: pointer;
 }
 
-/* Settings */
+.effect-option:hover {
+    background: rgba(0,122,255,0.1);
+}
+
+.effect-option input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+.delete-text-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: #ff3b30;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+    transition: all 0.2s ease;
+    justify-content: center;
+}
+
+.delete-text-btn:hover {
+    background: #d70015;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255,59,48,0.3);
+}
+
+/* ============== صفحة الإعدادات ============== */
 .settings-content {
     padding: 15px;
 }
 
 .setting-card {
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 20px;
     margin-bottom: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-color);
 }
 
 .setting-card h3 {
     color: var(--text-color);
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     font-size: 18px;
+    font-weight: 700;
 }
 
 .theme-options,
 .language-options {
     display: flex;
-    gap: 10px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .theme-btn,
 .lang-btn {
     flex: 1;
-    padding: 12px;
+    padding: 15px;
     border: 2px solid var(--border-color);
     background: var(--bg-color);
     color: var(--text-color);
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 15px;
     touch-action: manipulation;
     transition: all 0.2s ease;
+    min-width: 120px;
+    text-align: center;
 }
 
 .theme-btn:hover,
@@ -528,6 +738,7 @@ body[dir="ltr"] {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
 .theme-btn.active,
@@ -535,28 +746,36 @@ body[dir="ltr"] {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0,122,255,0.3);
 }
 
 .setting-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 15px;
+    gap: 15px;
+    padding: 18px;
     color: var(--text-color);
     text-decoration: none;
     border-bottom: 1px solid var(--border-color);
-    transition: background 0.2s ease;
+    transition: all 0.2s ease;
+    font-size: 15px;
 }
 
 .setting-link:hover {
     background: var(--bg-color);
+    padding-right: 25px;
 }
 
 .setting-link:last-child {
     border-bottom: none;
 }
 
-/* Bottom Nav */
+.setting-link .material-symbols-outlined {
+    color: var(--primary-color);
+    font-size: 22px;
+}
+
+/* ============== القائمة السفلية ============== */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -565,10 +784,11 @@ body[dir="ltr"] {
     background: var(--card-bg);
     display: flex;
     justify-content: space-around;
-    padding: 8px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    padding: 10px;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
     z-index: 10002;
     height: 70px;
+    border-top: 1px solid var(--border-color);
 }
 
 .nav-btn {
@@ -577,13 +797,13 @@ body[dir="ltr"] {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 8px;
+    gap: 6px;
+    padding: 10px;
     cursor: pointer;
     color: var(--text-secondary);
-    border-radius: 10px;
+    border-radius: 12px;
     flex: 1;
-    font-size: 11px;
+    font-size: 12px;
     touch-action: manipulation;
     min-width: 70px;
     transition: all 0.2s ease;
@@ -591,18 +811,21 @@ body[dir="ltr"] {
 
 .nav-btn:hover {
     background: var(--bg-color);
+    color: var(--primary-color);
+    transform: translateY(-3px);
 }
 
 .nav-btn.active {
     color: var(--primary-color);
     background: var(--bg-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .nav-btn .material-symbols-outlined {
-    font-size: 24px;
+    font-size: 26px;
 }
 
-/* منع ارتفاع العناصر عند فتح لوحة المفاتيح */
+/* ============== لوحة المفاتيح ============== */
 body.keyboard-open {
     height: 100vh !important;
     overflow: hidden !important;
@@ -610,7 +833,6 @@ body.keyboard-open {
     width: 100% !important;
 }
 
-/* إبقاء جميع الأزرار في مكانها عند ظهور لوحة المفاتيح */
 .keyboard-open .bottom-nav,
 .keyboard-open .editor-toolbar,
 .keyboard-open .tool-panel.active {
@@ -632,25 +854,142 @@ body.keyboard-open {
     bottom: 140px !important;
 }
 
-/* إخفاء لوحات الأدوات عند فتح لوحة المفاتيح */
 .keyboard-open .tool-panel.active {
     display: none !important;
 }
 
-/* تحسين جودة الصور */
-.category-item img,
-.image-item img,
-#canvas {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    image-rendering: pixelated;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+/* ============== الإشعارات ============== */
+.custom-alert {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 25px;
+    border-radius: 12px;
+    color: white;
+    font-weight: bold;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 300px;
+    max-width: 90%;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    animation: slideInAlert 0.3s ease-out;
+    backdrop-filter: blur(10px);
 }
 
-/* تحسينات للهواتف الصغيرة */
+@keyframes slideInAlert {
+    from { 
+        transform: translateX(-50%) translateY(-30px); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateX(-50%) translateY(0); 
+        opacity: 1; 
+    }
+}
+
+.custom-alert.success { 
+    background: rgba(52, 199, 89, 0.95); 
+    border: 1px solid rgba(52, 199, 89, 0.3);
+}
+.custom-alert.error { 
+    background: rgba(255, 59, 48, 0.95); 
+    border: 1px solid rgba(255, 59, 48, 0.3);
+}
+.custom-alert.info { 
+    background: rgba(90, 200, 250, 0.95); 
+    border: 1px solid rgba(90, 200, 250, 0.3);
+}
+.custom-alert.warning { 
+    background: rgba(255, 149, 0, 0.95); 
+    border: 1px solid rgba(255, 149, 0, 0.3);
+}
+
+/* ============== مؤشر التحميل ============== */
+.custom-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100001;
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s ease;
+}
+
+.loader-content {
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    min-width: 280px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    border: 1px solid var(--border-color);
+}
+
+.loader-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid var(--bg-color);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    margin: 0 auto 25px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loader-text {
+    color: var(--text-color);
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* ============== تحسينات التمرير ============== */
+.tool-panel::-webkit-scrollbar,
+.font-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tool-panel::-webkit-scrollbar-track,
+.font-grid::-webkit-scrollbar-track {
+    background: var(--bg-color);
+    border-radius: 4px;
+}
+
+.tool-panel::-webkit-scrollbar-thumb,
+.font-grid::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.tool-panel::-webkit-scrollbar-thumb:hover,
+.font-grid::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* ============== عدادات الفئات ============== */
+#categoriesCounter {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 5px;
+    padding: 5px;
+    background: var(--bg-color);
+    border-radius: 8px;
+    margin: 5px 20px 0;
+}
+
+/* ============== تحسينات للهواتف الصغيرة ============== */
 @media (max-height: 700px) {
     .editor-container {
         bottom: 130px !important;
@@ -677,18 +1016,36 @@ body.keyboard-open {
     .keyboard-open .tool-panel.active {
         bottom: 120px !important;
     }
+    
+    .font-grid {
+        max-height: 200px;
+    }
+    
+    .color-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
     .categories-grid,
     .image-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        padding: 10px;
+        gap: 10px;
+        padding: 12px;
     }
     
     .color-grid {
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+    }
+    
+    .font-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .header {
+        padding: 12px 15px;
     }
     
     .header h1 {
@@ -696,22 +1053,22 @@ body.keyboard-open {
     }
     
     .tool-btn {
-        font-size: 9px;
-        padding: 6px;
-        min-width: 50px;
+        font-size: 10px;
+        padding: 8px;
+        min-width: 55px;
     }
     
     .tool-btn .material-symbols-outlined {
-        font-size: 18px;
+        font-size: 20px;
     }
     
     .nav-btn {
-        min-width: 60px;
-        font-size: 10px;
+        min-width: 65px;
+        font-size: 11px;
     }
     
     .nav-btn .material-symbols-outlined {
-        font-size: 20px;
+        font-size: 22px;
     }
     
     .editor-container {
@@ -723,16 +1080,26 @@ body.keyboard-open {
     .editor-toolbar {
         height: 60px !important;
         bottom: 60px !important;
-        padding: 8px;
+        padding: 10px;
     }
     
     .bottom-nav {
         height: 60px !important;
-        padding: 6px;
+        padding: 8px;
     }
     
     .text-card {
         max-width: 95%;
+    }
+    
+    .setting-card {
+        padding: 15px;
+    }
+    
+    .theme-btn,
+    .lang-btn {
+        min-width: 100px;
+        padding: 12px;
     }
 }
 
@@ -746,8 +1113,12 @@ body.keyboard-open {
         grid-template-columns: repeat(5, 1fr);
     }
     
+    .font-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    
     .header {
-        padding: 12px 15px;
+        padding: 10px 12px;
     }
     
     .header h1 {
@@ -755,27 +1126,27 @@ body.keyboard-open {
     }
     
     .editor-toolbar {
-        padding: 5px;
+        padding: 8px;
     }
     
     .tool-btn {
-        font-size: 8px;
-        padding: 4px;
-        min-width: 45px;
+        font-size: 9px;
+        padding: 6px;
+        min-width: 50px;
     }
     
     .tool-btn .material-symbols-outlined {
-        font-size: 16px;
+        font-size: 18px;
     }
     
     .nav-btn {
-        font-size: 9px;
-        padding: 6px;
-        min-width: 55px;
+        font-size: 10px;
+        padding: 8px;
+        min-width: 60px;
     }
     
     .nav-btn .material-symbols-outlined {
-        font-size: 18px;
+        font-size: 20px;
     }
     
     .text-card {
@@ -784,114 +1155,24 @@ body.keyboard-open {
     
     .text-card-buttons {
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
     }
     
     .text-card-btn {
         width: 100%;
     }
+    
+    .custom-alert {
+        min-width: 250px;
+        padding: 12px 20px;
+        font-size: 14px;
+    }
 }
 
-/* تحسينات للخطوط */
-select#fontFamily option {
-    padding: 8px;
-    font-size: 16px;
-}
-
-select#fontFamily optgroup {
-    font-weight: bold;
-    padding: 10px 0;
-    color: var(--primary-color);
-}
-
-/* إشعارات */
-.custom-alert {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 12px 20px;
-    border-radius: 8px;
-    color: white;
-    font-weight: bold;
-    z-index: 100000;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-width: 300px;
-    max-width: 90%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-    to { transform: translateX(-50%) translateY(0); opacity: 1; }
-}
-
-.custom-alert.success { background: #4CAF50; }
-.custom-alert.error { background: #f44336; }
-.custom-alert.info { background: #2196F3; }
-.custom-alert.warning { background: #ff9800; }
-
-.custom-loader {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100001;
-    backdrop-filter: blur(4px);
-}
-
-.loader-content {
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    text-align: center;
-    min-width: 250px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-}
-
-.loader-spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--primary-color);
-    border-radius: 50%;
-    margin: 0 auto 20px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.loader-text {
-    color: #333;
-    font-weight: bold;
-    font-size: 16px;
-}
-
-/* تحسينات عامة */
-* {
-    -webkit-touch-callout: none;
-    -webkit-user-drag: none;
-}
-
+/* ============== تحسينات عامة ============== */
 input:focus, textarea:focus, select:focus {
     outline: none !important;
     box-shadow: none !important;
-}
-
-*:not(.text-overlay) {
-    -webkit-user-select: none !important;
-    user-select: none !important;
 }
 
 button {
@@ -902,91 +1183,14 @@ button:active {
     transform: scale(0.95);
 }
 
-input[type="range"] {
-    -webkit-appearance: none;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--border-color);
-    outline: none;
+*:not(.text-overlay) {
+    -webkit-user-select: none !important;
+    user-select: none !important;
 }
 
-input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-input[type="checkbox"] {
-    accent-color: var(--primary-color);
-}
-
-.tool-panel::-webkit-scrollbar {
-    width: 6px;
-}
-
-.tool-panel::-webkit-scrollbar-track {
-    background: var(--bg-color);
-    border-radius: 3px;
-}
-
-.tool-panel::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-.tool-panel::-webkit-scrollbar-thumb:hover {
-    background: var(--text-secondary);
-}
-
-/* إضافة نمط لخلفية الصورة */
-.canvas-wrapper-fixed {
-    background: linear-gradient(45deg, var(--bg-color) 25%, transparent 25%),
-                linear-gradient(-45deg, var(--bg-color) 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, var(--bg-color) 75%),
-                linear-gradient(-45deg, transparent 75%, var(--bg-color) 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-    background-color: rgba(245, 245, 247, 0.5);
-}
-
-[data-theme="dark"] .canvas-wrapper-fixed {
-    background: linear-gradient(45deg, #2c2c2e 25%, transparent 25%),
-                linear-gradient(-45deg, #2c2c2e 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, #2c2c2e 75%),
-                linear-gradient(-45deg, transparent 75%, #2c2c2e 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-    background-color: rgba(44, 44, 46, 0.5);
-}
-
-/* تحسينات للصور */
-.image-item img {
-    transition: transform 0.3s ease;
-}
-
-.image-item:hover img {
-    transform: scale(1.03);
-}
-
-.category-item img {
-    transition: transform 0.3s ease;
-}
-
-.category-item:hover img {
-    transform: scale(1.05);
-}
-
-/* إخفاء زر السمة الزرقاء */
-.theme-btn[data-theme="blue"] {
-    display: none !important;
-}
-
-/* تحسين جودة العرض */
+/* تحسين جودة الصور */
+.category-item img,
+.image-item img,
 #canvas {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
@@ -997,18 +1201,153 @@ input[type="checkbox"] {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* تحسين عرض الألوان */
-.color-item {
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* إخفاء شريط التمرير في بعض المتصفحات */
+::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
 }
 
-.color-item:hover {
-    transform: scale(1.15);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    z-index: 1;
+/* تحسين الأداء */
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.color-item[style*="border: 2px solid #ccc"] {
-    border-color: #999 !important;
+/* تحسين عرض النصوص */
+@supports (-webkit-touch-callout: none) {
+    * {
+        -webkit-touch-callout: none;
+    }
+}
+
+/* تحسين للشاشات عالية الدقة */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .header,
+    .setting-card,
+    .tool-panel {
+        border-width: 0.5px;
+    }
+}
+
+/* تحسين للوضع الداكن على iOS */
+@supports (-webkit-touch-callout: none) {
+    [data-theme="dark"] {
+        background: #000;
+    }
+}
+
+/* تحسينات للتحميل */
+.loading-shimmer {
+    background: linear-gradient(90deg, 
+        var(--bg-color) 0%, 
+        rgba(255,255,255,0.1) 50%, 
+        var(--bg-color) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* ============== التحسينات النهائية ============== */
+.material-symbols-outlined {
+    font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+/* ضمان أن الخلفيات شفافة عند الحاجة */
+.canvas-wrapper-fixed {
+    background-blend-mode: multiply;
+}
+
+/* تحسين الظلال */
+.header,
+.setting-card,
+.tool-panel,
+.bottom-nav,
+.editor-toolbar {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] .header,
+[data-theme="dark"] .setting-card,
+[data-theme="dark"] .tool-panel,
+[data-theme="dark"] .bottom-nav,
+[data-theme="dark"] .editor-toolbar {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+/* تحسين الحدود */
+.category-item,
+.image-item,
+.font-item,
+.color-item,
+.setting-card {
+    border: 1px solid var(--border-color);
+}
+
+/* تحسين النصوص */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.5;
+}
+
+/* تحسين الأزرار */
+button {
+    font-family: inherit;
+}
+
+/* تحسين التمرير السلس */
+.page {
+    scroll-behavior: smooth;
+}
+
+/* تحسين للشاشات الكبيرة */
+@media (min-width: 1024px) {
+    .categories-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .image-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+        padding: 20px;
+    }
+    
+    .color-grid {
+        grid-template-columns: repeat(10, 1fr);
+    }
+    
+    .font-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* تحسين النهاية */
+* {
+    -webkit-overflow-scrolling: touch;
+}
+
+html, body {
+    overscroll-behavior: none;
+}
+
+/* منع التكبير على iOS */
+@supports (-webkit-touch-callout: none) {
+    input, textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* تحسين الأداء النهائي */
+* {
+    will-change: transform, opacity;
 }
