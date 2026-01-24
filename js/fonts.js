@@ -70,47 +70,8 @@ const loadedFonts = new Set();
 
 // تهيئة قائمة الخطوط
 function initializeFonts() {
-    const fontSelect = document.getElementById('fontFamily');
-    if (!fontSelect) {
-        console.error('fontFamily element not found');
-        return;
-    }
-    
-    fontSelect.innerHTML = '';
-    
-    // إضافة الخطوط العربية
-    const arabicGroup = document.createElement('optgroup');
-    arabicGroup.label = 'الخطوط العربية';
-    
-    ARABIC_FONTS.forEach(font => {
-        const option = document.createElement('option');
-        option.value = font.family;
-        option.textContent = `${font.name} - ${font.demo}`;
-        option.style.fontFamily = font.family;
-        arabicGroup.appendChild(option);
-    });
-    
-    fontSelect.appendChild(arabicGroup);
-    
-    // إضافة الخطوط الإنجليزية
-    const englishGroup = document.createElement('optgroup');
-    englishGroup.label = 'English Fonts';
-    
-    ENGLISH_FONTS.forEach(font => {
-        const option = document.createElement('option');
-        option.value = font.family;
-        option.textContent = `${font.name} - ${font.demo}`;
-        option.style.fontFamily = font.family;
-        englishGroup.appendChild(option);
-    });
-    
-    fontSelect.appendChild(englishGroup);
-    
-    // تعيين الخط الافتراضي
-    fontSelect.value = ARABIC_FONTS[0].family;
-    console.log('Fonts loaded:', ARABIC_FONTS.length + ENGLISH_FONTS.length);
-    
-    // تحميل الخطوط مسبقاً
+    console.log('Fonts system initialized');
+    // الخطوط يتم اختيارها الآن من اللوحة الأفقية
     preloadFonts();
 }
 
