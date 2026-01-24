@@ -18,7 +18,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         setupTextCard();
         addTextCardButton();
-    }, 1000);
+    }, 500);
 });
 
 // إعداد بطاقة النص الجديدة
@@ -239,10 +239,15 @@ async function loadCategories() {
     
     try {
         const promises = [];
+        
+        // تحميل الفئات من 1 إلى 100
         for (let i = 1; i <= 100; i++) {
             promises.push(
                 fetch(`data/images${i}.json`)
-                    .then(res => res.ok ? res.json() : null)
+                    .then(res => {
+                        if (!res.ok) throw new Error('Not found');
+                        return res.json();
+                    })
                     .then(data => {
                         if (data && data.images && data.images.length > 0) {
                             categories.push({
@@ -253,20 +258,23 @@ async function loadCategories() {
                             });
                         }
                     })
-                    .catch(() => null)
+                    .catch(() => {
+                        console.log(`Category ${i} not found, skipping...`);
+                    })
             );
         }
         
         await Promise.allSettled(promises);
         
         if (categories.length === 0) {
+            console.log('No categories found, loading demo...');
             loadDemoCategories();
         } else {
             categories.sort((a, b) => a.id - b.id);
             displayCategories();
+            console.log(`✓ تم تحميل ${categories.length} فئة`);
         }
         
-        console.log('Categories loaded:', categories.length);
     } catch (error) {
         console.error('Error loading categories:', error);
         loadDemoCategories();
@@ -282,7 +290,7 @@ function loadDemoCategories() {
             const id = (i - 1) * 12 + j;
             images.push({
                 id: id,
-                url: `https://picsum.photos/300/400?random=${id}`,
+                url: `https://images.pexels.com/photos/${1000000 + id}/pexels-photo-${1000000 + id}.jpeg?auto=compress&cs=tinysrgb&w=400`,
                 title: `صورة ${id}`
             });
         }
@@ -310,7 +318,7 @@ function displayCategories() {
         item.className = 'category-item';
         item.onclick = () => openCategory(cat);
         item.innerHTML = `
-            <img src="${cat.coverImage}" alt="${cat.name}" loading="lazy">
+            <img src="${cat.coverImage}" alt="${cat.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400?text=No+Image'">
             <div class="category-overlay">
                 <div class="category-title">${cat.name}</div>
             </div>
@@ -318,7 +326,7 @@ function displayCategories() {
         grid.appendChild(item);
     });
     
-    console.log('Categories displayed:', categories.length);
+    console.log('✓ تم عرض', categories.length, 'فئة');
 }
 
 function openCategory(cat) {
@@ -333,7 +341,7 @@ function openCategory(cat) {
     displayImages();
     showPage('images');
     
-    console.log('Category opened:', cat.name);
+    console.log('✓ تم فتح الفئة:', cat.name);
 }
 
 function displayImages() {
@@ -354,16 +362,19 @@ function displayImages() {
         imgEl.src = img.url;
         imgEl.alt = img.title || 'صورة';
         imgEl.loading = 'lazy';
+        imgEl.onerror = function() {
+            this.src = 'https://via.placeholder.com/300x400?text=Error';
+        };
         
         item.appendChild(imgEl);
         grid.appendChild(item);
     });
     
-    console.log('Images displayed:', currentImages.length);
+    console.log('✓ تم عرض', currentImages.length, 'صورة');
 }
 
 function selectImage(img) {
-    console.log('Image selected:', img.id);
+    console.log('✓ تم اختيار الصورة:', img.id);
     
     localStorage.setItem('selectedImage', JSON.stringify(img));
     showPage('editor');
@@ -371,8 +382,10 @@ function selectImage(img) {
     setTimeout(() => {
         if (typeof loadImageToEditor === 'function') {
             loadImageToEditor(img.url);
+        } else {
+            console.error('loadImageToEditor function not found');
         }
-    }, 100);
+    }, 200);
 }
 
 function showPage(pageName) {
@@ -410,11 +423,6 @@ function showPage(pageName) {
     if (pageName !== 'editor') {
         closeAllToolPanels();
         handleKeyboardClose();
-    }
-    
-    // عرض خلفية فارغة عند فتح المحرر
-    if (pageName === 'editor' && typeof initializeEmptyCanvas === 'function') {
-        initializeEmptyCanvas();
     }
 }
 
@@ -459,15 +467,13 @@ async function downloadImage() {
                 return;
             }
         } else {
-            hideLoadingIndicator();
-            showAlert('دالة الرسم غير متوفرة', 'error');
-            return;
+            exportCanvas = canvas;
         }
         
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
         
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `صورة-مع-نص-${timestamp}.png`;
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+        const filename = `edited-image-${timestamp}.png`;
         
         exportCanvas.toBlob((blob) => {
             if (!blob) {
@@ -488,9 +494,9 @@ async function downloadImage() {
             setTimeout(() => URL.revokeObjectURL(url), 1000);
             
             hideLoadingIndicator();
-            showAlert('تم تنزيل الصورة بنجاح!', 'success');
+            showAlert('✓ تم تنزيل الصورة بنجاح!', 'success');
             
-            console.log('Download completed');
+            console.log('✓ Download completed');
             
         }, 'image/png', 1.0);
         
@@ -527,12 +533,10 @@ async function shareImage() {
                 return;
             }
         } else {
-            hideLoadingIndicator();
-            showAlert('دالة الرسم غير متوفرة', 'error');
-            return;
+            exportCanvas = canvas;
         }
         
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         exportCanvas.toBlob(async (blob) => {
             if (!blob) {
@@ -541,7 +545,7 @@ async function shareImage() {
                 return;
             }
             
-            const file = new File([blob], 'صورة-مع-نص.png', { 
+            const file = new File([blob], 'edited-image.png', { 
                 type: 'image/png',
                 lastModified: Date.now()
             });
@@ -555,13 +559,13 @@ async function shareImage() {
                 
                 await navigator.share({
                     files: [file],
-                    title: 'صورة مع نص',
-                    text: 'شاهد هذه الصورة الرائعة مع نص مكتوب عليها!'
+                    title: 'صورة معدلة',
+                    text: 'شاهد هذه الصورة!'
                 });
                 
                 hideLoadingIndicator();
-                showAlert('تم المشاركة بنجاح!', 'success');
-                console.log('تمت المشاركة بنجاح');
+                showAlert('✓ تم المشاركة بنجاح!', 'success');
+                console.log('✓ Share completed');
                 
             } catch (shareError) {
                 hideLoadingIndicator();
@@ -611,7 +615,7 @@ function showAlert(message, type = 'info') {
         if (alert.parentElement) {
             alert.remove();
         }
-    }, 5000);
+    }, 4000);
 }
 
 function showLoadingIndicator(message = 'جاري المعالجة...') {
@@ -639,4 +643,10 @@ function hideLoadingIndicator() {
     }
 }
 
+// تهيئة النص
 window.currentText = '';
+window.showPage = showPage;
+window.goBackToImages = goBackToImages;
+window.downloadImage = downloadImage;
+window.shareImage = shareImage;
+window.showAlert = showAlert;
