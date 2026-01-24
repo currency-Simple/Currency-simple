@@ -1,3 +1,5 @@
+[file name]: editor.js
+[file content begin]
 // متغيرات المحرر
 let canvas, ctx;
 let currentImage = null;
@@ -82,6 +84,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // تهيئة القيم من window
     if (window.textScale === undefined) window.textScale = 1;
     if (window.textRotation === undefined) window.textRotation = 0;
+    if (window.textX === undefined) window.textX = 0.5;
+    if (window.textY === undefined) window.textY = 0.5;
     
     if (typeof initializeFonts === 'function') {
         initializeFonts();
@@ -351,8 +355,8 @@ function handleTouchMove(e) {
         const x = Math.max(0.1, Math.min(0.9, (touch.clientX - rect.left) / canvas.width));
         const y = Math.max(0.1, Math.min(0.9, (touch.clientY - rect.top) / canvas.height));
         
-        textX = x;
-        textY = y;
+        window.textX = x;
+        window.textY = y;
         
         lastRenderTime = now;
         renderFullCanvas();
@@ -509,8 +513,8 @@ function loadImageToEditor(imageUrl) {
         currentFilter = 'none';
         canvasStickers = [];
         
-        textX = 0.5;
-        textY = 0.5;
+        window.textX = 0.5;
+        window.textY = 0.5;
         window.textScale = 1;
         window.textRotation = 0;
         
@@ -670,8 +674,8 @@ function renderTextContent() {
     
     const lineHeight = adjustedFontSize * 1.4;
     const totalHeight = adjustedLines.length * lineHeight;
-    const centerX = textX * canvas.width;
-    const centerY = textY * canvas.height;
+    const centerX = (window.textX || 0.5) * canvas.width;
+    const centerY = (window.textY || 0.5) * canvas.height;
     
     ctx.translate(centerX, centerY);
     ctx.rotate((window.textRotation || 0) * Math.PI / 180);
@@ -853,8 +857,8 @@ function prepareImageForExport() {
         
         const lineHeight = scaledFontSize * 1.4;
         const totalHeight = lines.length * lineHeight;
-        const centerX = textX * exportCanvas.width;
-        const centerY = textY * exportCanvas.height;
+        const centerX = (window.textX || 0.5) * exportCanvas.width;
+        const centerY = (window.textY || 0.5) * exportCanvas.height;
         
         exportCtx.translate(centerX, centerY);
         exportCtx.rotate((window.textRotation || 0) * Math.PI / 180);
@@ -923,3 +927,4 @@ window.flipImageV = flipImageV;
 window.applyFilter = applyFilter;
 window.setBorderColor = setBorderColor;
 window.FILTERS = FILTERS;
+[file content end]
