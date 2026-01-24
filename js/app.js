@@ -10,6 +10,10 @@ let currentStickers = [];
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
     console.log('App starting...');
+    
+    // فحص حالة إذن الملفات
+    checkFileAccessStatus();
+    
     loadCategories();
     loadStickers();
     showPage('categories');
@@ -64,7 +68,6 @@ function setupTextCard() {
     canvasWrapper.appendChild(textCard);
     console.log('Text card setup complete');
     
-    // إضافة مستمع لوضع التركيز
     const textInput = document.getElementById('textCardInput');
     if (textInput) {
         textInput.addEventListener('focus', () => {
@@ -73,7 +76,6 @@ function setupTextCard() {
             }, 100);
         });
         
-        // تحديث زر الحذف عند الكتابة
         textInput.addEventListener('input', updateDeleteButtonState);
     }
 }
@@ -99,7 +101,6 @@ function addTextCardButton() {
     `;
     textBtn.onclick = () => toggleTextCard();
     
-    // إضافة الزر في البداية
     editorToolbar.insertBefore(textBtn, editorToolbar.firstChild);
     
     console.log('Text button added to toolbar');
@@ -349,7 +350,6 @@ async function loadCategories() {
     
     try {
         const promises = [];
-        // تحميل 100 فئة
         for (let i = 1; i <= 100; i++) {
             promises.push(
                 fetch(`data/images${i}.json`)
@@ -521,14 +521,12 @@ function showPage(pageName) {
         btn.classList.add('active');
     }
     
-    // إغلاق لوحات الأدوات عند التنقل
     if (pageName !== 'editor') {
         closeAllToolPanels();
         handleKeyboardClose();
     }
 }
 
-// إغلاق جميع لوحات الأدوات
 function closeAllToolPanels() {
     const panels = document.querySelectorAll('.tool-panel');
     panels.forEach(panel => {
@@ -754,7 +752,6 @@ function hideLoadingIndicator() {
     }
 }
 
-// إضافة دالة للتحقق من حالة الصورة المحفوظة
 function checkSavedImage() {
     const savedImage = localStorage.getItem('selectedImage');
     if (savedImage) {
@@ -773,9 +770,58 @@ function checkSavedImage() {
     }
 }
 
-// تحميل الصورة المحفوظة عند فتح صفحة المحرر
 window.addEventListener('load', () => {
     setTimeout(checkSavedImage, 1000);
 });
 
 window.currentText = '';
+
+// ============ نظام طلب الوصول للملفات ============
+
+function checkFileAccessStatus() {
+    const fileAccessGranted = localStorage.getItem('fileAccessGranted');
+    const fileAccessCard = document.getElementById('fileAccessCard');
+    
+    if (fileAccessGranted === 'true') {
+        if (fileAccessCard) {
+            fileAccessCard.classList.add('hidden');
+        }
+    }
+}
+
+async function requestFileAccess() {
+    try {
+        if ('showDirectoryPicker' in window) {
+            await window.showDirectoryPicker();
+            localStorage.setItem('fileAccessGranted', 'true');
+            showAlert('تم منح الإذن بنجاح!', 'success');
+        } else {
+            localStorage.setItem('fileAccessGranted', 'true');
+            showAlert('تم حفظ التفضيل', 'success');
+        }
+        
+        const fileAccessCard = document.getElementById('fileAccessCard');
+        if (fileAccessCard) {
+            fileAccessCard.classList.add('hidden');
+        }
+        
+    } catch (error) {
+        console.log('User cancelled file access or browser does not support');
+        localStorage.setItem('fileAccessGranted', 'true');
+        const fileAccessCard = document.getElementById('fileAccessCard');
+        if (fileAccessCard) {
+            fileAccessCard.classList.add('hidden');
+        }
+    }
+}
+
+function dismissFileAccess() {
+    localStorage.setItem('fileAccessGranted', 'true');
+    const fileAccessCard = document.getElementById('fileAccessCard');
+    if (fileAccessCard) {
+        fileAccessCard.classList.add('hidden');
+    }
+}
+
+window.requestFileAccess = requestFileAccess;
+window.dismissFileAccess = dismissFileAccess;
