@@ -34,6 +34,9 @@ let imageBorderWidth = 0;
 let imageBorderColor = '#000000';
 let currentFilter = 'none';
 
+// تصدير imageBorderColor لـ window
+window.imageBorderColor = imageBorderColor;
+
 // متغيرات تأثيرات النص الجديدة
 let shadowIntensity = 5;
 let bgOpacity = 70;
@@ -801,3 +804,84 @@ function prepareImageForExport() {
         const baseFontSize = Math.min(exportCanvas.width, exportCanvas.height) * 0.08;
         const scaledFontSize = baseFontSize * textScale;
         const scaledStrokeWidth = strokeWidth * scale;
+        
+        exportCtx.font = 'bold ' + scaledFontSize + 'px ' + fontFamily;
+        exportCtx.textAlign = 'center';
+        exportCtx.textBaseline = 'middle';
+        exportCtx.direction = 'rtl';
+        
+        const maxLineWidth = exportCanvas.width * 0.9;
+        const lines = wrapText(window.currentText, maxLineWidth, exportCtx, scaledFontSize);
+        
+        const lineHeight = scaledFontSize * 1.4;
+        const totalHeight = lines.length * lineHeight;
+        const centerX = textX * exportCanvas.width;
+        const centerY = textY * exportCanvas.height;
+        
+        exportCtx.translate(centerX, centerY);
+        exportCtx.rotate(textRotation * Math.PI / 180);
+        
+        if (shadowEnabled) {
+            exportCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            exportCtx.shadowBlur = shadowIntensity * scale;
+            exportCtx.shadowOffsetX = (shadowIntensity / 2) * scale;
+            exportCtx.shadowOffsetY = (shadowIntensity / 2) * scale;
+        }
+        
+        lines.forEach((line, index) => {
+            const y = -(totalHeight / 2) + (index * lineHeight) + (lineHeight / 2);
+            const x = 0;
+            
+            const textMetrics = exportCtx.measureText(line);
+            
+            if (cardEnabled) {
+                const padding = scaledFontSize * 0.5;
+                const bgWidth = textMetrics.width + (padding * 2);
+                const bgHeight = scaledFontSize + padding;
+                const bgX = -(bgWidth / 2);
+                const bgY = y - (scaledFontSize / 2) - (padding / 2);
+                
+                exportCtx.save();
+                exportCtx.fillStyle = cardColor;
+                exportCtx.globalAlpha = bgOpacity / 100;
+                exportCtx.fillRect(bgX, bgY, bgWidth, bgHeight);
+                exportCtx.restore();
+            }
+            
+            if (scaledStrokeWidth > 0) {
+                exportCtx.strokeStyle = strokeColor;
+                exportCtx.lineWidth = scaledStrokeWidth;
+                exportCtx.strokeText(line, x, y);
+            }
+            
+            exportCtx.fillStyle = textColor;
+            exportCtx.fillText(line, x, y);
+        });
+        
+        exportCtx.restore();
+    }
+    
+    return exportCanvas;
+}
+
+function setBorderColor(color) {
+    imageBorderColor = color;
+    window.imageBorderColor = color;
+    console.log('✓ تم تغيير لون حواف الصورة إلى:', color);
+    renderFullCanvas();
+}
+
+// تصدير جميع الدوال المهمة
+window.prepareImageForExport = prepareImageForExport;
+window.renderFullCanvas = renderFullCanvas;
+window.renderTextOnCanvas = renderFullCanvas;
+window.updateTextOnCanvas = updateTextOnCanvas;
+window.loadImageToEditor = loadImageToEditor;
+window.addSticker = addSticker;
+window.deleteSelectedSticker = deleteSelectedSticker;
+window.rotateImage = rotateImage;
+window.flipImageH = flipImageH;
+window.flipImageV = flipImageV;
+window.applyFilter = applyFilter;
+window.setBorderColor = setBorderColor;
+window.FILTERS = FILTERS;
