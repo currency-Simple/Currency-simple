@@ -38,10 +38,11 @@ window.currentCardColor = currentCardColor;
 function initializeColors() {
   console.log('⏳ جاري تهيئة الألوان...');
   
-  // شبكة ألوان النص
+  // شبكة ألوان النص (أفقية)
   const colorGrid = document.getElementById('colorGrid');
   if (colorGrid) {
     colorGrid.innerHTML = '';
+    colorGrid.className = 'horizontal-controls color-scroll';
     COLORS.forEach((color, index) => {
       const item = createColorItem(color, () => setTextColor(color));
       colorGrid.appendChild(item);
@@ -49,10 +50,11 @@ function initializeColors() {
     console.log(`✓ تم تحميل ${COLORS.length} لون للنص`);
   }
 
-  // شبكة ألوان الحواف
+  // شبكة ألوان الحواف (أفقية)
   const strokeGrid = document.getElementById('strokeColorGrid');
   if (strokeGrid) {
     strokeGrid.innerHTML = '';
+    strokeGrid.className = 'horizontal-controls color-scroll';
     COLORS.forEach((color, index) => {
       const item = createColorItem(color, () => setStrokeColor(color));
       strokeGrid.appendChild(item);
@@ -60,10 +62,11 @@ function initializeColors() {
     console.log(`✓ تم تحميل ${COLORS.length} لون للحواف`);
   }
 
-  // شبكة ألوان حواف الصورة
+  // شبكة ألوان حواف الصورة (أفقية)
   const borderGrid = document.getElementById('borderColorGrid');
   if (borderGrid) {
     borderGrid.innerHTML = '';
+    borderGrid.className = 'horizontal-controls color-scroll';
     COLORS.forEach((color, index) => {
       const item = createColorItem(color, () => {
         if (typeof setBorderColor === 'function') {
@@ -75,10 +78,11 @@ function initializeColors() {
     console.log(`✓ تم تحميل ${COLORS.length} لون لحواف الصورة`);
   }
 
-  // شبكة ألوان خلفية النص
+  // شبكة ألوان خلفية النص (أفقية)
   const cardGrid = document.getElementById('cardColorGrid');
   if (cardGrid) {
     cardGrid.innerHTML = '';
+    cardGrid.className = 'horizontal-controls color-scroll';
     COLORS.forEach((color, index) => {
       const item = createColorItem(color, () => setCardColor(color));
       cardGrid.appendChild(item);
