@@ -4,18 +4,12 @@ let currentCategory = null;
 let currentImages = [];
 let keyboardOpen = false;
 let textCardVisible = false;
-let stickers = [];
-let currentStickers = [];
 
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
     console.log('App starting...');
     
-    // فحص حالة إذن الملفات
-    checkFileAccessStatus();
-    
     loadCategories();
-    loadStickers();
     showPage('categories');
     
     setupKeyboardListeners();
@@ -29,11 +23,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // إعداد بطاقة النص الجديدة
 function setupTextCard() {
-    const oldTextOverlay = document.getElementById('textOverlay');
-    if (oldTextOverlay) {
-        oldTextOverlay.remove();
-    }
-    
     const canvasWrapper = document.getElementById('canvasWrapperFixed');
     if (!canvasWrapper) {
         console.error('canvasWrapperFixed not found');
@@ -81,7 +70,7 @@ function setupTextCard() {
 }
 
 function addTextCardButton() {
-    const editorToolbar = document.querySelector('.editor-toolbar-bottom');
+    const editorToolbar = document.querySelector('.editor-toolbar');
     if (!editorToolbar) {
         console.error('Editor toolbar not found');
         return;
@@ -244,106 +233,6 @@ function handleKeyboardClose() {
     document.body.classList.remove('keyboard-open');
 }
 
-// تحميل الملصقات
-async function loadStickers() {
-    stickers = [];
-    console.log('Loading stickers...');
-    
-    try {
-        const promises = [];
-        for (let i = 1; i <= 7; i++) {
-            promises.push(
-                fetch(`data/stickers${i}.json`)
-                    .then(res => res.ok ? res.json() : null)
-                    .then(data => {
-                        if (data && data.stickers && data.stickers.length > 0) {
-                            stickers.push({
-                                id: i,
-                                name: data.name || `مجموعة ${i}`,
-                                stickers: data.stickers
-                            });
-                        }
-                    })
-                    .catch(() => null)
-            );
-        }
-        
-        await Promise.allSettled(promises);
-        
-        stickers.sort((a, b) => a.id - b.id);
-        displayStickerCategories();
-        
-        console.log('Stickers loaded:', stickers.length);
-    } catch (error) {
-        console.error('Error loading stickers:', error);
-    }
-}
-
-// عرض فئات الملصقات
-function displayStickerCategories() {
-    const grid = document.getElementById('stickerCategoriesGrid');
-    if (!grid) return;
-    
-    grid.innerHTML = '';
-    
-    stickers.forEach(cat => {
-        const item = document.createElement('div');
-        item.className = 'sticker-category-item';
-        item.onclick = () => openStickerCategory(cat);
-        item.innerHTML = `
-            <img src="${cat.stickers[0].url}" alt="${cat.name}" loading="lazy">
-            <div class="category-overlay">
-                <div class="category-title">${cat.name}</div>
-            </div>
-        `;
-        grid.appendChild(item);
-    });
-}
-
-// فتح فئة ملصقات
-function openStickerCategory(cat) {
-    currentStickers = cat.stickers;
-    
-    const categoryTitle = document.getElementById('stickerCategoryTitle');
-    if (categoryTitle) {
-        categoryTitle.textContent = cat.name;
-    }
-    
-    displayStickers();
-    showPage('sticker-selection');
-}
-
-// عرض الملصقات
-function displayStickers() {
-    const grid = document.getElementById('stickerGrid');
-    if (!grid) return;
-    
-    grid.innerHTML = '';
-    
-    currentStickers.forEach(sticker => {
-        const item = document.createElement('div');
-        item.className = 'sticker-item';
-        item.onclick = () => addStickerToCanvas(sticker);
-        
-        const imgEl = document.createElement('img');
-        imgEl.src = sticker.url;
-        imgEl.alt = sticker.title || 'ملصق';
-        imgEl.loading = 'lazy';
-        
-        item.appendChild(imgEl);
-        grid.appendChild(item);
-    });
-}
-
-// إضافة ملصق إلى الصورة
-function addStickerToCanvas(sticker) {
-    if (typeof addSticker === 'function') {
-        addSticker(sticker.url);
-        showPage('editor');
-        showAlert('تم إضافة الملصق', 'success');
-    }
-}
-
 async function loadCategories() {
     categories = [];
     console.log('Loading categories...');
@@ -499,9 +388,7 @@ function showPage(pageName) {
         'categories': 'categoriesPage',
         'images': 'imagesPage',
         'editor': 'editorPage',
-        'settings': 'settingsPage',
-        'stickers': 'stickersPage',
-        'sticker-selection': 'stickerSelectionPage'
+        'settings': 'settingsPage'
     };
     
     const page = document.getElementById(pageMap[pageName]);
@@ -512,8 +399,7 @@ function showPage(pageName) {
     const navMap = {
         'categories': 'navCategories',
         'editor': 'navEditor',
-        'settings': 'navSettings',
-        'stickers': 'navStickers'
+        'settings': 'navSettings'
     };
     
     const btn = document.getElementById(navMap[pageName]);
@@ -524,6 +410,11 @@ function showPage(pageName) {
     if (pageName !== 'editor') {
         closeAllToolPanels();
         handleKeyboardClose();
+    }
+    
+    // عرض خلفية فارغة عند فتح المحرر
+    if (pageName === 'editor' && typeof initializeEmptyCanvas === 'function') {
+        initializeEmptyCanvas();
     }
 }
 
@@ -545,10 +436,6 @@ function goBackToImages() {
     } else {
         showPage('categories');
     }
-}
-
-function goBackToStickers() {
-    showPage('stickers');
 }
 
 async function downloadImage() {
@@ -752,76 +639,4 @@ function hideLoadingIndicator() {
     }
 }
 
-function checkSavedImage() {
-    const savedImage = localStorage.getItem('selectedImage');
-    if (savedImage) {
-        try {
-            const img = JSON.parse(savedImage);
-            if (img && img.url) {
-                setTimeout(() => {
-                    if (typeof loadImageToEditor === 'function') {
-                        loadImageToEditor(img.url);
-                    }
-                }, 500);
-            }
-        } catch (error) {
-            console.error('Error loading saved image:', error);
-        }
-    }
-}
-
-window.addEventListener('load', () => {
-    setTimeout(checkSavedImage, 1000);
-});
-
 window.currentText = '';
-
-// ============ نظام طلب الوصول للملفات ============
-
-function checkFileAccessStatus() {
-    const fileAccessGranted = localStorage.getItem('fileAccessGranted');
-    const fileAccessCard = document.getElementById('fileAccessCard');
-    
-    if (fileAccessGranted === 'true') {
-        if (fileAccessCard) {
-            fileAccessCard.classList.add('hidden');
-        }
-    }
-}
-
-async function requestFileAccess() {
-    try {
-        if ('showDirectoryPicker' in window) {
-            await window.showDirectoryPicker();
-            localStorage.setItem('fileAccessGranted', 'true');
-            showAlert('تم منح الإذن بنجاح!', 'success');
-        } else {
-            localStorage.setItem('fileAccessGranted', 'true');
-            showAlert('تم حفظ التفضيل', 'success');
-        }
-        
-        const fileAccessCard = document.getElementById('fileAccessCard');
-        if (fileAccessCard) {
-            fileAccessCard.classList.add('hidden');
-        }
-        
-    } catch (error) {
-        console.log('User cancelled file access or browser does not support');
-        localStorage.setItem('fileAccessGranted', 'true');
-        const fileAccessCard = document.getElementById('fileAccessCard');
-        if (fileAccessCard) {
-            fileAccessCard.classList.add('hidden');
-        }
-    }
-}
-
-function dismissFileAccess() {
-    localStorage.setItem('fileAccessGranted', 'true');
-    const fileAccessCard = document.getElementById('fileAccessCard');
-    if (fileAccessCard) {
-        fileAccessCard.classList.add('hidden');
-    }
-}
-
-window.requestFileAccess = requestFileAccess;
-window.dismissFileAccess = dismissFileAccess;
