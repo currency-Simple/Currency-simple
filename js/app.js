@@ -4,6 +4,7 @@ let currentCategory = null;
 let currentImages = [];
 let keyboardOpen = false;
 let textCardVisible = false;
+let textControlCardVisible = false;
 
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
@@ -17,7 +18,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // إعداد بطاقة النص بعد تحميل الصفحة
     setTimeout(() => {
         setupTextCard();
-        addTextCardButton();
+        setupTextControlCard();
+        setupFontSizeControl();
     }, 500);
 });
 
@@ -69,30 +71,40 @@ function setupTextCard() {
     }
 }
 
-function addTextCardButton() {
-    const editorToolbar = document.querySelector('.editor-toolbar');
-    if (!editorToolbar) {
-        console.error('Editor toolbar not found');
+function setupTextControlCard() {
+    const canvasWrapper = document.getElementById('canvasWrapperFixed');
+    if (!canvasWrapper) {
+        console.error('canvasWrapperFixed not found');
         return;
     }
     
-    const existingBtn = editorToolbar.querySelector('.tool-btn[data-tool="text"]');
-    if (existingBtn) {
-        return;
+    // تم إنشاؤه في HTML
+    console.log('Text control card setup complete');
+}
+
+function setupFontSizeControl() {
+    const fontSizeSlider = document.getElementById('fontSizeSlider');
+    if (fontSizeSlider) {
+        fontSizeSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            const display = document.getElementById('fontSizeDisplay');
+            if (display) {
+                display.textContent = value;
+            }
+            
+            // تحديث حجم النص
+            if (window.textScale !== undefined) {
+                window.textScale = value / 50; // تحويل القيمة 10-100 إلى 0.2-2
+                if (window.currentText && window.currentText.trim() !== '') {
+                    setTimeout(() => {
+                        if (typeof renderFullCanvas === 'function') {
+                            renderFullCanvas();
+                        }
+                    }, 50);
+                }
+            }
+        });
     }
-    
-    const textBtn = document.createElement('button');
-    textBtn.className = 'tool-btn';
-    textBtn.setAttribute('data-tool', 'text');
-    textBtn.innerHTML = `
-        <span class="material-symbols-outlined">text_fields</span>
-        <span>نص</span>
-    `;
-    textBtn.onclick = () => toggleTextCard();
-    
-    editorToolbar.insertBefore(textBtn, editorToolbar.firstChild);
-    
-    console.log('Text button added to toolbar');
 }
 
 function toggleTextCard() {
@@ -140,6 +152,24 @@ function closeTextCard() {
         textCard.style.display = 'none';
         textCardVisible = false;
         console.log('Text card closed');
+    }
+}
+
+function openTextControlCard() {
+    const textControlCard = document.getElementById('textControlCard');
+    if (textControlCard) {
+        textControlCard.style.display = 'block';
+        textControlCardVisible = true;
+        console.log('Text control card opened');
+    }
+}
+
+function closeTextControlCard() {
+    const textControlCard = document.getElementById('textControlCard');
+    if (textControlCard) {
+        textControlCard.style.display = 'none';
+        textControlCardVisible = false;
+        console.log('Text control card closed');
     }
 }
 
@@ -199,6 +229,114 @@ function clearTextFromImage() {
     }
     
     console.log('Text cleared from image');
+}
+
+function rotateTextClockwise() {
+    if (window.textRotation !== undefined) {
+        window.textRotation = (window.textRotation + 15) % 360;
+        if (window.currentText && window.currentText.trim() !== '') {
+            if (typeof renderFullCanvas === 'function') {
+                renderFullCanvas();
+            }
+        }
+        showAlert('تم تدوير النص 15° يميناً', 'success');
+    }
+}
+
+function rotateTextCounterClockwise() {
+    if (window.textRotation !== undefined) {
+        window.textRotation = (window.textRotation - 15 + 360) % 360;
+        if (window.currentText && window.currentText.trim() !== '') {
+            if (typeof renderFullCanvas === 'function') {
+                renderFullCanvas();
+            }
+        }
+        showAlert('تم تدوير النص 15° يساراً', 'success');
+    }
+}
+
+function increaseTextSize() {
+    const fontSizeSlider = document.getElementById('fontSizeSlider');
+    if (fontSizeSlider) {
+        let value = parseInt(fontSizeSlider.value);
+        if (value < 100) {
+            value += 5;
+            fontSizeSlider.value = value;
+            
+            const display = document.getElementById('fontSizeDisplay');
+            if (display) {
+                display.textContent = value;
+            }
+            
+            // تحديث حجم النص
+            if (window.textScale !== undefined) {
+                window.textScale = value / 50;
+                if (window.currentText && window.currentText.trim() !== '') {
+                    setTimeout(() => {
+                        if (typeof renderFullCanvas === 'function') {
+                            renderFullCanvas();
+                        }
+                    }, 50);
+                }
+            }
+            
+            showAlert('تم تكبير النص', 'success');
+        }
+    }
+}
+
+function decreaseTextSize() {
+    const fontSizeSlider = document.getElementById('fontSizeSlider');
+    if (fontSizeSlider) {
+        let value = parseInt(fontSizeSlider.value);
+        if (value > 10) {
+            value -= 5;
+            fontSizeSlider.value = value;
+            
+            const display = document.getElementById('fontSizeDisplay');
+            if (display) {
+                display.textContent = value;
+            }
+            
+            // تحديث حجم النص
+            if (window.textScale !== undefined) {
+                window.textScale = value / 50;
+                if (window.currentText && window.currentText.trim() !== '') {
+                    setTimeout(() => {
+                        if (typeof renderFullCanvas === 'function') {
+                            renderFullCanvas();
+                        }
+                    }, 50);
+                }
+            }
+            
+            showAlert('تم تصغير النص', 'success');
+        }
+    }
+}
+
+function resetText() {
+    if (window.textRotation !== undefined) {
+        window.textRotation = 0;
+        window.textScale = 1;
+        
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        if (fontSizeSlider) {
+            fontSizeSlider.value = 50;
+            const display = document.getElementById('fontSizeDisplay');
+            if (display) {
+                display.textContent = '50';
+            }
+        }
+        
+        if (window.currentText && window.currentText.trim() !== '') {
+            if (typeof renderFullCanvas === 'function') {
+                renderFullCanvas();
+            }
+        }
+        
+        showAlert('تم إعادة تعيين النص', 'success');
+    }
 }
 
 function setupKeyboardListeners() {
@@ -423,6 +561,7 @@ function showPage(pageName) {
     if (pageName !== 'editor') {
         closeAllToolPanels();
         handleKeyboardClose();
+        closeTextControlCard();
     }
 }
 
@@ -645,8 +784,20 @@ function hideLoadingIndicator() {
 
 // تهيئة النص
 window.currentText = '';
+window.textScale = 1;
+window.textRotation = 0;
 window.showPage = showPage;
 window.goBackToImages = goBackToImages;
 window.downloadImage = downloadImage;
 window.shareImage = shareImage;
 window.showAlert = showAlert;
+window.toggleTextCard = toggleTextCard;
+window.closeTextCard = closeTextCard;
+window.openTextCard = openTextCard;
+window.closeTextControlCard = closeTextControlCard;
+window.openTextControlCard = openTextControlCard;
+window.rotateTextClockwise = rotateTextClockwise;
+window.rotateTextCounterClockwise = rotateTextCounterClockwise;
+window.increaseTextSize = increaseTextSize;
+window.decreaseTextSize = decreaseTextSize;
+window.resetText = resetText;
