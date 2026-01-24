@@ -19,6 +19,21 @@
         <div class="header">
             <h1>اختر فئة</h1>
         </div>
+        
+        <!-- بطاقة طلب الوصول للملفات -->
+        <div id="fileAccessCard" class="file-access-card">
+            <div class="file-access-icon">
+                <span class="material-symbols-outlined">folder_open</span>
+            </div>
+            <h3>السماح بالوصول إلى الملفات</h3>
+            <p>للحفظ والمشاركة بشكل أفضل، يرجى منح التطبيق إذن الوصول إلى ملفات الهاتف</p>
+            <button onclick="requestFileAccess()" class="file-access-btn">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>السماح بالوصول</span>
+            </button>
+            <button onclick="dismissFileAccess()" class="file-access-dismiss">تجاهل</button>
+        </div>
+        
         <div class="categories-grid" id="categoriesGrid"></div>
     </div>
 
@@ -58,7 +73,7 @@
             <button onclick="goBackToImages()" class="icon-btn back-btn">
                 <span class="material-symbols-outlined">arrow_back</span>
             </button>
-            <h1 data-lang="edit">تحرير</h1>
+            <h1>تحرير</h1>
         </div>
         
         <!-- حاوية المحرر -->
@@ -66,13 +81,13 @@
             <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
                 <canvas id="canvas"></canvas>
                 
-                <!-- أزرار التحكم العائمة - خط أفقي -->
+                <!-- أزرار التحكم العائمة -->
                 <div class="floating-controls">
-                    <button onclick="shareImage()" class="floating-btn share-btn" title="مشاركة">
+                    <button onclick="shareImage()" class="floating-btn share-btn">
                         <span class="material-symbols-outlined">share</span>
                         <span>مشاركة</span>
                     </button>
-                    <button onclick="downloadImage()" class="floating-btn download-btn" title="تنزيل">
+                    <button onclick="downloadImage()" class="floating-btn download-btn">
                         <span class="material-symbols-outlined">download</span>
                         <span>تنزيل</span>
                     </button>
@@ -103,9 +118,9 @@
                         <span>حواف</span>
                     </button>
 
-                    <button class="tool-btn" onclick="toggleToolPanel('filterPanel')">
-                        <span class="material-symbols-outlined">filter</span>
-                        <span>فلاتر</span>
+                    <button class="tool-btn" onclick="toggleToolPanel('adjustPanel')">
+                        <span class="material-symbols-outlined">tune</span>
+                        <span>تعديل</span>
                     </button>
                 </div>
 
@@ -162,63 +177,86 @@
 
             <!-- لوحة التدوير والقلب -->
             <div id="rotatePanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>تدوير وقلب الصورة</h4>
-                    <div class="tool-buttons-grid">
-                        <button class="tool-action-btn" onclick="rotateImage()">
-                            <span class="material-symbols-outlined">rotate_right</span>
-                            <span>تدوير 90°</span>
-                        </button>
-                        <button class="tool-action-btn" onclick="flipImageH()">
-                            <span class="material-symbols-outlined">flip</span>
-                            <span>قلب أفقي</span>
-                        </button>
-                        <button class="tool-action-btn" onclick="flipImageV()">
-                            <span class="material-symbols-outlined">flip</span>
-                            <span>قلب عمودي</span>
-                        </button>
-                    </div>
+                <div class="tool-buttons-grid">
+                    <button class="tool-action-btn" onclick="rotateImage()">
+                        <span class="material-symbols-outlined">rotate_right</span>
+                        <span>تدوير 90°</span>
+                    </button>
+                    <button class="tool-action-btn" onclick="flipImageH()">
+                        <span class="material-symbols-outlined">flip</span>
+                        <span>قلب أفقي</span>
+                    </button>
+                    <button class="tool-action-btn" onclick="flipImageV()">
+                        <span class="material-symbols-outlined">flip</span>
+                        <span>قلب عمودي</span>
+                    </button>
                 </div>
             </div>
 
             <!-- لوحة حواف الصورة -->
-            <div id="borderPanel" class="tool-panel">
+            <div id="borderPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls color-scroll" id="borderColorGrid"></div>
                 <div class="tool-section">
                     <h4>سُمك حواف الصورة</h4>
                     <input type="range" id="borderSlider" min="0" max="50" value="0" class="border-slider">
                     <span id="borderDisplay">0</span>
                 </div>
-                <div class="tool-section">
-                    <h4>لون حواف الصورة</h4>
-                    <div class="color-grid" id="borderColorGrid"></div>
-                </div>
             </div>
 
-            <!-- لوحة الفلاتر -->
-            <div id="filterPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>الفلاتر</h4>
-                    <div class="filters-grid" id="filtersGrid">
-                        <button class="filter-btn active" onclick="applyFilter('none')">بدون</button>
-                        <button class="filter-btn" onclick="applyFilter('grayscale')">أبيض وأسود</button>
-                        <button class="filter-btn" onclick="applyFilter('sepia')">سيبيا</button>
-                        <button class="filter-btn" onclick="applyFilter('invert')">عكس</button>
-                        <button class="filter-btn" onclick="applyFilter('brightness')">سطوع</button>
-                        <button class="filter-btn" onclick="applyFilter('contrast')">تباين</button>
-                        <button class="filter-btn" onclick="applyFilter('saturate')">تشبع</button>
-                        <button class="filter-btn" onclick="applyFilter('hue')">ألوان</button>
-                        <button class="filter-btn" onclick="applyFilter('vintage')">قديم</button>
-                        <button class="filter-btn" onclick="applyFilter('warm')">دافئ</button>
-                        <button class="filter-btn" onclick="applyFilter('cool')">بارد</button>
+            <!-- لوحة التعديل (iPhone Style) -->
+            <div id="adjustPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls">
+                    <div class="filter-item" onclick="selectAdjustment('brightness')">
+                        <div class="filter-preview" style="background: linear-gradient(to bottom, #fff, #666);"></div>
+                        <span>سطوع</span>
+                    </div>
+                    <div class="filter-item" onclick="selectAdjustment('contrast')">
+                        <div class="filter-preview" style="background: linear-gradient(90deg, #000, #fff, #000);"></div>
+                        <span>تباين</span>
+                    </div>
+                    <div class="filter-item" onclick="selectAdjustment('saturation')">
+                        <div class="filter-preview" style="background: linear-gradient(90deg, #f00, #0f0, #00f);"></div>
+                        <span>تشبع</span>
+                    </div>
+                    <div class="filter-item" onclick="selectAdjustment('warmth')">
+                        <div class="filter-preview" style="background: linear-gradient(to right, #0af, #fa0);"></div>
+                        <span>دفء</span>
+                    </div>
+                    <div class="filter-item" onclick="selectAdjustment('tint')">
+                        <div class="filter-preview" style="background: linear-gradient(to right, #f0f, #0ff);"></div>
+                        <span>صبغة</span>
+                    </div>
+                    <div class="filter-item" onclick="selectAdjustment('sharpness')">
+                        <div class="filter-preview" style="background: radial-gradient(circle, #fff, #000);"></div>
+                        <span>حدة</span>
+                    </div>
+                </div>
+                <div class="adjustment-slider-container" id="adjustmentSliderContainer" style="display: none;">
+                    <input type="range" id="adjustmentSlider" min="-100" max="100" value="0" class="adjustment-slider">
+                    <div class="slider-labels">
+                        <span id="adjustmentValue">0</span>
                     </div>
                 </div>
             </div>
             
             <!-- لوحة الخطوط -->
-            <div id="fontPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>اختيار الخط</h4>
-                    <select id="fontFamily" class="tool-select"></select>
+            <div id="fontPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls">
+                    <div class="font-item" onclick="selectFont('\'Amiri\', serif')">
+                        <span style="font-family: 'Amiri', serif;">محمد</span>
+                    </div>
+                    <div class="font-item" onclick="selectFont('\'Lateef\', serif')">
+                        <span style="font-family: 'Lateef', serif;">Lateef</span>
+                    </div>
+                    <div class="font-item" onclick="selectFont('\'Noto Kufi Arabic\', sans-serif')">
+                        <span style="font-family: 'Noto Kufi Arabic', sans-serif;">Noto</span>
+                    </div>
+                    <div class="font-item" onclick="selectFont('\'Cairo\', sans-serif')">
+                        <span style="font-family: 'Cairo', sans-serif;">Cairo</span>
+                    </div>
+                    <div class="font-item" onclick="selectFont('\'Tajawal\', sans-serif')">
+                        <span style="font-family: 'Tajawal', sans-serif;">Tajawal</span>
+                    </div>
                 </div>
             </div>
 
@@ -232,19 +270,13 @@
             </div>
 
             <!-- لوحة لون النص -->
-            <div id="colorPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>لون النص</h4>
-                    <div class="color-grid" id="colorGrid"></div>
-                </div>
+            <div id="colorPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls color-scroll" id="colorGrid"></div>
             </div>
 
             <!-- لوحة حواف النص -->
-            <div id="strokePanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>لون حواف النص</h4>
-                    <div class="color-grid" id="strokeColorGrid"></div>
-                </div>
+            <div id="strokePanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls color-scroll" id="strokeColorGrid"></div>
                 <div class="tool-section">
                     <h4>سُمك حواف النص</h4>
                     <input type="range" id="strokeWidth" min="0" max="10" value="3" class="stroke-slider">
@@ -252,8 +284,9 @@
                 </div>
             </div>
 
-            <!-- لوحة التأثيرات (محدثة) -->
-            <div id="effectsPanel" class="tool-panel">
+            <!-- لوحة التأثيرات -->
+            <div id="effectsPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls color-scroll" id="cardColorGrid"></div>
                 <div class="tool-section">
                     <label class="effect-option">
                         <input type="checkbox" id="shadowEnabled" checked>
@@ -276,11 +309,6 @@
                     <input type="range" id="bgOpacitySlider" min="10" max="100" value="70" class="bg-opacity-slider">
                     <span id="bgOpacityDisplay">70</span>
                 </div>
-                
-                <div class="tool-section">
-                    <h4>لون خلفية النص</h4>
-                    <div class="color-grid" id="cardColorGrid"></div>
-                </div>
             </div>
         </div>
     </div>
@@ -288,23 +316,23 @@
     <!-- صفحة الإعدادات -->
     <div id="settingsPage" class="page">
         <div class="header">
-            <h1 data-lang="settings">الإعدادات</h1>
+            <h1>الإعدادات</h1>
         </div>
         <div class="settings-content">
             <div class="setting-card">
-                <h3 data-lang="theme">السمة</h3>
+                <h3>السمة</h3>
                 <div class="theme-options">
                     <button class="theme-btn active" onclick="changeTheme('light')" data-theme="light">
-                        <span data-lang="light">فاتح</span>
+                        <span>فاتح</span>
                     </button>
                     <button class="theme-btn" onclick="changeTheme('dark')" data-theme="dark">
-                        <span data-lang="dark">داكن</span>
+                        <span>داكن</span>
                     </button>
                 </div>
             </div>
 
             <div class="setting-card">
-                <h3 data-lang="language">اللغة</h3>
+                <h3>اللغة</h3>
                 <div class="language-options">
                     <button class="lang-btn active" onclick="changeLanguage('ar')" data-lang-btn="ar">
                         العربية
@@ -321,25 +349,25 @@
             <div class="setting-card">
                 <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
                     <span class="material-symbols-outlined">shield</span>
-                    <span data-lang="privacy">سياسة الخصوصية</span>
+                    <span>سياسة الخصوصية</span>
                 </a>
                 <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
                     <span class="material-symbols-outlined">info</span>
-                    <span data-lang="about">معلومات حول</span>
+                    <span>معلومات حول</span>
                 </a>
                 <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
                     <span class="material-symbols-outlined">help</span>
-                    <span data-lang="help">مركز المساعدة</span>
+                    <span>مركز المساعدة</span>
                 </a>
                 <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
                     <span class="material-symbols-outlined">mail</span>
-                    <span data-lang="contact">اتصل بنا</span>
+                    <span>اتصل بنا</span>
                 </a>
             </div>
 
             <div class="setting-card">
                 <p style="text-align: center; color: #86868b; font-size: 14px;">
-                    <span data-lang="version">الإصدار</span> 7.0 Pro
+                    <span>الإصدار</span> 7.1 Pro
                 </p>
             </div>
         </div>
@@ -368,7 +396,6 @@
     <script src="js/fonts.js"></script>
     <script src="js/colors.js"></script>
     <script src="js/settings.js"></script>
-    <script src="js/toolsidebar.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/app.js"></script>
 </body>
