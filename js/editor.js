@@ -79,6 +79,10 @@ window.addEventListener('DOMContentLoaded', () => {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     
+    // تهيئة القيم من window
+    if (window.textScale === undefined) window.textScale = 1;
+    if (window.textRotation === undefined) window.textRotation = 0;
+    
     if (typeof initializeFonts === 'function') {
         initializeFonts();
     }
@@ -308,7 +312,7 @@ function handleTouchStart(e) {
         const dx = touch2.clientX - touch1.clientX;
         const dy = touch2.clientY - touch1.clientY;
         initialDistance = Math.sqrt(dx * dx + dy * dy);
-        initialScale = textScale;
+        initialScale = window.textScale || 1;
         initialAngle = Math.atan2(dy, dx);
         
         console.log('بدء التكبير/التصغير - المسافة الأولية:', initialDistance);
@@ -365,18 +369,29 @@ function handleTouchMove(e) {
         // حساب التكبير/التصغير
         if (initialDistance > 0) {
             const scaleMultiplier = currentDistance / initialDistance;
-            textScale = Math.max(0.3, Math.min(5, initialScale * scaleMultiplier));
+            window.textScale = Math.max(0.2, Math.min(2, initialScale * scaleMultiplier));
+            
+            // تحديث شريط التحكم
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            if (fontSizeSlider) {
+                const newValue = Math.round(window.textScale * 50);
+                fontSizeSlider.value = Math.max(10, Math.min(100, newValue));
+                const display = document.getElementById('fontSizeDisplay');
+                if (display) {
+                    display.textContent = fontSizeSlider.value;
+                }
+            }
         }
         
         // حساب التدوير
         const angleChange = currentAngle - initialAngle;
-        textRotation += angleChange * (180 / Math.PI);
+        window.textRotation = (window.textRotation + angleChange * (180 / Math.PI)) % 360;
         initialAngle = currentAngle;
         
         lastRenderTime = now;
         renderFullCanvas();
         
-        console.log('حجم النص:', textScale.toFixed(2));
+        console.log('حجم النص:', window.textScale.toFixed(2));
     }
 }
 
@@ -384,7 +399,7 @@ function handleTouchEnd(e) {
     e.preventDefault();
     
     if (isResizing) {
-        console.log('انتهى التكبير/التصغير - الحجم النهائي:', textScale.toFixed(2));
+        console.log('انتهى التكبير/التصغير - الحجم النهائي:', window.textScale.toFixed(2));
     }
     
     isDragging = false;
@@ -482,6 +497,8 @@ function loadImageToEditor(imageUrl) {
         originalImageWidth = img.naturalWidth || img.width;
         originalImageHeight = img.naturalHeight || img.height;
         
+        console.log('Original image dimensions:', originalImageWidth, 'x', originalImageHeight);
+        
         adjustImageForBorder();
         
         imageBlur = 0;
@@ -494,8 +511,18 @@ function loadImageToEditor(imageUrl) {
         
         textX = 0.5;
         textY = 0.5;
-        textScale = 1;
-        textRotation = 0;
+        window.textScale = 1;
+        window.textRotation = 0;
+        
+        // تحديث شريط التحكم
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        if (fontSizeSlider) {
+            fontSizeSlider.value = 50;
+            const display = document.getElementById('fontSizeDisplay');
+            if (display) {
+                display.textContent = '50';
+            }
+        }
         
         renderFullCanvas();
         
@@ -544,6 +571,10 @@ function renderFullCanvas() {
                 const currentFilterValue = ctx.filter !== 'none' ? ctx.filter + ' ' : '';
                 ctx.filter = currentFilterValue + FILTERS[currentFilter].filter;
             }
+            
+            // استخدام جودة عالية
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
             
             ctx.drawImage(currentImage, -imageWidth / 2, -imageHeight / 2, imageWidth, imageHeight);
             ctx.filter = 'none';
@@ -603,7 +634,7 @@ function renderTextContent() {
     
     // حساب حجم الخط الأساسي بناءً على حجم الكانفاس
     const baseFontSize = Math.min(canvas.width, canvas.height) * 0.08;
-    let finalFontSize = baseFontSize * textScale;
+    let finalFontSize = baseFontSize * (window.textScale || 1);
     
     const fontKey = `${fontFamily}_${finalFontSize}`;
     if (!fontCache.has(fontKey)) {
@@ -643,7 +674,7 @@ function renderTextContent() {
     const centerY = textY * canvas.height;
     
     ctx.translate(centerX, centerY);
-    ctx.rotate(textRotation * Math.PI / 180);
+    ctx.rotate((window.textRotation || 0) * Math.PI / 180);
     
     if (shadowEnabled) {
         ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
@@ -724,8 +755,13 @@ function wrapText(text, maxWidth, ctx, fontSize) {
 
 function prepareImageForExport() {
     const exportCanvas = document.createElement('canvas');
-    exportCanvas.width = originalImageWidth;
-    exportCanvas.height = originalImageHeight;
+    
+    // استخدام الأبعاد الأصلية مع حد أدنى للحفاظ على الجودة
+    const exportWidth = Math.max(originalImageWidth, 800);
+    const exportHeight = Math.max(originalImageHeight, 600);
+    
+    exportCanvas.width = exportWidth;
+    exportCanvas.height = exportHeight;
     const exportCtx = exportCanvas.getContext('2d', { 
         willReadFrequently: false,
         alpha: true 
@@ -736,11 +772,13 @@ function prepareImageForExport() {
     
     exportCtx.save();
     
-    const scale = originalImageWidth / (canvas.width - (imageBorderWidth * 2));
-    const scaledBorder = imageBorderWidth * scale;
+    const scaleX = exportWidth / (canvas.width - (imageBorderWidth * 2));
+    const scaleY = exportHeight / (canvas.height - (imageBorderWidth * 2));
+    const scale = Math.min(scaleX, scaleY);
     
-    const imageWidth = originalImageWidth;
-    const imageHeight = originalImageHeight;
+    const scaledBorder = imageBorderWidth * scale;
+    const imageWidth = exportWidth;
+    const imageHeight = exportHeight;
     
     exportCtx.translate(exportCanvas.width / 2, exportCanvas.height / 2);
     exportCtx.rotate(imageRotation * Math.PI / 180);
@@ -802,7 +840,7 @@ function prepareImageForExport() {
         const cardColor = window.currentCardColor || '#000000';
         
         const baseFontSize = Math.min(exportCanvas.width, exportCanvas.height) * 0.08;
-        const scaledFontSize = baseFontSize * textScale;
+        const scaledFontSize = baseFontSize * (window.textScale || 1);
         const scaledStrokeWidth = strokeWidth * scale;
         
         exportCtx.font = 'bold ' + scaledFontSize + 'px ' + fontFamily;
@@ -819,7 +857,7 @@ function prepareImageForExport() {
         const centerY = textY * exportCanvas.height;
         
         exportCtx.translate(centerX, centerY);
-        exportCtx.rotate(textRotation * Math.PI / 180);
+        exportCtx.rotate((window.textRotation || 0) * Math.PI / 180);
         
         if (shadowEnabled) {
             exportCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
