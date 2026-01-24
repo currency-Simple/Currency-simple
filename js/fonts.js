@@ -1,146 +1,123 @@
-// قائمة الخطوط العربية والإنجليزية
-const ARABIC_FONTS = [
-    {
-        name: "محمد",
-        family: "'Amiri', serif",
-        demo: "جمال",
-        preload: true
-    },
-    {
-        name: "Lateef",
-        family: "'Lateef', serif",
-        demo: "مرحبا",
-        preload: true
-    },
-    {
-        name: "Noto Kufi Arabic",
-        family: "'Noto Kufi Arabic', sans-serif",
-        demo: "شكرا",
-        preload: true
-    },
-    {
-        name: "Cairo",
-        family: "'Cairo', sans-serif",
-        demo: "أهلا",
-        preload: true
-    },
-    {
-        name: "Tajawal",
-        family: "'Tajawal', sans-serif",
-        demo: "صباح",
-        preload: true
-    }
+// قائمة الخطوط الـ 40 من Google Fonts
+const ALL_FONTS = [
+    { name: "Agu Display", family: "'Agu Display', display", demo: "نص تجريبي" },
+    { name: "Alkalami", family: "'Alkalami', serif", demo: "خط عربي" },
+    { name: "Amatic SC", family: "'Amatic SC', cursive", demo: "Creative" },
+    { name: "Anton", family: "'Anton', sans-serif", demo: "BOLD" },
+    { name: "Archivo Black", family: "'Archivo Black', sans-serif", demo: "Heavy" },
+    { name: "Archivo", family: "'Archivo', sans-serif", demo: "Modern" },
+    { name: "Audiowide", family: "'Audiowide', sans-serif", demo: "Tech" },
+    { name: "Badeen Display", family: "'Badeen Display', display", demo: "عرض" },
+    { name: "Bangers", family: "'Bangers', system-ui", demo: "POP!" },
+    { name: "Bebas Neue", family: "'Bebas Neue', sans-serif", demo: "TITLE" },
+    { name: "Bitcount", family: "'Bitcount Single', monospace", demo: "01010" },
+    { name: "Buda", family: "'Buda', display", demo: "Unique" },
+    { name: "Cairo Play", family: "'Cairo Play', sans-serif", demo: "قاهرة" },
+    { name: "Creepster", family: "'Creepster', system-ui", demo: "Scary" },
+    { name: "Dancing Script", family: "'Dancing Script', cursive", demo: "Dance" },
+    { name: "Eater", family: "'Eater', system-ui", demo: "Horror" },
+    { name: "Edu Hand", family: "'Edu SA Hand', cursive", demo: "Hand" },
+    { name: "Fjalla One", family: "'Fjalla One', sans-serif", demo: "Strong" },
+    { name: "Fredericka", family: "'Fredericka the Great', serif", demo: "Great" },
+    { name: "Gravitas One", family: "'Gravitas One', serif", demo: "Heavy" },
+    { name: "Lalezar", family: "'Lalezar', system-ui", demo: "لاله زار" },
+    { name: "Lobster Two", family: "'Lobster Two', serif", demo: "Fancy" },
+    { name: "Macondo", family: "'Macondo', system-ui", demo: "Fun" },
+    { name: "Mada", family: "'Mada', sans-serif", demo: "مدى" },
+    { name: "Momo Signature", family: "'Momo Signature', cursive", demo: "Sign" },
+    { name: "Monoton", family: "'Monoton', system-ui", demo: "LINE" },
+    { name: "Moo Lah Lah", family: "'Moo Lah Lah', system-ui", demo: "Moo" },
+    { name: "Noto Nastaliq", family: "'Noto Nastaliq Urdu', serif", demo: "نستعلیق" },
+    { name: "Noto Serif", family: "'Noto Serif', serif", demo: "Classic" },
+    { name: "Oswald", family: "'Oswald', sans-serif", demo: "Clean" },
+    { name: "Pacifico", family: "'Pacifico', cursive", demo: "Beach" },
+    { name: "Playfair", family: "'Playfair Display', serif", demo: "Elegant" },
+    { name: "Playwrite GB", family: "'Playwrite GB J Guides', cursive", demo: "Write" },
+    { name: "Reem Kufi", family: "'Reem Kufi', sans-serif", demo: "ريم كوفي" },
+    { name: "Rock Salt", family: "'Rock Salt', cursive", demo: "Rock" },
+    { name: "Rubik Storm", family: "'Rubik Storm', system-ui", demo: "Storm" },
+    { name: "Ruwudu", family: "'Ruwudu', serif", demo: "روودو" },
+    { name: "Gothic Condensed", family: "'Special Gothic Condensed One', sans-serif", demo: "Thin" },
+    { name: "Gothic Expanded", family: "'Special Gothic Expanded One', sans-serif", demo: "Wide" },
+    { name: "Zalando Sans", family: "'Zalando Sans Expanded', sans-serif", demo: "Expand" }
 ];
 
-const ENGLISH_FONTS = [
-    {
-        name: "Arial",
-        family: "Arial, sans-serif",
-        demo: "Hello",
-        preload: false
-    },
-    {
-        name: "Times New Roman",
-        family: "'Times New Roman', serif",
-        demo: "World",
-        preload: false
-    },
-    {
-        name: "Courier New",
-        family: "'Courier New', monospace",
-        demo: "Code",
-        preload: false
-    },
-    {
-        name: "Georgia",
-        family: "Georgia, serif",
-        demo: "Text",
-        preload: false
-    },
-    {
-        name: "Verdana",
-        family: "Verdana, sans-serif",
-        demo: "Test",
-        preload: false
-    }
-];
-
-// ذاكرة مؤقتة للخطوط المحملة
-const loadedFonts = new Set();
+let currentFontFamily = ALL_FONTS[0].family;
 
 // تهيئة قائمة الخطوط
 function initializeFonts() {
-    console.log('Fonts system initialized');
-    // الخطوط يتم اختيارها الآن من اللوحة الأفقية
-    preloadFonts();
-}
-
-// تحميل الخطوط مسبقاً
-function preloadFonts() {
-    console.log('Preloading fonts...');
+    const fontGrid = document.getElementById('fontGrid');
+    if (!fontGrid) {
+        console.error('fontGrid element not found');
+        return;
+    }
     
-    // إنشاء عناصر نص مخفية لتحميل الخطوط
-    const fontLoader = document.createElement('div');
-    fontLoader.style.position = 'absolute';
-    fontLoader.style.left = '-9999px';
-    fontLoader.style.top = '-9999px';
-    fontLoader.style.opacity = '0';
+    fontGrid.innerHTML = '';
+    fontGrid.className = 'horizontal-controls';
     
-    // إضافة عينات من كل خط عربي
-    ARABIC_FONTS.forEach(font => {
-        if (font.preload) {
-            const sample = document.createElement('div');
-            sample.style.fontFamily = font.family;
-            sample.style.fontSize = '1px';
-            sample.textContent = font.demo;
-            fontLoader.appendChild(sample);
-        }
+    ALL_FONTS.forEach((font, index) => {
+        const fontItem = document.createElement('div');
+        fontItem.className = 'font-item';
+        if (index === 0) fontItem.classList.add('selected');
+        
+        fontItem.onclick = () => selectFont(font.family, fontItem);
+        
+        const fontSample = document.createElement('span');
+        fontSample.style.fontFamily = font.family;
+        fontSample.textContent = font.demo;
+        
+        fontItem.appendChild(fontSample);
+        fontGrid.appendChild(fontItem);
     });
     
-    document.body.appendChild(fontLoader);
-    
-    // إزالة المحمل بعد وقت قصير
-    setTimeout(() => {
-        if (fontLoader.parentNode) {
-            document.body.removeChild(fontLoader);
-        }
-    }, 1000);
-    
-    console.log('Fonts preloaded');
+    console.log('✓ تم تحميل', ALL_FONTS.length, 'خط');
 }
 
-// إضافة روابط الخطوط إلى HTML
-function loadFonts() {
-    console.log('Loading fonts dynamically...');
+// اختيار خط
+function selectFont(fontFamily, fontElement) {
+    currentFontFamily = fontFamily;
     
-    // فقط أضف روابط الخطوط إذا لم تكن محملة مسبقاً
-    const existingLinks = document.querySelectorAll('link[href*="fonts.googleapis.com"]');
-    if (existingLinks.length === 0) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://fonts.googleapis.com/css2?family=Amiri&family=Lateef&family=Noto+Kufi+Arabic:wght@400;700&family=Cairo:wght@400;700&family=Tajawal:wght@400;700&display=swap';
-        link.onload = () => {
-            console.log('Google Fonts loaded');
-            // إعادة تحميل الخطوط في المحرر بعد تحميل الخطوط
-            if (typeof updateTextOnCanvas === 'function') {
-                setTimeout(() => updateTextOnCanvas(), 100);
-            }
-        };
-        document.head.appendChild(link);
-    } else {
-        console.log('Fonts already loaded');
+    // تحديث واجهة المستخدم
+    document.querySelectorAll('.font-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    
+    if (fontElement) {
+        fontElement.classList.add('selected');
     }
+    
+    // تحديث النص على الكانفاس
+    if (window.currentText && window.currentText.trim() !== '') {
+        if (typeof renderFullCanvas === 'function') {
+            renderFullCanvas();
+        }
+    }
+    
+    console.log('✓ تم اختيار الخط:', fontFamily);
 }
 
 // تحميل الخطوط عند بدء التطبيق
 window.addEventListener('DOMContentLoaded', () => {
-    // تحميل الخطوط مع تأخير بسيط لضمان تحميل الصفحة أولاً
-    setTimeout(() => {
-        loadFonts();
-        initializeFonts();
-    }, 500);
+    console.log('⏳ جاري تحميل الخطوط...');
+    
+    // التأكد من تحميل الخطوط
+    if (document.fonts) {
+        document.fonts.ready.then(() => {
+            console.log('✓ تم تحميل جميع الخطوط');
+            setTimeout(() => {
+                initializeFonts();
+            }, 300);
+        });
+    } else {
+        // متصفح قديم - تحميل مباشر
+        setTimeout(() => {
+            initializeFonts();
+        }, 1000);
+    }
 });
 
-// تصدير الدوال للاستخدام في ملفات أخرى
-window.loadFonts = loadFonts;
+// تصدير الدوال والمتغيرات
 window.initializeFonts = initializeFonts;
+window.selectFont = selectFont;
+window.currentFontFamily = currentFontFamily;
+window.ALL_FONTS = ALL_FONTS;
