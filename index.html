@@ -6,7 +6,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>محرر النصوص على الصور المتقدم</title>
+    <title>محرر النصوص على الصور</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Lateef&family=Noto+Kufi+Arabic:wght@400;700&family=Cairo:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
@@ -18,20 +18,6 @@
     <div id="categoriesPage" class="page active">
         <div class="header">
             <h1>اختر فئة</h1>
-        </div>
-        
-        <!-- بطاقة طلب الوصول للملفات -->
-        <div id="fileAccessCard" class="file-access-card">
-            <div class="file-access-icon">
-                <span class="material-symbols-outlined">folder_open</span>
-            </div>
-            <h3>السماح بالوصول إلى الملفات</h3>
-            <p>للحفظ والمشاركة بشكل أفضل، يرجى منح التطبيق إذن الوصول إلى ملفات الهاتف</p>
-            <button onclick="requestFileAccess()" class="file-access-btn">
-                <span class="material-symbols-outlined">check_circle</span>
-                <span>السماح بالوصول</span>
-            </button>
-            <button onclick="dismissFileAccess()" class="file-access-dismiss">تجاهل</button>
         </div>
         
         <div class="categories-grid" id="categoriesGrid"></div>
@@ -46,25 +32,6 @@
             <h1 id="categoryTitle">الصور</h1>
         </div>
         <div class="image-grid" id="imageGrid"></div>
-    </div>
-
-    <!-- صفحة الملصقات -->
-    <div id="stickersPage" class="page">
-        <div class="header">
-            <h1>الملصقات</h1>
-        </div>
-        <div class="categories-grid" id="stickerCategoriesGrid"></div>
-    </div>
-
-    <!-- صفحة اختيار الملصقات -->
-    <div id="stickerSelectionPage" class="page">
-        <div class="header">
-            <button onclick="goBackToStickers()" class="icon-btn back-btn">
-                <span class="material-symbols-outlined">arrow_back</span>
-            </button>
-            <h1 id="stickerCategoryTitle">ملصقات</h1>
-        </div>
-        <div class="image-grid" id="stickerGrid"></div>
     </div>
 
     <!-- صفحة المحرر -->
@@ -116,11 +83,6 @@
                     <button class="tool-btn" onclick="toggleToolPanel('borderPanel')">
                         <span class="material-symbols-outlined">border_style</span>
                         <span>حواف</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('adjustPanel')">
-                        <span class="material-symbols-outlined">tune</span>
-                        <span>تعديل</span>
                     </button>
                 </div>
 
@@ -200,42 +162,6 @@
                     <h4>سُمك حواف الصورة</h4>
                     <input type="range" id="borderSlider" min="0" max="50" value="0" class="border-slider">
                     <span id="borderDisplay">0</span>
-                </div>
-            </div>
-
-            <!-- لوحة التعديل (iPhone Style) -->
-            <div id="adjustPanel" class="tool-panel horizontal-scroll-panel">
-                <div class="horizontal-controls">
-                    <div class="filter-item" onclick="selectAdjustment('brightness')">
-                        <div class="filter-preview" style="background: linear-gradient(to bottom, #fff, #666);"></div>
-                        <span>سطوع</span>
-                    </div>
-                    <div class="filter-item" onclick="selectAdjustment('contrast')">
-                        <div class="filter-preview" style="background: linear-gradient(90deg, #000, #fff, #000);"></div>
-                        <span>تباين</span>
-                    </div>
-                    <div class="filter-item" onclick="selectAdjustment('saturation')">
-                        <div class="filter-preview" style="background: linear-gradient(90deg, #f00, #0f0, #00f);"></div>
-                        <span>تشبع</span>
-                    </div>
-                    <div class="filter-item" onclick="selectAdjustment('warmth')">
-                        <div class="filter-preview" style="background: linear-gradient(to right, #0af, #fa0);"></div>
-                        <span>دفء</span>
-                    </div>
-                    <div class="filter-item" onclick="selectAdjustment('tint')">
-                        <div class="filter-preview" style="background: linear-gradient(to right, #f0f, #0ff);"></div>
-                        <span>صبغة</span>
-                    </div>
-                    <div class="filter-item" onclick="selectAdjustment('sharpness')">
-                        <div class="filter-preview" style="background: radial-gradient(circle, #fff, #000);"></div>
-                        <span>حدة</span>
-                    </div>
-                </div>
-                <div class="adjustment-slider-container" id="adjustmentSliderContainer" style="display: none;">
-                    <input type="range" id="adjustmentSlider" min="-100" max="100" value="0" class="adjustment-slider">
-                    <div class="slider-labels">
-                        <span id="adjustmentValue">0</span>
-                    </div>
                 </div>
             </div>
             
@@ -347,27 +273,8 @@
             </div>
 
             <div class="setting-card">
-                <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
-                    <span class="material-symbols-outlined">shield</span>
-                    <span>سياسة الخصوصية</span>
-                </a>
-                <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
-                    <span class="material-symbols-outlined">info</span>
-                    <span>معلومات حول</span>
-                </a>
-                <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
-                    <span class="material-symbols-outlined">help</span>
-                    <span>مركز المساعدة</span>
-                </a>
-                <a href="https://imgur.com/rMuCo3W" target="_blank" class="setting-link">
-                    <span class="material-symbols-outlined">mail</span>
-                    <span>اتصل بنا</span>
-                </a>
-            </div>
-
-            <div class="setting-card">
                 <p style="text-align: center; color: #86868b; font-size: 14px;">
-                    <span>الإصدار</span> 7.1 Pro
+                    <span>الإصدار</span> 8.0 Final
                 </p>
             </div>
         </div>
@@ -382,10 +289,6 @@
         <button onclick="showPage('editor')" class="nav-btn" id="navEditor">
             <span class="material-symbols-outlined">edit</span>
             <span>التحرير</span>
-        </button>
-        <button onclick="showPage('stickers')" class="nav-btn" id="navStickers">
-            <span class="material-symbols-outlined">emoji_emotions</span>
-            <span>ملصقات</span>
         </button>
         <button onclick="showPage('settings')" class="nav-btn" id="navSettings">
             <span class="material-symbols-outlined">settings</span>
