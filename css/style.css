@@ -388,14 +388,17 @@ body[dir="ltr"] {
     background: var(--card-bg);
     border-top: 1px solid var(--border-color);
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .editor-toolbar {
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-start;
     align-items: center;
     height: 100%;
     padding: 8px 5px;
+    min-width: max-content;
 }
 
 .tool-btn {
@@ -405,15 +408,15 @@ body[dir="ltr"] {
     gap: 3px;
     background: none;
     border: none;
-    padding: 6px 4px;
+    padding: 6px 10px;
     cursor: pointer;
     color: var(--text-secondary);
     border-radius: 8px;
     font-size: 9px;
     touch-action: manipulation;
-    min-width: 45px;
+    min-width: 60px;
     transition: all 0.2s ease;
-    flex: 1;
+    flex-shrink: 0;
 }
 
 .tool-btn:hover {
@@ -473,17 +476,30 @@ body[dir="ltr"] {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     cursor: pointer;
-    padding: 8px;
+    padding: 12px 16px;
     border-radius: 12px;
     transition: all 0.2s ease;
-    min-width: 70px;
+    min-width: 100px;
+    border: 2px solid var(--border-color);
+    background: var(--bg-color);
 }
 
 .font-item:active {
-    background: var(--bg-color);
+    background: var(--primary-color);
+    border-color: var(--primary-color);
     transform: scale(0.95);
+}
+
+.font-item.selected {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.font-item.selected span {
+    color: white !important;
 }
 
 .font-item span {
@@ -649,6 +665,36 @@ body[dir="ltr"] {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+}
+
+.settings-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: var(--bg-color);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+}
+
+.settings-link:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateX(-5px);
+}
+
+.settings-link .material-symbols-outlined {
+    font-size: 24px;
 }
 
 .bottom-nav {
@@ -828,7 +874,7 @@ input[type="checkbox"] {
     }
     
     .font-item {
-        min-width: 60px;
+        min-width: 90px;
     }
     
     .color-scroll .color-item {
