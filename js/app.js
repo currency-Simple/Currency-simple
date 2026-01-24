@@ -1,3 +1,5 @@
+[file name]: app.js
+[file content begin]
 // متغيرات عامة
 let categories = [];
 let currentCategory = null;
@@ -18,7 +20,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // إعداد بطاقة النص بعد تحميل الصفحة
     setTimeout(() => {
         setupTextCard();
-        setupTextControlCard();
         setupFontSizeControl();
     }, 500);
 });
@@ -71,17 +72,6 @@ function setupTextCard() {
     }
 }
 
-function setupTextControlCard() {
-    const canvasWrapper = document.getElementById('canvasWrapperFixed');
-    if (!canvasWrapper) {
-        console.error('canvasWrapperFixed not found');
-        return;
-    }
-    
-    // تم إنشاؤه في HTML
-    console.log('Text control card setup complete');
-}
-
 function setupFontSizeControl() {
     const fontSizeSlider = document.getElementById('fontSizeSlider');
     if (fontSizeSlider) {
@@ -94,11 +84,12 @@ function setupFontSizeControl() {
             
             // تحديث حجم النص
             if (window.textScale !== undefined) {
-                window.textScale = value / 50; // تحويل القيمة 10-100 إلى 0.2-2
+                window.textScale = value / 50;
                 if (window.currentText && window.currentText.trim() !== '') {
                     setTimeout(() => {
                         if (typeof renderFullCanvas === 'function') {
                             renderFullCanvas();
+                            updateTextControlFrame();
                         }
                     }, 50);
                 }
@@ -155,24 +146,6 @@ function closeTextCard() {
     }
 }
 
-function openTextControlCard() {
-    const textControlCard = document.getElementById('textControlCard');
-    if (textControlCard) {
-        textControlCard.style.display = 'block';
-        textControlCardVisible = true;
-        console.log('Text control card opened');
-    }
-}
-
-function closeTextControlCard() {
-    const textControlCard = document.getElementById('textControlCard');
-    if (textControlCard) {
-        textControlCard.style.display = 'none';
-        textControlCardVisible = false;
-        console.log('Text control card closed');
-    }
-}
-
 function updateDeleteButtonState() {
     const deleteBtn = document.getElementById('deleteTextFromCardBtn');
     const textInput = document.getElementById('textCardInput');
@@ -191,7 +164,7 @@ function clearTextFromCard() {
     if (!textInput) return;
     
     textInput.value = '';
-    clearTextFromImage();
+    deleteText();
     updateDeleteButtonState();
     textInput.focus();
     
@@ -207,6 +180,12 @@ function applyTextToImage() {
     
     if (typeof renderFullCanvas === 'function') {
         renderFullCanvas();
+        if (text) {
+            updateTextControlFrame();
+            showTextControlFrame();
+        } else {
+            hideTextControlFrame();
+        }
     }
     
     updateDeleteButtonState();
@@ -214,6 +193,7 @@ function applyTextToImage() {
     
     if (text) {
         showAlert('تم إضافة النص إلى الصورة', 'success');
+        showTextTransformControls();
     } else {
         showAlert('تم حذف النص من الصورة', 'success');
     }
@@ -221,14 +201,300 @@ function applyTextToImage() {
     console.log('Text applied to image:', text);
 }
 
-function clearTextFromImage() {
+function deleteText() {
     window.currentText = '';
     
     if (typeof renderFullCanvas === 'function') {
         renderFullCanvas();
     }
     
-    console.log('Text cleared from image');
+    hideTextControlFrame();
+    hideDeleteTextButton();
+    
+    console.log('Text deleted from image');
+}
+
+// وظائف التحكم بالنص المتقدم
+function showTextTransformControls() {
+    if (window.currentText && window.currentText.trim() !== '') {
+        updateTextControlFrame();
+        showTextControlFrame();
+        showDeleteTextButton();
+        showAlert('يمكنك الآن تحريك وتدوير وتكبير النص باستخدام الإطار الزرق', 'info');
+    }
+}
+
+function showTextControlFrame() {
+    const frame = document.getElementById('textControlFrame');
+    if (frame) {
+        frame.style.display = 'block';
+        setupTextFrameControls();
+    }
+}
+
+function hideTextControlFrame() {
+    const frame = document.getElementById('textControlFrame');
+    if (frame) {
+        frame.style.display = 'none';
+    }
+}
+
+function updateTextControlFrame() {
+    if (!window.currentText || !window.currentText.trim()) {
+        hideTextControlFrame();
+        return;
+    }
+    
+    const canvas = document.getElementById('canvas');
+    if (!canvas) return;
+    
+    const frame = document.getElementById('textControlFrame');
+    if (!frame) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const textX = window.textX || 0.5;
+    const textY = window.textY || 0.5;
+    
+    // حساب أبعاد النص
+    const ctx = canvas.getContext('2d');
+    const fontSize = Math.min(canvas.width, canvas.height) * 0.08 * (window.textScale || 1);
+    const fontFamily = window.currentFontFamily || "'Agu Display', display";
+    ctx.font = `bold ${fontSize}px ${fontFamily}`;
+    
+    const lines = window.currentText.split('\n');
+    const maxWidth = Math.max(...lines.map(line => ctx.measureText(line).width));
+    const totalHeight = lines.length * fontSize * 1.4;
+    
+    // حساب موضع الإطار
+    const frameWidth = maxWidth + 40;
+    const frameHeight = totalHeight + 40;
+    const frameX = (textX * canvas.width) - (frameWidth / 2) + rect.left;
+    const frameY = (textY * canvas.height) - (frameHeight / 2) + rect.top;
+    
+    // تحديث الإطار
+    frame.style.width = `${frameWidth}px`;
+    frame.style.height = `${frameHeight}px`;
+    frame.style.left = `${frameX}px`;
+    frame.style.top = `${frameY}px`;
+    frame.style.transform = `rotate(${window.textRotation || 0}deg)`;
+}
+
+function setupTextFrameControls() {
+    const frame = document.getElementById('textControlFrame');
+    if (!frame) return;
+    
+    // إزالة الأحداث القديمة
+    frame.replaceWith(frame.cloneNode(true));
+    const newFrame = document.getElementById('textControlFrame');
+    
+    let isDragging = false;
+    let isResizing = false;
+    let isRotating = false;
+    let startX, startY;
+    let startWidth, startHeight;
+    let startRotation;
+    
+    newFrame.addEventListener('mousedown', startDrag);
+    newFrame.addEventListener('touchstart', startDragTouch);
+    
+    function startDrag(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (e.target.classList.contains('delete-handle')) {
+            deleteText();
+            return;
+        }
+        
+        if (e.target.classList.contains('rotate-handle')) {
+            startRotation = window.textRotation || 0;
+            startX = e.clientX;
+            startY = e.clientY;
+            isRotating = true;
+        } else if (e.target === newFrame) {
+            startX = e.clientX;
+            startY = e.clientY;
+            isDragging = true;
+        }
+        
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', stopDrag);
+    }
+    
+    function startDragTouch(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            
+            if (e.target.classList.contains('delete-handle')) {
+                deleteText();
+                return;
+            }
+            
+            if (e.target.classList.contains('rotate-handle')) {
+                startRotation = window.textRotation || 0;
+                startX = touch.clientX;
+                startY = touch.clientY;
+                isRotating = true;
+            } else if (e.target === newFrame) {
+                startX = touch.clientX;
+                startY = touch.clientY;
+                isDragging = true;
+            }
+        } else if (e.touches.length === 2) {
+            isResizing = true;
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            startX = (touch1.clientX + touch2.clientX) / 2;
+            startY = (touch1.clientY + touch2.clientY) / 2;
+            startWidth = parseFloat(newFrame.style.width);
+            startHeight = parseFloat(newFrame.style.height);
+        }
+        
+        document.addEventListener('touchmove', onDragTouch);
+        document.addEventListener('touchend', stopDrag);
+    }
+    
+    function onDrag(e) {
+        if (!isDragging && !isResizing && !isRotating) return;
+        
+        e.preventDefault();
+        
+        if (isDragging) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            const canvas = document.getElementById('canvas');
+            const rect = canvas.getBoundingClientRect();
+            
+            window.textX = ((parseFloat(newFrame.style.left) - rect.left + dx) + (parseFloat(newFrame.style.width) / 2)) / canvas.width;
+            window.textY = ((parseFloat(newFrame.style.top) - rect.top + dy) + (parseFloat(newFrame.style.height) / 2)) / canvas.height;
+            
+            newFrame.style.left = `${parseFloat(newFrame.style.left) + dx}px`;
+            newFrame.style.top = `${parseFloat(newFrame.style.top) + dy}px`;
+            
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            if (typeof renderFullCanvas === 'function') {
+                renderFullCanvas();
+            }
+        } else if (isRotating) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            window.textRotation = (startRotation + angle) % 360;
+            
+            newFrame.style.transform = `rotate(${window.textRotation}deg)`;
+            
+            if (typeof renderFullCanvas === 'function') {
+                renderFullCanvas();
+            }
+        }
+    }
+    
+    function onDragTouch(e) {
+        if (!isDragging && !isResizing && !isRotating) return;
+        
+        e.preventDefault();
+        
+        if (isDragging && e.touches.length === 1) {
+            const touch = e.touches[0];
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            
+            const canvas = document.getElementById('canvas');
+            const rect = canvas.getBoundingClientRect();
+            
+            window.textX = ((parseFloat(newFrame.style.left) - rect.left + dx) + (parseFloat(newFrame.style.width) / 2)) / canvas.width;
+            window.textY = ((parseFloat(newFrame.style.top) - rect.top + dy) + (parseFloat(newFrame.style.height) / 2)) / canvas.height;
+            
+            newFrame.style.left = `${parseFloat(newFrame.style.left) + dx}px`;
+            newFrame.style.top = `${parseFloat(newFrame.style.top) + dy}px`;
+            
+            startX = touch.clientX;
+            startY = touch.clientY;
+            
+            if (typeof renderFullCanvas === 'function') {
+                renderFullCanvas();
+            }
+        } else if (isResizing && e.touches.length === 2) {
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const currentX = (touch1.clientX + touch2.clientX) / 2;
+            const currentY = (touch1.clientY + touch2.clientY) / 2;
+            
+            const dx = currentX - startX;
+            const dy = currentY - startY;
+            const scale = 1 + (dx + dy) / 500;
+            
+            const newWidth = startWidth * scale;
+            const newHeight = startHeight * scale;
+            
+            newFrame.style.width = `${newWidth}px`;
+            newFrame.style.height = `${newHeight}px`;
+            
+            // تحديث حجم النص
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            if (fontSizeSlider) {
+                const currentScale = window.textScale || 1;
+                const newScale = currentScale * scale;
+                const newValue = Math.max(10, Math.min(100, Math.round(newScale * 50)));
+                fontSizeSlider.value = newValue;
+                window.textScale = newScale;
+                
+                const display = document.getElementById('fontSizeDisplay');
+                if (display) {
+                    display.textContent = newValue;
+                }
+            }
+            
+            if (typeof renderFullCanvas === 'function') {
+                renderFullCanvas();
+            }
+        } else if (isRotating && e.touches.length === 1) {
+            const touch = e.touches[0];
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            window.textRotation = (startRotation + angle) % 360;
+            
+            newFrame.style.transform = `rotate(${window.textRotation}deg)`;
+            
+            if (typeof renderFullCanvas === 'function') {
+                renderFullCanvas();
+            }
+        }
+    }
+    
+    function stopDrag() {
+        isDragging = false;
+        isResizing = false;
+        isRotating = false;
+        
+        document.removeEventListener('mousemove', onDrag);
+        document.removeEventListener('touchmove', onDragTouch);
+        document.removeEventListener('mouseup', stopDrag);
+        document.removeEventListener('touchend', stopDrag);
+        
+        updateTextControlFrame();
+    }
+}
+
+function showDeleteTextButton() {
+    const deleteBtn = document.getElementById('deleteTextBtn');
+    if (deleteBtn) {
+        deleteBtn.style.display = 'flex';
+    }
+}
+
+function hideDeleteTextButton() {
+    const deleteBtn = document.getElementById('deleteTextBtn');
+    if (deleteBtn) {
+        deleteBtn.style.display = 'none';
+    }
 }
 
 function rotateTextClockwise() {
@@ -237,6 +503,7 @@ function rotateTextClockwise() {
         if (window.currentText && window.currentText.trim() !== '') {
             if (typeof renderFullCanvas === 'function') {
                 renderFullCanvas();
+                updateTextControlFrame();
             }
         }
         showAlert('تم تدوير النص 15° يميناً', 'success');
@@ -249,6 +516,7 @@ function rotateTextCounterClockwise() {
         if (window.currentText && window.currentText.trim() !== '') {
             if (typeof renderFullCanvas === 'function') {
                 renderFullCanvas();
+                updateTextControlFrame();
             }
         }
         showAlert('تم تدوير النص 15° يساراً', 'success');
@@ -275,6 +543,7 @@ function increaseTextSize() {
                     setTimeout(() => {
                         if (typeof renderFullCanvas === 'function') {
                             renderFullCanvas();
+                            updateTextControlFrame();
                         }
                     }, 50);
                 }
@@ -305,6 +574,7 @@ function decreaseTextSize() {
                     setTimeout(() => {
                         if (typeof renderFullCanvas === 'function') {
                             renderFullCanvas();
+                            updateTextControlFrame();
                         }
                     }, 50);
                 }
@@ -319,6 +589,8 @@ function resetText() {
     if (window.textRotation !== undefined) {
         window.textRotation = 0;
         window.textScale = 1;
+        window.textX = 0.5;
+        window.textY = 0.5;
         
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         if (fontSizeSlider) {
@@ -332,6 +604,7 @@ function resetText() {
         if (window.currentText && window.currentText.trim() !== '') {
             if (typeof renderFullCanvas === 'function') {
                 renderFullCanvas();
+                updateTextControlFrame();
             }
         }
         
@@ -561,7 +834,7 @@ function showPage(pageName) {
     if (pageName !== 'editor') {
         closeAllToolPanels();
         handleKeyboardClose();
-        closeTextControlCard();
+        hideTextControlFrame();
     }
 }
 
@@ -786,6 +1059,8 @@ function hideLoadingIndicator() {
 window.currentText = '';
 window.textScale = 1;
 window.textRotation = 0;
+window.textX = 0.5;
+window.textY = 0.5;
 window.showPage = showPage;
 window.goBackToImages = goBackToImages;
 window.downloadImage = downloadImage;
@@ -794,10 +1069,11 @@ window.showAlert = showAlert;
 window.toggleTextCard = toggleTextCard;
 window.closeTextCard = closeTextCard;
 window.openTextCard = openTextCard;
-window.closeTextControlCard = closeTextControlCard;
-window.openTextControlCard = openTextControlCard;
 window.rotateTextClockwise = rotateTextClockwise;
 window.rotateTextCounterClockwise = rotateTextCounterClockwise;
 window.increaseTextSize = increaseTextSize;
 window.decreaseTextSize = decreaseTextSize;
 window.resetText = resetText;
+window.deleteText = deleteText;
+window.showTextTransformControls = showTextTransformControls;
+[file content end]
