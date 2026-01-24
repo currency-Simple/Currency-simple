@@ -52,6 +52,36 @@
             <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
                 <canvas id="canvas"></canvas>
                 
+                <!-- بطاقة تحكم بالنص -->
+                <div class="text-control-card" id="textControlCard" style="display: none;">
+                    <div class="text-control-header">
+                        <span>تحكم بالنص</span>
+                        <button class="close-control-btn" onclick="closeTextControlCard()">×</button>
+                    </div>
+                    <div class="text-control-buttons">
+                        <button class="text-control-btn" onclick="rotateTextClockwise()">
+                            <span class="material-symbols-outlined">rotate_right</span>
+                            <span>تدوير يمين</span>
+                        </button>
+                        <button class="text-control-btn" onclick="rotateTextCounterClockwise()">
+                            <span class="material-symbols-outlined">rotate_left</span>
+                            <span>تدوير يسار</span>
+                        </button>
+                        <button class="text-control-btn" onclick="increaseTextSize()">
+                            <span class="material-symbols-outlined">zoom_in</span>
+                            <span>تكبير</span>
+                        </button>
+                        <button class="text-control-btn" onclick="decreaseTextSize()">
+                            <span class="material-symbols-outlined">zoom_out</span>
+                            <span>تصغير</span>
+                        </button>
+                        <button class="text-control-btn" onclick="resetText()">
+                            <span class="material-symbols-outlined">refresh</span>
+                            <span>إعادة تعيين</span>
+                        </button>
+                    </div>
+                </div>
+                
                 <!-- أزرار التحكم العائمة -->
                 <div class="floating-controls">
                     <button onclick="shareImage()" class="floating-btn share-btn">
@@ -65,7 +95,7 @@
                 </div>
             </div>
             
-            <!-- أدوات التحرير - صف واحد فقط -->
+            <!-- أدوات التحرير -->
             <div class="editor-toolbar-container">
                 <div class="editor-toolbar">
                     <button class="tool-btn" onclick="toggleToolPanel('uploadPanel')">
@@ -73,24 +103,19 @@
                         <span>رفع</span>
                     </button>
 
-                    <button class="tool-btn" onclick="toggleToolPanel('blurPanel')">
-                        <span class="material-symbols-outlined">blur_on</span>
-                        <span>ضبابية</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('rotatePanel')">
-                        <span class="material-symbols-outlined">rotate_right</span>
-                        <span>تدوير</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('borderPanel')">
-                        <span class="material-symbols-outlined">border_style</span>
-                        <span>حواف</span>
+                    <button class="tool-btn" onclick="toggleTextCard()">
+                        <span class="material-symbols-outlined">text_fields</span>
+                        <span>نص</span>
                     </button>
 
                     <button class="tool-btn" onclick="toggleToolPanel('fontPanel')">
                         <span class="material-symbols-outlined">brand_family</span>
                         <span>خط</span>
+                    </button>
+
+                    <button class="tool-btn" onclick="toggleToolPanel('fontSizePanel')">
+                        <span class="material-symbols-outlined">format_size</span>
+                        <span>حجم النص</span>
                     </button>
 
                     <button class="tool-btn" onclick="toggleToolPanel('colorPanel')">
@@ -106,6 +131,21 @@
                     <button class="tool-btn" onclick="toggleToolPanel('effectsPanel')">
                         <span class="material-symbols-outlined">bedtime</span>
                         <span>تأثيرات</span>
+                    </button>
+
+                    <button class="tool-btn" onclick="toggleToolPanel('blurPanel')">
+                        <span class="material-symbols-outlined">blur_on</span>
+                        <span>ضبابية</span>
+                    </button>
+
+                    <button class="tool-btn" onclick="toggleToolPanel('borderPanel')">
+                        <span class="material-symbols-outlined">border_style</span>
+                        <span>حواف</span>
+                    </button>
+
+                    <button class="tool-btn" onclick="toggleToolPanel('rotatePanel')">
+                        <span class="material-symbols-outlined">rotate_right</span>
+                        <span>تدوير</span>
                     </button>
                 </div>
             </div>
@@ -163,6 +203,21 @@
             <!-- لوحة الخطوط -->
             <div id="fontPanel" class="tool-panel horizontal-scroll-panel">
                 <div class="horizontal-controls" id="fontGrid"></div>
+            </div>
+
+            <!-- لوحة حجم النص -->
+            <div id="fontSizePanel" class="tool-panel">
+                <div class="tool-section">
+                    <h4>حجم النص</h4>
+                    <input type="range" id="fontSizeSlider" min="10" max="100" value="50" class="size-slider">
+                    <span id="fontSizeDisplay">50</span>
+                </div>
+                <div class="tool-buttons-grid">
+                    <button class="tool-action-btn" onclick="openTextControlCard()">
+                        <span class="material-symbols-outlined">open_with</span>
+                        <span>فتح تحكم النص</span>
+                    </button>
+                </div>
             </div>
 
             <!-- لوحة لون النص -->
@@ -267,7 +322,7 @@
 
             <div class="setting-card">
                 <p style="text-align: center; color: #86868b; font-size: 14px;">
-                    <span>الإصدار</span> 9.0 Final
+                    <span>الإصدار</span> 10.0 Final
                 </p>
             </div>
         </div>
