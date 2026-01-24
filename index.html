@@ -9,7 +9,11 @@
     <title>محرر النصوص على الصور</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Lateef&family=Noto+Kufi+Arabic:wght@400;700&family=Cairo:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- تحميل جميع الخطوط من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Agu+Display&family=Alkalami&family=Amatic+SC:wght@400;700&family=Anton&family=Archivo+Black&family=Archivo:ital,wght@0,100..900;1,100..900&family=Audiowide&family=Badeen+Display&family=Bangers&family=Bebas+Neue&family=Bitcount+Single:wght@100..900&family=Buda:wght@300&family=Cairo+Play:wght@200..1000&family=Creepster&family=Dancing+Script:wght@400..700&family=Eater&family=Edu+SA+Hand:wght@400..700&family=Fjalla+One&family=Fredericka+the+Great&family=Gravitas+One&family=Lalezar&family=Lobster+Two:ital,wght@0,400;0,700;1,400;1,700&family=Macondo&family=Mada:wght@200..900&family=Momo+Signature&family=Monoton&family=Moo+Lah+Lah&family=Noto+Nastaliq+Urdu:wght@400..700&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Pacifico&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Playwrite+GB+J+Guides:ital@0;1&family=Reem+Kufi:wght@400..700&family=Rock+Salt&family=Rubik+Storm&family=Ruwudu:wght@400;500;600;700&family=Special+Gothic+Condensed+One&family=Special+Gothic+Expanded+One&family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -158,23 +162,7 @@
             
             <!-- لوحة الخطوط -->
             <div id="fontPanel" class="tool-panel horizontal-scroll-panel">
-                <div class="horizontal-controls">
-                    <div class="font-item" onclick="selectFont('\'Amiri\', serif')">
-                        <span style="font-family: 'Amiri', serif;">محمد</span>
-                    </div>
-                    <div class="font-item" onclick="selectFont('\'Lateef\', serif')">
-                        <span style="font-family: 'Lateef', serif;">Lateef</span>
-                    </div>
-                    <div class="font-item" onclick="selectFont('\'Noto Kufi Arabic\', sans-serif')">
-                        <span style="font-family: 'Noto Kufi Arabic', sans-serif;">Noto</span>
-                    </div>
-                    <div class="font-item" onclick="selectFont('\'Cairo\', sans-serif')">
-                        <span style="font-family: 'Cairo', sans-serif;">Cairo</span>
-                    </div>
-                    <div class="font-item" onclick="selectFont('\'Tajawal\', sans-serif')">
-                        <span style="font-family: 'Tajawal', sans-serif;">Tajawal</span>
-                    </div>
-                </div>
+                <div class="horizontal-controls" id="fontGrid"></div>
             </div>
 
             <!-- لوحة لون النص -->
@@ -251,6 +239,29 @@
                     <button class="lang-btn" onclick="changeLanguage('fr')" data-lang-btn="fr">
                         Français
                     </button>
+                </div>
+            </div>
+
+            <!-- روابط إضافية -->
+            <div class="setting-card">
+                <h3>روابط مفيدة</h3>
+                <div class="settings-links">
+                    <a href="#privacy" class="settings-link" onclick="showPrivacyPolicy(); return false;">
+                        <span class="material-symbols-outlined">policy</span>
+                        <span>سياسة الخصوصية</span>
+                    </a>
+                    <a href="#about" class="settings-link" onclick="showAbout(); return false;">
+                        <span class="material-symbols-outlined">info</span>
+                        <span>معلومات حول</span>
+                    </a>
+                    <a href="#help" class="settings-link" onclick="showHelp(); return false;">
+                        <span class="material-symbols-outlined">help</span>
+                        <span>مركز المساعدة</span>
+                    </a>
+                    <a href="#contact" class="settings-link" onclick="showContact(); return false;">
+                        <span class="material-symbols-outlined">email</span>
+                        <span>اتصل بنا</span>
+                    </a>
                 </div>
             </div>
 
