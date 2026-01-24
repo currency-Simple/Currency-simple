@@ -1,255 +1,55 @@
 {
-  "name": "Houses ",
+  "name": "الطبيعة",
   "images": [
-    {
-      "id": 1,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183175/c458add370e3ff8396d9d8958321d639_uveuau.jpg",
-      "title": "صورة 1"
-    },
-    {
-      "id": 2,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183176/ccd02022dd8b2ae7f8f8e7f1e20904db_rffoo6.jpg",
-      "title": "صورة 2"
-    },
-    {
-      "id": 3,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183175/b18297257f817f9883057aba356df769_jwux0n.jpg",
-      "title": "صورة 3"
-    },
-    {
-      "id": 4,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183176/ee738848807c53785882b675361bc348_efo9lf.jpg",
-      "title": "صورة 4"
-    },
-    {
-      "id": 5,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183198/2f80f0d27f76eb2b1eed431928ea05e1_xj2zu4.jpg",
-      "title": "صورة 5"
-    },
-    {
-      "id": 6,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183198/040bf5835e7e9cba7af7875f892a2206_avn0us.jpg",
-      "title": "صورة 6"
-    },
-    {
-      "id": 7,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183216/aeab673446cef04c03dfb81d3007ac5b_npzmfv.jpg",
-      "title": "صورة 7"
-    },
-    {
-      "id": 8,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183198/76ef6486af552afa2cdb43680f34b09a_hdcxfx.jpg",
-      "title": "صورة 8"
-    },
-    {
-      "id": 9,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183199/877b7a35f7c11b45b33e26dc0c5f512a_rgndrz.jpg",
-      "title": "صورة 9"
-    },
-    {
-      "id": 10,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183139/071a2fa36a7f323d6e2e6df09d10bd7b_zupxmm.jpg",
-      "title": "صورة 10"
-    },
-    {
-      "id": 11,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183138/8e4e7e3d0b019ccfa79f4c28b9099458_doesmz.jpg",
-      "title": "صورة 11"
-    },
-    {
-      "id": 12,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183138/7c27fed17d98e47ec2065e134a78c208_yegzys.jpg",
-      "title": "صورة 12"
-    },
-    {
-      "id": 13,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183158/860dc19f03cab6c28331d7918277bac1_allhu3.jpg",
-      "title": "صورة 13"
-    },
-    {
-      "id": 14,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183138/65ad373d6cd455b4ee5fe01caae0b340_b3yycs.jpg",
-      "title": "صورة 14"
-    },
-    {
-      "id": 15,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183175/ae3d1367443de4f59af9ef969fa0e808_ctm3tu.jpg",
-      "title": "صورة 15"
-    },
-    {
-      "id": 16,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183159/83590f71a5ee702d984f770e41c852cd_sgasgo.jpg",
-      "title": "صورة 16"
-    },
-    {
-      "id": 17,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183158/72172eebe4a8cfd0005f21fdd14fcb47_wtsmcy.jpg",
-      "title": "صورة 17"
-    },
-    {
-      "id": 18,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183093/3adf31c75050dd9512ad4d078dc6b0fe_xjjitn.jpg",
-      "title": "صورة 18"
-    },
-    {
-      "id": 19,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183094/6d6e0acb1b59fbfb58c29cb245e4fe19_of306h.jpg",
-      "title": "صورة 19"
-    },
-    {
-      "id": 20,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183093/1ee5600c92d8565b0468d6f13bf4ac7e_onhatm.jpg",
-      "title": "صورة 20"
-    },
-    {
-      "id": 21,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183114/9cd997d1fff3469ffcc3ab8741635c76_zvgycc.jpg",
-      "title": "صورة 21"
-    },
-    {
-      "id": 22,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183093/3ee0034bb3bf73d0792e857a7be57b17_ylovzb.jpg",
-      "title": "صورة 22"
-    },
-    {
-      "id": 23,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183094/4c63511bd43fc190b476740366ffe6f8_pfttoo.jpg",
-      "title": "صورة 23"
-    },
-    {
-      "id": 24,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183115/9ce3d658cb5638e8995e1c75a26de96e_bd457g.jpg",
-      "title": "صورة 24"
-    },
-    {
-      "id": 25,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183115/f074a70038fd7316dbddee385da98414_csqh4y.jpg",
-      "title": "صورة 25"
-    },
-    {
-      "id": 26,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183115/d8f30db7a9ff8af195f87642383d0a2e_yd1da3.jpg",
-      "title": "صورة 26"
-    },
-    {
-      "id": 27,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183137/6c485218e19c49bcc92243e7217be690_fzyx5r.jpg",
-      "title": "صورة 27"
-    },
-    {
-      "id": 28,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183115/a8314411290cae38de809fc39cf17fc8_x0amsj.jpg",
-      "title": "صورة 28"
-    },
-    {
-      "id": 29,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183116/2a0abfd3374ca9c36055b504a0ba52cf_fprrmy.jpg",
-      "title": "صورة 29"
-    },
-    {
-      "id": 30,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183042/f3efb9ca28bbfdd8a9ab79010a05af88_b24gix.jpg",
-      "title": "صورة 30"
-    },
-    {
-      "id": 31,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183042/4bf3fa16d2b2fab5833b1630d5981863_gtksf7.jpg",
-      "title": "صورة 31"
-    },
-    {
-      "id": 32,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183042/3a7a0786254232ffa6f57c40f7d23d57_wm3irb.jpg",
-      "title": "صورة 32"
-    },
-    {
-      "id": 33,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183043/9ee1c2e5d858d70e56e9407d691699af_xb7vl2.jpg",
-      "title": "صورة 33"
-    },
-    {
-      "id": 34,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183043/8da2b2cf127d79cc4d7887304fe45b28_d50vyt.jpg",
-      "title": "صورة 34"
-    },
-    {
-      "id": 35,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183043/9fa5472d112763f22bb78ec97bd773f3_ec03wd.jpg",
-      "title": "صورة 35"
-    },
-    {
-      "id": 36,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183073/512ae7ab85840a44c5b860537184a975_veyks7.jpg",
-      "title": "صورة 36"
-    },
-    {
-      "id": 37,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183073/63f0ba7f14c9b01f6842fd0b3e4e49da_iqyquo.jpg",
-      "title": "صورة 37"
-    },
-    {
-      "id": 38,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183074/d6dc404d78a7b5e3f26d66df3b4f8ccb_v8khl5.jpg",
-      "title": "صورة 38"
-    },
-    {
-      "id": 39,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183093/3aa87fae0a3a4935c71d609ffcea41bc_fdjkyo.jpg",
-      "title": "صورة 39"
-    },
-    {
-      "id": 40,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183074/c0dbdd381bf6009821ab31a670da1bf0_gwsaon.jpg",
-      "title": "صورة 40"
-    },
-    {
-      "id": 41,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183074/d352cdd9f9e99129a0c1d98eb41ef8bb_lshe1m.jpg",
-      "title": "صورة 41"
-    },
-    {
-      "id": 42,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183016/6b727cfa560c3c72ec7f7b82e1bbb59d_wpae8d.jpg",
-      "title": "صورة 42"
-    },
-    {
-      "id": 43,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183016/3a4b3409bb42d2ff9a9bb13cb14d53a6_mebnzv.jpg",
-      "title": "صورة 43"
-    },
-    {
-      "id": 44,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183016/19b46e6752e5327a5b5b48c41edc5bea_okvv18.jpg",
-      "title": "صورة 44"
-    },
-    {
-      "id": 45,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183016/62e9792686ab9f1698001a40643e21f7_m0pd9b.jpg",
-      "title": "صورة 45"
-    },
-    {
-      "id": 46,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183016/7a8d28c88155f1bfb3125039cf68a9ea_a0l5it.jpg",
-      "title": "صورة 46"
-    },
-    {
-      "id": 47,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183017/e709367f390d31101cac12e1b33ff4b8_nqysbr.jpg",
-      "title": "صورة 47"
-    },
-    {
-      "id": 48,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183016/0837dfa9b2fb01802530b27a7a17ec40_uoxqkq.jpg",
-      "title": "صورة 48"
-    },
-    {
-      "id": 49,
-      "url": "https://res.cloudinary.com/doh5fq6wc/image/upload/v1769183017/c5210454caf199962caf029f9b8afa8e_ysywrv.jpg",
-      "title": "صورة 49"
-    },
-    {
-      "id": 50,
-      "url": "https://res.cloudinary.com/dv3bu4n5f/image/upload/v1769026413/your-image-50.jpg",
-      "title": "صورة 50"
-    }
+    {"id": 1, "url": "https://images.pexels.com/photos/268533/pexels-photo-268533.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "جبال"},
+    {"id": 2, "url": "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "شلال"},
+    {"id": 3, "url": "https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "غابة"},
+    {"id": 4, "url": "https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "إيطاليا"},
+    {"id": 5, "url": "https://images.pexels.com/photos/326055/pexels-photo-326055.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "بحيرة"},
+    {"id": 6, "url": "https://images.pexels.com/photos/1562/italian-landscape-mountains-nature.jpg?auto=compress&cs=tinysrgb&w=600", "title": "مناظر طبيعية"},
+    {"id": 7, "url": "https://images.pexels.com/photos/1252869/pexels-photo-1252869.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "طريق جبلي"},
+    {"id": 8, "url": "https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "شروق الشمس"},
+    {"id": 9, "url": "https://images.pexels.com/photos/1323550/pexels-photo-1323550.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "غروب"},
+    {"id": 10, "url": "https://images.pexels.com/photos/1591373/pexels-photo-1591373.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "شاطئ"},
+    {"id": 11, "url": "https://images.pexels.com/photos/462024/pexels-photo-462024.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "أشجار"},
+    {"id": 12, "url": "https://images.pexels.com/photos/1366630/pexels-photo-1366630.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "حقول"},
+    {"id": 13, "url": "https://images.pexels.com/photos/1770809/pexels-photo-1770809.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "جبال ثلجية"},
+    {"id": 14, "url": "https://images.pexels.com/photos/1433052/pexels-photo-1433052.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "نهر"},
+    {"id": 15, "url": "https://images.pexels.com/photos/531321/pexels-photo-531321.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "زهور"},
+    {"id": 16, "url": "https://images.pexels.com/photos/1034584/pexels-photo-1034584.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "صحراء"},
+    {"id": 17, "url": "https://images.pexels.com/photos/1166209/pexels-photo-1166209.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "كهف"},
+    {"id": 18, "url": "https://images.pexels.com/photos/1179229/pexels-photo-1179229.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "صخور"},
+    {"id": 19, "url": "https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "جزيرة"},
+    {"id": 20, "url": "https://images.pexels.com/photos/189349/pexels-photo-189349.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "منحدرات"},
+    {"id": 21, "url": "https://images.pexels.com/photos/1402850/pexels-photo-1402850.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "واحة"},
+    {"id": 22, "url": "https://images.pexels.com/photos/1450082/pexels-photo-1450082.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "وادي"},
+    {"id": 23, "url": "https://images.pexels.com/photos/1619317/pexels-photo-1619317.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "قمة جبل"},
+    {"id": 24, "url": "https://images.pexels.com/photos/1624438/pexels-photo-1624438.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "غيوم"},
+    {"id": 25, "url": "https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "ضباب"},
+    {"id": 26, "url": "https://images.pexels.com/photos/1670187/pexels-photo-1670187.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "أرض خضراء"},
+    {"id": 27, "url": "https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "جسر طبيعي"},
+    {"id": 28, "url": "https://images.pexels.com/photos/2440079/pexels-photo-2440079.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "شجرة وحيدة"},
+    {"id": 29, "url": "https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "منظر طبيعي"},
+    {"id": 30, "url": "https://images.pexels.com/photos/2693529/pexels-photo-2693529.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "سماء زرقاء"},
+    {"id": 31, "url": "https://images.pexels.com/photos/1717859/pexels-photo-1717859.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "بحر"},
+    {"id": 32, "url": "https://images.pexels.com/photos/1743165/pexels-photo-1743165.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "أمواج"},
+    {"id": 33, "url": "https://images.pexels.com/photos/1772973/pexels-photo-1772973.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "بحيرة جبلية"},
+    {"id": 34, "url": "https://images.pexels.com/photos/1786726/pexels-photo-1786726.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "غابة كثيفة"},
+    {"id": 35, "url": "https://images.pexels.com/photos/1850629/pexels-photo-1850629.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "طريق ريفي"},
+    {"id": 36, "url": "https://images.pexels.com/photos/1903702/pexels-photo-1903702.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "حديقة"},
+    {"id": 37, "url": "https://images.pexels.com/photos/2007647/pexels-photo-2007647.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "ربيع"},
+    {"id": 38, "url": "https://images.pexels.com/photos/2088203/pexels-photo-2088203.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "صيف"},
+    {"id": 39, "url": "https://images.pexels.com/photos/2132180/pexels-photo-2132180.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "خريف"},
+    {"id": 40, "url": "https://images.pexels.com/photos/2166711/pexels-photo-2166711.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "شتاء"},
+    {"id": 41, "url": "https://images.pexels.com/photos/2295744/pexels-photo-2295744.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "كوخ جبلي"},
+    {"id": 42, "url": "https://images.pexels.com/photos/2387418/pexels-photo-2387418.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "مرج"},
+    {"id": 43, "url": "https://images.pexels.com/photos/2437299/pexels-photo-2437299.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "نبع ماء"},
+    {"id": 44, "url": "https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "منحدر أخضر"},
+    {"id": 45, "url": "https://images.pexels.com/photos/2666598/pexels-photo-2666598.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "طبيعة خلابة"},
+    {"id": 46, "url": "https://images.pexels.com/photos/2709388/pexels-photo-2709388.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "منظر بانورامي"},
+    {"id": 47, "url": "https://images.pexels.com/photos/2749481/pexels-photo-2749481.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "سلسلة جبال"},
+    {"id": 48, "url": "https://images.pexels.com/photos/2832039/pexels-photo-2832039.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "طبيعة ساحرة"},
+    {"id": 49, "url": "https://images.pexels.com/photos/2901209/pexels-photo-2901209.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "منظر رائع"},
+    {"id": 50, "url": "https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=600", "title": "مناظر جميلة"}
   ]
 }
