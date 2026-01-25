@@ -23,7 +23,7 @@ let currentStrokeColor = "#000000";
 let currentCardColor = "#000000";
 let currentBorderColor = "#000000";
 let currentBackgroundColor = "#FFFFFF";
-let currentBackgroundSize = "cover"; // تغيير من null إلى "cover"
+let currentBackgroundSize = "original"; // تغيير إلى "original"
 
 // تخزين الألوان في window لاستخدامها في editor.js
 window.currentTextColor = currentTextColor;
@@ -33,17 +33,17 @@ window.currentBorderColor = currentBorderColor;
 window.currentBackgroundColor = currentBackgroundColor;
 window.currentBackgroundSize = currentBackgroundSize;
 
-// أحجام الخلفية المتاحة
+// أحجام الخلفية المتاحة - محدثة
 const BACKGROUND_SIZES = [
-    { name: "فراغ", value: "none", icon: "crop_free" },
+    { name: "أصلي", value: "original", icon: "crop_original" },
+    { name: "تغطية", value: "cover", icon: "fit_screen" },
     { name: "مربع", value: "1:1", icon: "crop_square" },
     { name: "عمودي", value: "4:5", icon: "crop_portrait" },
     { name: "قصة", value: "9:16", icon: "crop_portrait" },
     { name: "نشر", value: "3:2", icon: "crop_landscape" },
     { name: "3:4", value: "3:4", icon: "crop_portrait" },
-    { name: "3:2", value: "3:2", icon: "crop_landscape" },
     { name: "16:9", value: "16:9", icon: "crop_landscape" },
-    { name: "تغطية", value: "cover", icon: "fit_screen" }
+    { name: "شاشة", value: "16:10", icon: "desktop_windows" }
 ];
 
 // تهيئة شبكات الألوان والخلفية
@@ -121,7 +121,6 @@ function initializeColors() {
             transparentItem.classList.add('selected');
             setBackgroundColor('transparent');
         };
-        transparentItem.classList.add('selected');
         backgroundGrid.appendChild(transparentItem);
         
         COLORS.forEach((color, index) => {
@@ -147,6 +146,11 @@ function initializeColors() {
             `;
             button.title = size.name;
             button.onclick = () => setBackgroundSize(size.value, button);
+            
+            // تحديد "أصلي" افتراضياً
+            if (size.value === "original") {
+                button.classList.add('selected');
+            }
             
             backgroundSizeGrid.appendChild(button);
         });
