@@ -36,7 +36,7 @@ let currentFilter = 'none';
 
 // متغيرات الخلفية الجديدة
 let backgroundColor = '#FFFFFF';
-let backgroundSize = 'cover';
+let backgroundSize = 'original';
 let backgroundCanvas = null;
 let backgroundCtx = null;
 
@@ -93,7 +93,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (window.textScale === undefined) window.textScale = 1;
     if (window.textRotation === undefined) window.textRotation = 0;
     if (window.currentBackgroundColor === undefined) window.currentBackgroundColor = '#FFFFFF';
-    if (window.currentBackgroundSize === undefined) window.currentBackgroundSize = 'cover';
+    if (window.currentBackgroundSize === undefined) window.currentBackgroundSize = 'original';
     
     backgroundColor = window.currentBackgroundColor;
     backgroundSize = window.currentBackgroundSize;
@@ -481,37 +481,50 @@ function adjustImageForBorder() {
     const containerHeight = container.clientHeight - 20;
     
     const borderSpace = imageBorderWidth * 2;
-    const availableWidth = containerWidth - borderSpace;
-    const availableHeight = containerHeight - borderSpace;
+    let targetWidth = containerWidth - borderSpace;
+    let targetHeight = containerHeight - borderSpace;
     
     // حساب الأبعاد بناءً على حجم الخلفية
-    let targetWidth = availableWidth;
-    let targetHeight = availableHeight;
-    
-    if (backgroundSize !== 'none' && backgroundSize !== 'cover') {
-        const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
-        const aspectRatio = widthRatio / heightRatio;
+    if (backgroundSize !== 'original' && backgroundSize !== 'cover') {
+        if (backgroundSize.includes(':')) {
+            const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
+            const aspectRatio = widthRatio / heightRatio;
+            
+            if (targetWidth / targetHeight > aspectRatio) {
+                targetHeight = targetHeight;
+                targetWidth = targetHeight * aspectRatio;
+            } else {
+                targetWidth = targetWidth;
+                targetHeight = targetWidth / aspectRatio;
+            }
+        }
+    } else if (backgroundSize === 'cover') {
+        const imageAspect = originalImageWidth / originalImageHeight;
+        const containerAspect = targetWidth / targetHeight;
         
-        if (availableWidth / availableHeight > aspectRatio) {
-            targetHeight = availableHeight;
-            targetWidth = targetHeight * aspectRatio;
+        if (containerAspect > imageAspect) {
+            targetWidth = targetWidth;
+            targetHeight = targetWidth / imageAspect;
         } else {
-            targetWidth = availableWidth;
-            targetHeight = targetWidth / aspectRatio;
+            targetHeight = targetHeight;
+            targetWidth = targetHeight * imageAspect;
         }
     }
     
-    const widthRatio = targetWidth / originalImageWidth;
-    const heightRatio = targetHeight / originalImageHeight;
-    const scale = Math.min(widthRatio, heightRatio);
+    // لحجم "أصلي" نستخدم الأبعاد الأصلية مع حدود
+    if (backgroundSize === 'original') {
+        const widthRatio = targetWidth / originalImageWidth;
+        const heightRatio = targetHeight / originalImageHeight;
+        const scale = Math.min(widthRatio, heightRatio);
+        
+        targetWidth = Math.max(100, Math.round(originalImageWidth * scale));
+        targetHeight = Math.max(100, Math.round(originalImageHeight * scale));
+    }
     
-    const displayWidth = Math.max(100, Math.round(originalImageWidth * scale));
-    const displayHeight = Math.max(100, Math.round(originalImageHeight * scale));
-    
-    canvas.width = displayWidth + borderSpace;
-    canvas.height = displayHeight + borderSpace;
-    canvas.style.width = (displayWidth + borderSpace) + 'px';
-    canvas.style.height = (displayHeight + borderSpace) + 'px';
+    canvas.width = targetWidth + borderSpace;
+    canvas.height = targetHeight + borderSpace;
+    canvas.style.width = (targetWidth + borderSpace) + 'px';
+    canvas.style.height = (targetHeight + borderSpace) + 'px';
 }
 
 function loadImageToEditor(imageUrl) {
@@ -584,7 +597,7 @@ function renderFullCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // رسم الخلفية أولاً
-        if (backgroundColor !== 'transparent' && backgroundSize !== 'none') {
+        if (backgroundColor !== 'transparent') {
             ctx.fillStyle = backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
@@ -597,7 +610,18 @@ function renderFullCanvas() {
             let imageHeight = canvas.height - (borderSpace * 2);
             
             // ضبط حجم الصورة بناءً على حجم الخلفية
-            if (backgroundSize !== 'none' && backgroundSize !== 'cover') {
+            if (backgroundSize === 'cover') {
+                const imageAspect = originalImageWidth / originalImageHeight;
+                const canvasAspect = imageWidth / imageHeight;
+                
+                if (canvasAspect > imageAspect) {
+                    imageWidth = imageWidth;
+                    imageHeight = imageWidth / imageAspect;
+                } else {
+                    imageHeight = imageHeight;
+                    imageWidth = imageHeight * imageAspect;
+                }
+            } else if (backgroundSize !== 'original' && backgroundSize.includes(':')) {
                 const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
                 const aspectRatio = widthRatio / heightRatio;
                 
@@ -610,7 +634,11 @@ function renderFullCanvas() {
                 }
             }
             
-            ctx.translate(canvas.width / 2, canvas.height / 2);
+            // حساب موضع الصورة في المنتصف
+            const x = (canvas.width - imageWidth) / 2;
+            const y = (canvas.height - imageHeight) / 2;
+            
+            ctx.translate(x + imageWidth / 2, y + imageHeight / 2);
             ctx.rotate(imageRotation * Math.PI / 180);
             
             if (imageFlipH) ctx.scale(-1, 1);
@@ -809,9 +837,26 @@ function wrapText(text, maxWidth, ctx, fontSize) {
 function prepareImageForExport() {
     const exportCanvas = document.createElement('canvas');
     
-    // استخدام الأبعاد الأصلية مع حد أدنى للحفاظ على الجودة
-    const exportWidth = Math.max(originalImageWidth, 800);
-    const exportHeight = Math.max(originalImageHeight, 600);
+    // استخدام الأبعاد الأصلية للصورة
+    let exportWidth = originalImageWidth;
+    let exportHeight = originalImageHeight;
+    
+    // ضبط الحجم بناءً على حجم الخلفية المختار
+    if (backgroundSize !== 'original') {
+        if (backgroundSize === 'cover') {
+            exportWidth = Math.max(originalImageWidth, 1920);
+            exportHeight = Math.max(originalImageHeight, 1080);
+        } else if (backgroundSize.includes(':')) {
+            const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
+            const aspectRatio = widthRatio / heightRatio;
+            
+            exportWidth = Math.max(originalImageWidth, 1200);
+            exportHeight = Math.round(exportWidth / aspectRatio);
+        } else {
+            exportWidth = Math.max(originalImageWidth, 1200);
+            exportHeight = Math.max(originalImageHeight, 800);
+        }
+    }
     
     exportCanvas.width = exportWidth;
     exportCanvas.height = exportHeight;
@@ -824,43 +869,54 @@ function prepareImageForExport() {
     exportCtx.imageSmoothingQuality = 'high';
     
     // رسم الخلفية أولاً
-    if (backgroundColor !== 'transparent' && backgroundSize !== 'none') {
+    if (backgroundColor !== 'transparent') {
         exportCtx.fillStyle = backgroundColor;
         exportCtx.fillRect(0, 0, exportWidth, exportHeight);
     }
     
     exportCtx.save();
     
-    const scaleX = exportWidth / (canvas.width - (imageBorderWidth * 2));
-    const scaleY = exportHeight / (canvas.height - (imageBorderWidth * 2));
-    const scale = Math.min(scaleX, scaleY);
-    
-    const scaledBorder = imageBorderWidth * scale;
-    let imageWidth = exportWidth;
-    let imageHeight = exportHeight;
+    const borderSpace = imageBorderWidth;
+    let imageWidth = exportWidth - (borderSpace * 2);
+    let imageHeight = exportHeight - (borderSpace * 2);
     
     // ضبط حجم الصورة بناءً على حجم الخلفية
-    if (backgroundSize !== 'none' && backgroundSize !== 'cover') {
+    if (backgroundSize === 'cover') {
+        const imageAspect = originalImageWidth / originalImageHeight;
+        const canvasAspect = imageWidth / imageHeight;
+        
+        if (canvasAspect > imageAspect) {
+            imageWidth = imageWidth;
+            imageHeight = imageWidth / imageAspect;
+        } else {
+            imageHeight = imageHeight;
+            imageWidth = imageHeight * imageAspect;
+        }
+    } else if (backgroundSize !== 'original' && backgroundSize.includes(':')) {
         const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
         const aspectRatio = widthRatio / heightRatio;
         
-        if (exportWidth / exportHeight > aspectRatio) {
-            imageHeight = exportHeight;
+        if (imageWidth / imageHeight > aspectRatio) {
+            imageHeight = imageHeight;
             imageWidth = imageHeight * aspectRatio;
         } else {
-            imageWidth = exportWidth;
+            imageWidth = imageWidth;
             imageHeight = imageWidth / aspectRatio;
         }
     }
     
-    exportCtx.translate(exportCanvas.width / 2, exportCanvas.height / 2);
+    // حساب موضع الصورة في المنتصف
+    const x = (exportWidth - imageWidth) / 2;
+    const y = (exportHeight - imageHeight) / 2;
+    
+    exportCtx.translate(x + imageWidth / 2, y + imageHeight / 2);
     exportCtx.rotate(imageRotation * Math.PI / 180);
     
     if (imageFlipH) exportCtx.scale(-1, 1);
     if (imageFlipV) exportCtx.scale(1, -1);
     
     if (imageBlur > 0) {
-        const scaledBlur = imageBlur * scale;
+        const scaledBlur = imageBlur;
         exportCtx.filter = `blur(${scaledBlur}px)`;
     }
     
@@ -874,26 +930,28 @@ function prepareImageForExport() {
     exportCtx.filter = 'none';
     exportCtx.restore();
     
-    if (scaledBorder > 0) {
+    if (borderSpace > 0) {
         exportCtx.strokeStyle = imageBorderColor;
-        exportCtx.lineWidth = scaledBorder;
+        exportCtx.lineWidth = borderSpace;
         exportCtx.lineCap = 'square';
         exportCtx.lineJoin = 'miter';
         
         exportCtx.strokeRect(
-            scaledBorder / 2,
-            scaledBorder / 2,
-            exportCanvas.width - scaledBorder,
-            exportCanvas.height - scaledBorder
+            borderSpace / 2,
+            borderSpace / 2,
+            exportCanvas.width - borderSpace,
+            exportCanvas.height - borderSpace
         );
     }
     
     canvasStickers.forEach(sticker => {
         exportCtx.save();
-        const x = sticker.x * scale;
-        const y = sticker.y * scale;
-        const w = sticker.width * scale;
-        const h = sticker.height * scale;
+        const scaleX = exportCanvas.width / canvas.width;
+        const scaleY = exportCanvas.height / canvas.height;
+        const x = sticker.x * scaleX;
+        const y = sticker.y * scaleY;
+        const w = sticker.width * scaleX;
+        const h = sticker.height * scaleY;
         exportCtx.translate(x + w / 2, y + h / 2);
         exportCtx.rotate(sticker.rotation * Math.PI / 180);
         exportCtx.drawImage(sticker.img, -w / 2, -h / 2, w, h);
@@ -914,7 +972,6 @@ function prepareImageForExport() {
         
         const baseFontSize = Math.min(exportCanvas.width, exportCanvas.height) * 0.08;
         const scaledFontSize = baseFontSize * (window.textScale || 1);
-        const scaledStrokeWidth = strokeWidth * scale;
         
         exportCtx.font = 'bold ' + scaledFontSize + 'px ' + fontFamily;
         exportCtx.textAlign = 'center';
@@ -934,9 +991,9 @@ function prepareImageForExport() {
         
         if (shadowEnabled) {
             exportCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-            exportCtx.shadowBlur = shadowIntensity * scale;
-            exportCtx.shadowOffsetX = (shadowIntensity / 2) * scale;
-            exportCtx.shadowOffsetY = (shadowIntensity / 2) * scale;
+            exportCtx.shadowBlur = shadowIntensity;
+            exportCtx.shadowOffsetX = shadowIntensity / 2;
+            exportCtx.shadowOffsetY = shadowIntensity / 2;
         }
         
         lines.forEach((line, index) => {
@@ -959,9 +1016,9 @@ function prepareImageForExport() {
                 exportCtx.restore();
             }
             
-            if (scaledStrokeWidth > 0) {
+            if (strokeWidth > 0) {
                 exportCtx.strokeStyle = strokeColor;
-                exportCtx.lineWidth = scaledStrokeWidth;
+                exportCtx.lineWidth = strokeWidth;
                 exportCtx.strokeText(line, x, y);
             }
             
@@ -985,7 +1042,8 @@ function setBorderColor(color) {
 // دالة جديدة لتحديث الخلفية
 function updateBackground() {
     backgroundColor = window.currentBackgroundColor || '#FFFFFF';
-    backgroundSize = window.currentBackgroundSize || 'cover';
+    backgroundSize = window.currentBackgroundSize || 'original';
+    adjustImageForBorder();
     renderFullCanvas();
 }
 
