@@ -161,6 +161,15 @@ function openTextCard() {
         }, 100);
         
         console.log('📝 Text card opened');
+        
+        // إظهار عناصر التحكم بالنص إذا كان هناك نص
+        if (window.currentText && window.currentText.trim() !== '') {
+            if (typeof updateTextControlsPosition === 'function') {
+                setTimeout(() => {
+                    updateTextControlsPosition();
+                }, 200);
+            }
+        }
     }
 }
 
@@ -222,8 +231,20 @@ function applyTextToImage() {
     
     if (text) {
         showAlert('✅ تم إضافة النص إلى الصورة', 'success');
+        
+        // إظهار عناصر التحكم بالنص
+        if (typeof updateTextControlsPosition === 'function') {
+            setTimeout(() => {
+                updateTextControlsPosition();
+            }, 100);
+        }
     } else {
         showAlert('✅ تم حذف النص من الصورة', 'success');
+        
+        // إخفاء عناصر التحكم بالنص
+        if (typeof hideTextControls === 'function') {
+            hideTextControls();
+        }
     }
     
     console.log('📝 Text applied to image:', text);
@@ -234,6 +255,11 @@ function clearTextFromImage() {
     
     if (typeof renderFullCanvas === 'function') {
         renderFullCanvas();
+    }
+    
+    // إخفاء عناصر التحكم بالنص
+    if (typeof hideTextControls === 'function') {
+        hideTextControls();
     }
     
     console.log('🗑️ Text cleared from image');
@@ -268,12 +294,25 @@ function setupKeyboardListeners() {
             shareImage();
         }
         
+        // Ctrl/Cmd + R لإعادة التعيين
+        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            e.preventDefault();
+            if (typeof resetEditor === 'function') {
+                resetEditor();
+            }
+        }
+        
         // Escape لإغلاق البطاقات
         if (e.key === 'Escape') {
             if (textCardVisible) {
                 closeTextCard();
             }
             closeAllToolPanels();
+            
+            // إخفاء عناصر التحكم بالنص
+            if (typeof hideTextControls === 'function') {
+                hideTextControls();
+            }
         }
     });
 }
@@ -605,6 +644,11 @@ function showPage(pageName) {
     if (pageName !== 'editor') {
         closeAllToolPanels();
         closeTextCard();
+        
+        // إخفاء عناصر التحكم بالنص
+        if (typeof hideTextControls === 'function') {
+            hideTextControls();
+        }
     }
     
     // تحديث عنوان الصفحة
@@ -917,6 +961,7 @@ window.openTextCard = openTextCard;
 window.clearTextFromImage = clearTextFromImage;
 window.clearTextFromCard = clearTextFromCard;
 window.applyTextToImage = applyTextToImage;
+window.resetEditor = resetEditor;
 
 // تهيئة الإعدادات
 function loadSettings() {
