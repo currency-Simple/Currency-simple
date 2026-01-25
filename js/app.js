@@ -4,39 +4,458 @@ let currentCategory = null;
 let currentImages = [];
 let keyboardOpen = false;
 let textCardVisible = false;
+let currentImageUrl = null; // لحفظ رابط الصورة الحالية
 
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 App starting...');
     
-    // تهيئة الإعدادات
     loadSettings();
-    
-    // تحميل الفئات
     loadCategories();
-    
-    // عرض الصفحة الأولية
     showPage('categories');
-    
-    // إعداد مستمعات الكيبورد
     setupKeyboardListeners();
     
-    // إعداد بطاقة النص بعد تحميل الصفحة
     setTimeout(() => {
         setupTextCard();
         setupBackgroundControls();
     }, 500);
 });
 
-// إعداد عناصر التحكم في الخلفية
+// إعادة تعيين المحرر
+function resetEditor() {
+    // طلب تأكيد من المستخدم
+    if (confirm('هل تريد حذف جميع التعديلات والبدء من جديد؟')) {
+        console.log('🔄 إعادة تعيين المحرر...');
+        
+        // إعادة تعيين النص
+        window.currentText = '';
+        const textInput = document.getElementById('textCardInput');
+        if (textInput) {
+            textInput.value = '';
+        }
+        
+        // إعادة تحميل الصورة الأصلية
+        if (currentImageUrl && typeof loadImageToEditor === 'function') {
+            loadImageToEditor(currentImageUrl);
+        }
+        
+        // إعادة تعيين جميع القيم الافتراضية
+        resetAllSettings();
+        
+        // إغلاق جميع اللوحات
+        closeAllToolPanels();
+        closeTextCard();
+        
+        showAlert('✅ تم إعادة التعيين بنجاح!', 'success');
+        console.log('✅ تم إعادة تعيين المحرر');
+    }
+}
+
+// إعادة تعيين جميع الإعدادات إلى القيم الافتراضية
+function resetAllSettings() {
+    // إعادة تعيين الألوان
+    if (typeof setTextColor === 'function') setTextColor('#FFFFFF');
+    if (typeof setStrokeColor === 'function') setStrokeColor('#000000');
+    if (typeof setCardColor === 'function') setCardColor('#000000');
+    if (typeof setBorderColor === 'function') setBorderColor('#000000');
+    if (typeof setBackgroundColor === 'function') setBackgroundColor('#FFFFFF');
+    if (typeof setBackgroundSize === 'function') setBackgroundSize('original');
+    
+    // إعادة تعيين الخط
+    if (typeof selectFont === 'function' && window.ALL_FONTS && window.ALL_FONTS.length > 0) {
+        selectFont(window.ALL_FONTS[0].family);
+    }
+    
+    // إعادة تعيين أشرطة التحكم
+    const controls = [
+        { id: 'fontSizeSlider', value: 50, displayId: 'fontSizeDisplay' },
+        { id: 'strokeWidth', value: 3, displayId: 'strokeWidthDisplay' },
+        { id: 'shadowSlider', value: 5, displayId: 'shadowDisplay' },
+        { id: 'bgOpacitySlider', value: 70, displayId: 'bgOpacityDisplay' },
+        { id: 'blurSlider', value: 0, displayId: 'blurDisplay' },
+        { id: 'borderSlider', value: 0, displayId: 'borderDisplay' }
+    ];
+    
+    controls.forEach(ctrl => {
+        const slider = document.getElementById(ctrl.id);
+        const display = document.getElementById(ctrl.displayId);
+        if (slider) {
+            slider.value = ctrl.value;
+            if (display) display.textContent = ctrl.value;
+        }
+    });
+    
+    // إعادة تعيين checkboxes
+    const shadowEnabled = document.getElementById('shadowEnabled');
+    const cardEnabled = document.getElementById('cardEnabled');
+    if (shadowEnabled) shadowEnabled.checked = true;
+    if (cardEnabled) cardEnabled.checked = false;
+    
+    // إعادة تحديد العناصر الافتراضية في الشبكات
+    resetColorGrids();
+    resetFontGrid();
+    resetBackgroundGrid();
+}
+
+// إعادة تعيين شبكات الألوان
+function resetColorGrids() {
+    // لون النص - أبيض
+    const colorGrid = document.getElementById('colorGrid');
+    if (colorGrid) {
+        colorGrid.querySelectorAll('.color-item').forEach((item, index) => {
+            item.classList.remove('selected');
+            if (index === 0) item.classList.add('selected');
+        });
+    }
+    
+    // حواف النص - أسود
+    const strokeGrid = document.getElementById('strokeColorGrid');
+    if (strokeGrid) {
+        strokeGrid.querySelectorAll('.color-item').forEach(item => {
+            item.classList.remove('selected');
+            if (item.style.backgroundColor === 'rgb(0, 0, 0)' || item.title === '#000000') {
+                item.classList.add('selected');
+            }
+        });
+    }
+    
+    // خلفية النص - أسود
+    const cardGrid = document.getElementById('cardColorGrid');
+    if (cardGrid) {
+        cardGrid.querySelectorAll('.color-item').forEach(item => {
+            item.classList.remove('selected');
+            if (item.style.backgroundColor === 'rgb(0, 0, 0)' || item.title === '#000000') {
+                item.classList.add('selected');
+            }
+        });
+    }
+    
+    // حواف الصورة - أسود
+    const borderGrid = document.getElementById('borderColorGrid');
+    if (borderGrid) {
+        borderGrid.querySelectorAll('.color-item').forEach(item => {
+            item.classList.remove('selected');
+            if (item.style.backgroundColor === 'rgb(0, 0, 0)' || item.title === '#000000') {
+                item.classList.add('selected');
+            }
+        });
+    }
+    
+    // خلفية الصورة - أبيض
+    const backgroundGrid = document.getElementById('backgroundColorGrid');
+    if (backgroundGrid) {
+        backgroundGrid.querySelectorAll('.color-item').forEach(item => {
+            item.classList.remove('selected');
+            if (item.style.backgroundColor === 'rgb(255, 255, 255)' || item.title === '#FFFFFF') {
+                item.classList.add('selected');
+            }
+        });
+    }
+}
+
+// إعادة تعيين شبكة الخطوط
+function resetFontGrid() {
+    const fontGrid = document.getElementById('fontGrid');
+    if (fontGrid) {
+        fontGrid.querySelectorAll('.font-item').forEach((item, index) => {
+            item.classList.remove('selected');
+            if (index === 0) item.classList.add('selected');
+        });
+    }
+}
+
+// إعادة تعيين شبكة الخلفية
+function resetBackgroundGrid() {
+    const backgroundSizeGrid = document.getElementById('backgroundSizeGrid');
+    if (backgroundSizeGrid) {
+        backgroundSizeGrid.querySelectorAll('.background-size-btn').forEach(btn => {
+            btn.classList.remove('selected');
+            if (btn.textContent.includes('أصلي')) {
+                btn.classList.add('selected');
+            }
+        });
+    }
+}
+
 function setupBackgroundControls() {
     console.log('🎨 Setting up background controls...');
     
-    // تحديث الخلفية عند تغيير الألوان
     const backgroundColorGrid = document.getElementById('backgroundColorGrid');
     if (backgroundColorGrid) {
         backgroundColorGrid.addEventListener('click', () => {
-            setTimeout(() => {
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            
+            hideLoadingIndicator();
+            showAlert('✅ تم تنزيل الصورة بنجاح!', 'success');
+            
+            console.log('✅ Download completed:', filename);
+            
+        }, 'image/png', 1.0);
+        
+    } catch (error) {
+        console.error('❌ خطأ في التنزيل:', error);
+        hideLoadingIndicator();
+        showAlert('❌ حدث خطأ أثناء التنزيل', 'error');
+    }
+}
+
+async function shareImage() {
+    try {
+        console.log('📤 بدء عملية المشاركة...');
+        
+        const canvas = document.getElementById('canvas');
+        if (!canvas || canvas.width === 0) {
+            showAlert('⚠️ يرجى اختيار صورة أولاً', 'error');
+            return;
+        }
+        
+        if (!navigator.share) {
+            showAlert('ℹ️ المشاركة غير مدعومة في هذا المتصفح', 'info');
+            return downloadImage();
+        }
+        
+        showLoadingIndicator('📤 جاري تحضير الصورة للمشاركة...');
+        
+        let exportCanvas;
+        if (typeof prepareImageForExport === 'function') {
+            exportCanvas = prepareImageForExport();
+            if (!exportCanvas) {
+                hideLoadingIndicator();
+                showAlert('❌ فشل في تحضير الصورة', 'error');
+                return;
+            }
+        } else {
+            exportCanvas = canvas;
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        exportCanvas.toBlob(async (blob) => {
+            if (!blob) {
+                hideLoadingIndicator();
+                showAlert('❌ فشل في إنشاء الصورة', 'error');
+                return;
+            }
+            
+            const file = new File([blob], 'صورة-معدلة.png', { 
+                type: 'image/png',
+                lastModified: Date.now()
+            });
+            
+            try {
+                if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
+                    hideLoadingIndicator();
+                    showAlert('ℹ️ لا يمكن مشاركة الملف في هذا الجهاز', 'info');
+                    return downloadImage();
+                }
+                
+                await navigator.share({
+                    files: [file],
+                    title: 'صورة معدلة',
+                    text: 'شاهد هذه الصورة المعدلة!',
+                    url: window.location.href
+                });
+                
+                hideLoadingIndicator();
+                showAlert('✅ تم المشاركة بنجاح!', 'success');
+                console.log('✅ Share completed');
+                
+            } catch (shareError) {
+                hideLoadingIndicator();
+                
+                if (shareError.name === 'AbortError') {
+                    console.log('⚠️ تم إلغاء المشاركة من قبل المستخدم');
+                    return;
+                }
+                
+                console.error('❌ خطأ في المشاركة:', shareError);
+                showAlert('❌ فشلت المشاركة', 'error');
+                downloadImage();
+            }
+            
+        }, 'image/png', 1.0);
+        
+    } catch (error) {
+        console.error('❌ خطأ في المشاركة:', error);
+        hideLoadingIndicator();
+        showAlert('❌ حدث خطأ أثناء المشاركة', 'error');
+    }
+}
+
+function showAlert(message, type = 'info') {
+    const existingAlert = document.querySelector('.custom-alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    const alert = document.createElement('div');
+    alert.className = `custom-alert ${type}`;
+    alert.setAttribute('role', 'alert');
+    alert.setAttribute('aria-live', 'assertive');
+    
+    alert.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" aria-label="إغلاق التنبيه">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    if (typeof Audio !== 'undefined') {
+        try {
+            const alertSound = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ');
+            alertSound.volume = 0.3;
+            alertSound.play();
+        } catch (e) {
+            // تجاهل أخطاء الصوت
+        }
+    }
+    
+    const timeout = setTimeout(() => {
+        if (alert.parentElement) {
+            alert.remove();
+        }
+    }, 4000);
+    
+    alert.addEventListener('mouseenter', () => {
+        clearTimeout(timeout);
+    });
+    
+    alert.addEventListener('mouseleave', () => {
+        setTimeout(() => {
+            if (alert.parentElement) {
+                alert.remove();
+            }
+        }, 4000);
+    });
+    
+    setTimeout(() => {
+        const closeBtn = alert.querySelector('button');
+        if (closeBtn) {
+            closeBtn.focus();
+        }
+    }, 100);
+}
+
+function showLoadingIndicator(message = '🔄 جاري المعالجة...') {
+    const existingLoader = document.querySelector('.custom-loader');
+    if (existingLoader) {
+        existingLoader.remove();
+    }
+    
+    const loader = document.createElement('div');
+    loader.className = 'custom-loader';
+    loader.setAttribute('role', 'status');
+    loader.setAttribute('aria-live', 'polite');
+    loader.setAttribute('aria-label', 'جاري التحميل');
+    
+    loader.innerHTML = `
+        <div class="loader-content">
+            <div class="loader-spinner" aria-hidden="true"></div>
+            <div class="loader-text">${message}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(loader);
+    document.body.style.overflow = 'hidden';
+}
+
+function hideLoadingIndicator() {
+    const loader = document.querySelector('.custom-loader');
+    if (loader) {
+        loader.remove();
+    }
+    
+    document.body.style.overflow = '';
+}
+
+window.currentText = '';
+window.textScale = 1;
+window.textRotation = 0;
+
+window.showPage = showPage;
+window.goBackToImages = goBackToImages;
+window.downloadImage = downloadImage;
+window.shareImage = shareImage;
+window.showAlert = showAlert;
+window.toggleTextCard = toggleTextCard;
+window.closeTextCard = closeTextCard;
+window.openTextCard = openTextCard;
+window.clearTextFromImage = clearTextFromImage;
+window.clearTextFromCard = clearTextFromCard;
+window.applyTextToImage = applyTextToImage;
+window.resetEditor = resetEditor;
+
+function loadSettings() {
+    const theme = localStorage.getItem('theme') || 'light';
+    const language = localStorage.getItem('language') || 'ar';
+    
+    if (typeof changeTheme === 'function') {
+        changeTheme(theme);
+    }
+    
+    if (typeof changeLanguage === 'function') {
+        changeLanguage(language);
+    }
+    
+    console.log('⚙️ Settings loaded:', { theme, language });
+}
+
+window.addEventListener('error', (e) => {
+    console.error('🌍 Global error:', e.error);
+    showAlert('حدث خطأ غير متوقع. يرجى تحديث الصفحة.', 'error');
+});
+
+window.addEventListener('beforeunload', (e) => {
+    if (window.currentText && window.currentText.trim() !== '') {
+        e.preventDefault();
+        e.returnValue = 'لديك تعديلات غير محفوظة. هل تريد المغادرة؟';
+        return e.returnValue;
+    }
+});
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('🔧 Service Worker registered:', registration);
+            })
+            .catch(error => {
+                console.log('🔧 Service Worker registration failed:', error);
+            });
+    });
+}
+
+if ('standalone' in navigator || window.matchMedia('(display-mode: standalone)').matches) {
+    console.log('📱 Running as PWA');
+    document.documentElement.classList.add('pwa-mode');
+}
+
+window.addEventListener('online', () => {
+    showAlert('✅ تم استعادة الاتصال بالإنترنت', 'success');
+});
+
+window.addEventListener('offline', () => {
+    showAlert('⚠️ أنت غير متصل بالإنترنت', 'warning');
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const images = document.querySelectorAll('img[loading="lazy"]');
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+        
+        images.forEach(img => imageObserver.observe(img));
+    }
+});(() => {
                 if (typeof updateBackground === 'function') {
                     updateBackground();
                 }
@@ -44,7 +463,6 @@ function setupBackgroundControls() {
         });
     }
     
-    // تحديث الخلفية عند تغيير الحجم
     const backgroundSizeGrid = document.getElementById('backgroundSizeGrid');
     if (backgroundSizeGrid) {
         backgroundSizeGrid.addEventListener('click', () => {
@@ -57,7 +475,6 @@ function setupBackgroundControls() {
     }
 }
 
-// إعداد بطاقة النص الجديدة
 function setupTextCard() {
     const canvasWrapper = document.getElementById('canvasWrapperFixed');
     if (!canvasWrapper) {
@@ -111,7 +528,6 @@ function setupTextCard() {
         
         textInput.addEventListener('input', updateDeleteButtonState);
         
-        // إضافة اختصارات لوحة المفاتيح
         textInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.ctrlKey) {
                 e.preventDefault();
@@ -154,7 +570,6 @@ function openTextCard() {
         setTimeout(() => {
             textInput.focus();
             textInput.select();
-            // إظهار لوحة المفاتيح على الأجهزة المحمولة
             if ('virtualKeyboard' in navigator && navigator.virtualKeyboard.show) {
                 navigator.virtualKeyboard.show();
             }
@@ -172,7 +587,6 @@ function closeTextCard() {
         textCard.style.display = 'none';
         textCardVisible = false;
         
-        // إخفاء لوحة المفاتيح
         if ('virtualKeyboard' in navigator && navigator.virtualKeyboard.hide) {
             navigator.virtualKeyboard.hide();
         }
@@ -254,21 +668,17 @@ function setupKeyboardListeners() {
         }, 100);
     });
     
-    // مستمعات اختصارات لوحة المفاتيح
     document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + S لحفظ
         if ((e.ctrlKey || e.metaKey) && e.key === 's') {
             e.preventDefault();
             downloadImage();
         }
         
-        // Ctrl/Cmd + P للمشاركة
         if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
             e.preventDefault();
             shareImage();
         }
         
-        // Escape لإغلاق البطاقات
         if (e.key === 'Escape') {
             if (textCardVisible) {
                 closeTextCard();
@@ -301,7 +711,6 @@ async function loadCategories() {
     try {
         const promises = [];
         
-        // تحميل الفئات من 1 إلى 100
         for (let i = 1; i <= 100; i++) {
             promises.push(
                 fetch(`data/images${i}.json`)
@@ -425,7 +834,6 @@ function displayCategories() {
             </div>
         `;
         
-        // إضافة مستمعات لوحة المفاتيح
         item.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -479,7 +887,6 @@ function displayImages() {
             this.src = 'https://via.placeholder.com/300x400?text=Error+Loading';
         };
         
-        // إضافة عنصر للعنوان
         const titleEl = document.createElement('div');
         titleEl.className = 'image-title';
         titleEl.textContent = img.title || `صورة ${img.id}`;
@@ -500,7 +907,6 @@ function displayImages() {
         item.appendChild(imgEl);
         item.appendChild(titleEl);
         
-        // إظهار العنوان عند التمرير
         item.addEventListener('mouseenter', () => {
             titleEl.style.opacity = '1';
         });
@@ -509,7 +915,6 @@ function displayImages() {
             titleEl.style.opacity = '0';
         });
         
-        // مستمعات لوحة المفاتيح
         item.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -526,16 +931,15 @@ function displayImages() {
 function selectImage(img) {
     console.log(`✅ تم اختيار الصورة: ${img.id}`);
     
-    // حفظ الصورة المختارة في localStorage
+    // حفظ رابط الصورة الحالية
+    currentImageUrl = img.url;
+    
     localStorage.setItem('selectedImage', JSON.stringify(img));
     
-    // عرض مؤشر التحميل
     showLoadingIndicator('جاري تحميل الصورة...');
     
-    // الانتقال إلى صفحة المحرر
     showPage('editor');
     
-    // تحميل الصورة إلى المحرر بعد تأخير قصير
     setTimeout(() => {
         if (typeof loadImageToEditor === 'function') {
             loadImageToEditor(img.url);
@@ -550,7 +954,6 @@ function selectImage(img) {
 function showPage(pageName) {
     console.log(`➡️ Navigating to: ${pageName}`);
     
-    // إغلاق لوحة المفاتيح أولاً
     handleKeyboardClose();
     
     const pages = document.querySelectorAll('.page');
@@ -574,7 +977,6 @@ function showPage(pageName) {
         page.classList.add('active');
         page.setAttribute('aria-hidden', 'false');
         
-        // التركيز على عنصر مناسب في الصفحة
         setTimeout(() => {
             if (pageName === 'categories' || pageName === 'images') {
                 const firstItem = page.querySelector('.category-item, .image-item');
@@ -601,13 +1003,11 @@ function showPage(pageName) {
         btn.classList.add('active');
     }
     
-    // إغلاق جميع الأدوات عند الانتقال من المحرر
     if (pageName !== 'editor') {
         closeAllToolPanels();
         closeTextCard();
     }
     
-    // تحديث عنوان الصفحة
     document.title = getPageTitle(pageName);
 }
 
@@ -669,10 +1069,8 @@ async function downloadImage() {
             exportCanvas = canvas;
         }
         
-        // تأخير قصير للسماح بعرض مؤشر التحميل
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        // إنشاء اسم ملف مع التاريخ والوقت
         const now = new Date();
         const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}${now.getSeconds().toString().padStart(2,'0')}`;
         const filename = `صورة-معدلة-${timestamp}.png`;
@@ -684,313 +1082,14 @@ async function downloadImage() {
                 return;
             }
             
-            // إنشاء رابط التنزيل
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.download = filename;
             link.href = url;
             link.style.display = 'none';
             
-            // إضافة الرابط إلى الصفحة والنقر عليه
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            // تحرير الذاكرة بعد ثانية
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-            
-            hideLoadingIndicator();
-            showAlert('✅ تم تنزيل الصورة بنجاح!', 'success');
-            
-            console.log('✅ Download completed:', filename);
-            
-        }, 'image/png', 1.0);
-        
-    } catch (error) {
-        console.error('❌ خطأ في التنزيل:', error);
-        hideLoadingIndicator();
-        showAlert('❌ حدث خطأ أثناء التنزيل', 'error');
-    }
-}
-
-async function shareImage() {
-    try {
-        console.log('📤 بدء عملية المشاركة...');
-        
-        const canvas = document.getElementById('canvas');
-        if (!canvas || canvas.width === 0) {
-            showAlert('⚠️ يرجى اختيار صورة أولاً', 'error');
-            return;
-        }
-        
-        // التحقق من دعم المشاركة
-        if (!navigator.share) {
-            showAlert('ℹ️ المشاركة غير مدعومة في هذا المتصفح', 'info');
-            // استبدال بالتنزيل
-            return downloadImage();
-        }
-        
-        showLoadingIndicator('📤 جاري تحضير الصورة للمشاركة...');
-        
-        let exportCanvas;
-        if (typeof prepareImageForExport === 'function') {
-            exportCanvas = prepareImageForExport();
-            if (!exportCanvas) {
-                hideLoadingIndicator();
-                showAlert('❌ فشل في تحضير الصورة', 'error');
-                return;
-            }
-        } else {
-            exportCanvas = canvas;
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        exportCanvas.toBlob(async (blob) => {
-            if (!blob) {
-                hideLoadingIndicator();
-                showAlert('❌ فشل في إنشاء الصورة', 'error');
-                return;
-            }
-            
-            const file = new File([blob], 'صورة-معدلة.png', { 
-                type: 'image/png',
-                lastModified: Date.now()
-            });
-            
-            try {
-                // التحقق من إمكانية المشاركة
-                if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
-                    hideLoadingIndicator();
-                    showAlert('ℹ️ لا يمكن مشاركة الملف في هذا الجهاز', 'info');
-                    return downloadImage();
-                }
-                
-                // المشاركة
-                await navigator.share({
-                    files: [file],
-                    title: 'صورة معدلة',
-                    text: 'شاهد هذه الصورة المعدلة!',
-                    url: window.location.href
-                });
-                
-                hideLoadingIndicator();
-                showAlert('✅ تم المشاركة بنجاح!', 'success');
-                console.log('✅ Share completed');
-                
-            } catch (shareError) {
-                hideLoadingIndicator();
-                
-                if (shareError.name === 'AbortError') {
-                    console.log('⚠️ تم إلغاء المشاركة من قبل المستخدم');
-                    return;
-                }
-                
-                console.error('❌ خطأ في المشاركة:', shareError);
-                showAlert('❌ فشلت المشاركة', 'error');
-                // استبدال بالتنزيل
-                downloadImage();
-            }
-            
-        }, 'image/png', 1.0);
-        
-    } catch (error) {
-        console.error('❌ خطأ في المشاركة:', error);
-        hideLoadingIndicator();
-        showAlert('❌ حدث خطأ أثناء المشاركة', 'error');
-    }
-}
-
-function showAlert(message, type = 'info') {
-    // إزالة أي تنبيهات سابقة
-    const existingAlert = document.querySelector('.custom-alert');
-    if (existingAlert) {
-        existingAlert.remove();
-    }
-    
-    // إنشاء التنبيه الجديد
-    const alert = document.createElement('div');
-    alert.className = `custom-alert ${type}`;
-    alert.setAttribute('role', 'alert');
-    alert.setAttribute('aria-live', 'assertive');
-    
-    alert.innerHTML = `
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()" aria-label="إغلاق التنبيه">
-            <span class="material-symbols-outlined">close</span>
-        </button>
-    `;
-    
-    document.body.appendChild(alert);
-    
-    // إضافة صوت التنبيه (اختياري)
-    if (typeof Audio !== 'undefined') {
-        try {
-            const alertSound = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ');
-            alertSound.volume = 0.3;
-            alertSound.play();
-        } catch (e) {
-            // تجاهل أخطاء الصوت
-        }
-    }
-    
-    // إخفاء التنبيه تلقائياً بعد 4 ثواني
-    const timeout = setTimeout(() => {
-        if (alert.parentElement) {
-            alert.remove();
-        }
-    }, 4000);
-    
-    // إلغاء الإخفاء التلقائي عند التركيز على التنبيه
-    alert.addEventListener('mouseenter', () => {
-        clearTimeout(timeout);
-    });
-    
-    alert.addEventListener('mouseleave', () => {
-        setTimeout(() => {
-            if (alert.parentElement) {
-                alert.remove();
-            }
-        }, 4000);
-    });
-    
-    // التركيز على زر الإغلاق
-    setTimeout(() => {
-        const closeBtn = alert.querySelector('button');
-        if (closeBtn) {
-            closeBtn.focus();
-        }
-    }, 100);
-}
-
-function showLoadingIndicator(message = '🔄 جاري المعالجة...') {
-    // إزالة أي مؤشرات تحميل سابقة
-    const existingLoader = document.querySelector('.custom-loader');
-    if (existingLoader) {
-        existingLoader.remove();
-    }
-    
-    // إنشاء مؤشر التحميل
-    const loader = document.createElement('div');
-    loader.className = 'custom-loader';
-    loader.setAttribute('role', 'status');
-    loader.setAttribute('aria-live', 'polite');
-    loader.setAttribute('aria-label', 'جاري التحميل');
-    
-    loader.innerHTML = `
-        <div class="loader-content">
-            <div class="loader-spinner" aria-hidden="true"></div>
-            <div class="loader-text">${message}</div>
-        </div>
-    `;
-    
-    document.body.appendChild(loader);
-    
-    // منع التمرير أثناء التحميل
-    document.body.style.overflow = 'hidden';
-}
-
-function hideLoadingIndicator() {
-    const loader = document.querySelector('.custom-loader');
-    if (loader) {
-        loader.remove();
-    }
-    
-    // إعادة تفعيل التمرير
-    document.body.style.overflow = '';
-}
-
-// تهيئة النص والمتغيرات العالمية
-window.currentText = '';
-window.textScale = 1;
-window.textRotation = 0;
-
-// تصدير الوظائف العامة
-window.showPage = showPage;
-window.goBackToImages = goBackToImages;
-window.downloadImage = downloadImage;
-window.shareImage = shareImage;
-window.showAlert = showAlert;
-window.toggleTextCard = toggleTextCard;
-window.closeTextCard = closeTextCard;
-window.openTextCard = openTextCard;
-window.clearTextFromImage = clearTextFromImage;
-window.clearTextFromCard = clearTextFromCard;
-window.applyTextToImage = applyTextToImage;
-
-// تهيئة الإعدادات
-function loadSettings() {
-    const theme = localStorage.getItem('theme') || 'light';
-    const language = localStorage.getItem('language') || 'ar';
-    
-    if (typeof changeTheme === 'function') {
-        changeTheme(theme);
-    }
-    
-    if (typeof changeLanguage === 'function') {
-        changeLanguage(language);
-    }
-    
-    console.log('⚙️ Settings loaded:', { theme, language });
-}
-
-// تسجيل الأخطاء العالمية
-window.addEventListener('error', (e) => {
-    console.error('🌍 Global error:', e.error);
-    showAlert('حدث خطأ غير متوقع. يرجى تحديث الصفحة.', 'error');
-});
-
-// منع إغلاق الصفحة أثناء التعديل
-window.addEventListener('beforeunload', (e) => {
-    if (window.currentText && window.currentText.trim() !== '') {
-        e.preventDefault();
-        e.returnValue = 'لديك تعديلات غير محفوظة. هل تريد المغادرة؟';
-        return e.returnValue;
-    }
-});
-
-// خدمة Worker لتخزين البيانات (اختياري)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('🔧 Service Worker registered:', registration);
-            })
-            .catch(error => {
-                console.log('🔧 Service Worker registration failed:', error);
-            });
-    });
-}
-
-// تهيئة PWA
-if ('standalone' in navigator || window.matchMedia('(display-mode: standalone)').matches) {
-    console.log('📱 Running as PWA');
-    document.documentElement.classList.add('pwa-mode');
-}
-
-// دعم وضع عدم الاتصال
-window.addEventListener('online', () => {
-    showAlert('✅ تم استعادة الاتصال بالإنترنت', 'success');
-});
-
-window.addEventListener('offline', () => {
-    showAlert('⚠️ أنت غير متصل بالإنترنت', 'warning');
-});
-
-// تهيئة تحميل متأخر للصور
-document.addEventListener('DOMContentLoaded', () => {
-    const images = document.querySelectorAll('img[loading="lazy"]');
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.src = img.dataset.src;
-                    imageObserver.unobserve(img);
-                }
-            });
-        });
-        
-        images.forEach(img => imageObserver.observe(img));
-    }
-});
+            setTimeout
