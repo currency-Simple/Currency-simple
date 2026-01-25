@@ -23,7 +23,7 @@ let currentStrokeColor = "#000000";
 let currentCardColor = "#000000";
 let currentBorderColor = "#000000";
 let currentBackgroundColor = "#FFFFFF";
-let currentBackgroundSize = "original"; // تغيير إلى "original"
+let currentBackgroundSize = "original";
 
 // تخزين الألوان في window لاستخدامها في editor.js
 window.currentTextColor = currentTextColor;
@@ -37,13 +37,13 @@ window.currentBackgroundSize = currentBackgroundSize;
 const BACKGROUND_SIZES = [
     { name: "أصلي", value: "original", icon: "crop_original" },
     { name: "تغطية", value: "cover", icon: "fit_screen" },
-    { name: "مربع", value: "1:1", icon: "crop_square" },
-    { name: "عمودي", value: "4:5", icon: "crop_portrait" },
-    { name: "قصة", value: "9:16", icon: "crop_portrait" },
-    { name: "نشر", value: "3:2", icon: "crop_landscape" },
-    { name: "3:4", value: "3:4", icon: "crop_portrait" },
-    { name: "16:9", value: "16:9", icon: "crop_landscape" },
-    { name: "شاشة", value: "16:10", icon: "desktop_windows" }
+    { name: "مربع 1:1", value: "1:1", icon: "crop_square" },
+    { name: "عمودي 4:5", value: "4:5", icon: "crop_portrait" },
+    { name: "قصة 9:16", value: "9:16", icon: "crop_portrait" },
+    { name: "أفقي 16:9", value: "16:9", icon: "crop_landscape" },
+    { name: "عمودي 3:4", value: "3:4", icon: "crop_portrait" },
+    { name: "نشر 3:2", value: "3:2", icon: "crop_landscape" },
+    { name: "شاشة 16:10", value: "16:10", icon: "desktop_windows" }
 ];
 
 // تهيئة شبكات الألوان والخلفية
@@ -255,7 +255,9 @@ function setBackgroundColor(color) {
     console.log('✓ لون خلفية الصورة:', color);
     
     // تحديث الصورة فوراً
-    if (typeof renderFullCanvas === 'function') {
+    if (typeof updateBackground === 'function') {
+        updateBackground();
+    } else if (typeof renderFullCanvas === 'function') {
         renderFullCanvas();
     }
 }
@@ -274,7 +276,9 @@ function setBackgroundSize(size, button) {
     }
     
     // تحديث الصورة فوراً
-    if (typeof renderFullCanvas === 'function') {
+    if (typeof updateBackground === 'function') {
+        updateBackground();
+    } else if (typeof renderFullCanvas === 'function') {
         renderFullCanvas();
     }
 }
