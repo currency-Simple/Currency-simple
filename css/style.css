@@ -130,8 +130,7 @@ body[dir="ltr"] {
 }
 
 .share-header-btn,
-.download-header-btn,
-.reset-header-btn {
+.download-header-btn {
     width: 40px;
     height: 40px;
 }
@@ -142,19 +141,6 @@ body[dir="ltr"] {
 
 .download-header-btn {
     color: var(--primary-color);
-}
-
-.reset-header-btn {
-    color: var(--warning-color);
-}
-
-.reset-header-btn:hover {
-    background: rgba(255, 149, 0, 0.1);
-    transform: scale(1.05);
-}
-
-.reset-header-btn:active {
-    transform: scale(0.95);
 }
 
 /* Categories Page */
@@ -1465,6 +1451,7 @@ body[dir="ltr"] {
     background: rgba(169, 155, 255, 0.1);
 }
 
+/* حل مشكلة الأزرار السفلية في الوضع الداكن */
 [data-theme="dark"] .bottom-nav {
     background: #121212;
     border-top-color: #333;
