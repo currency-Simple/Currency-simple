@@ -8,15 +8,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>محرر النصوص على الصور</title>
     
-    <!-- Web Font Loader لتحميل الخطوط بشكل متزامن -->
-    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     
-    <!-- تحميل جميع الخطوط من Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Agu+Display&family=Alkalami&family=Amatic+SC:wght@400;700&family=Anton&family=Archivo+Black&family=Archivo:ital,wght@0,100..900;1,100..900&family=Audiowide&family=Badeen+Display&family=Bangers&family=Bebas+Neue&family=Bitcount+Single:wght@100..900&family=Buda:wght@300&family=Cairo+Play:wght@200..1000&family=Creepster&family=Dancing+Script:wght@400..700&family=Eater&family=Edu+SA+Hand:wght@400..700&family=Fjalla+One&family=Fredericka+the+Great&family=Gravitas+One&family=Lalezar&family=Lobster+Two:ital,wght@0,400;0,700;1,400;1,700&family=Macondo&family=Mada:wght@200..900&family=Momo+Signature&family=Monoton&family=Moo+Lah+Lah&family=Noto+Nastaliq+Urdu:wght@400..700&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Pacifico&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Playwrite+GB+J+Guides:ital@0;1&family=Reem+Kufi:wght@400..700&family=Rock+Salt&family=Rubik+Storm&family=Ruwudu:wght@400;500;600;700&family=Special+Gothic+Condensed+One&family=Special+Gothic+Expanded+One&family=Zalando+Sans+Expanded:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <!-- خطوط Bunny Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=abeezee:400,400i|abhaya-libre:600,800|aboreto:400|abril-fatface:400|abyssinica-sil:400|aclonica:400|acme:400|advent-pro:700i,800i,900i|aguafina-script:400|akaya-telivigala:400|akronim:400|aladin:400|aldrich:400|alegreya:600i,700,900,900i|alegreya-sc:500,500i,800,900i|alex-brush:400|alfa-slab-one:400|allan:400,700|almendra:400i,700i|almendra-sc:400|alumni-sans:100,200,500i,800i|alumni-sans-inline-one:400,400i|amatic-sc:700|amita:700|arbutus:400|architects-daughter:400|are-you-serious:400|aref-ruqaa:400,700|asset:400|astloch:400,700|atomic-age:400|aubrey:400|audiowide:400|bahiana:400|bakbak-one:400|ballet:400|bangers:400|barriecito:400|beau-rivage:400|berkshire-swash:400|beth-ellen:400|bhutuka-expanded-one:400|big-shoulders-display:100,400,800,900|bigelow-rules:400|black-and-white-picture:400|bonbon:400|bungee-inline:400|bungee-outline:400|bungee-shade:400|butcherman:400|caesar-dressing:400|damion:400|dr-sugiyama:400|faster-one:400|fleur-de-leah:400|hanalei:400|libre-barcode-39-text:400|monofett:400|monoton:400|mrs-sheppards:400|nosifer:400|rubik-beastly:400|sixtyfour:400" rel="stylesheet" />
     
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -111,6 +107,11 @@
                         <span>نص</span>
                     </button>
 
+                    <button class="tool-btn" onclick="toggleToolPanel('backgroundPanel')">
+                        <span class="material-symbols-outlined">format_color_fill</span>
+                        <span>خلفية</span>
+                    </button>
+
                     <button class="tool-btn" onclick="toggleToolPanel('fontPanel')">
                         <span class="material-symbols-outlined">brand_family</span>
                         <span>خط</span>
@@ -163,6 +164,15 @@
                         <span>رفع صورة من الجهاز</span>
                     </button>
                     <input type="file" id="uploadImageInput" accept="image/*" style="display: none;">
+                </div>
+            </div>
+
+            <!-- لوحة الخلفية الجديدة -->
+            <div id="backgroundPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls color-scroll" id="backgroundColorGrid"></div>
+                <div class="tool-section">
+                    <h4>حجم الخلفية</h4>
+                    <div class="background-buttons-grid" id="backgroundSizeGrid"></div>
                 </div>
             </div>
 
