@@ -95,6 +95,12 @@ body[dir="ltr"] {
     margin: 0;
 }
 
+.header-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
 .icon-btn {
     background: var(--bg-color);
     border: none;
@@ -121,6 +127,20 @@ body[dir="ltr"] {
 
 .back-btn {
     margin-left: auto;
+}
+
+.share-header-btn,
+.download-header-btn {
+    width: 40px;
+    height: 40px;
+}
+
+.share-header-btn {
+    color: var(--success-color);
+}
+
+.download-header-btn {
+    color: var(--primary-color);
 }
 
 /* Categories Page */
@@ -448,20 +468,12 @@ body[dir="ltr"] {
     transform: translateY(0) scale(0.98);
 }
 
-.share-btn {
+.text-btn {
     background: var(--success-color);
 }
 
-.share-btn:hover {
+.text-btn:hover {
     background: color-mix(in srgb, var(--success-color) 90%, black);
-}
-
-.download-btn {
-    background: var(--primary-color);
-}
-
-.download-btn:hover {
-    background: var(--primary-hover);
 }
 
 /* Text Card */
@@ -636,7 +648,7 @@ body[dir="ltr"] {
     border: none;
     padding: 8px 12px;
     cursor: pointer;
-    color: var(--text-secondary);
+    color: var(--text-color);
     border-radius: 12px;
     font-size: 10px;
     touch-action: manipulation;
@@ -1106,7 +1118,6 @@ body[dir="ltr"] {
     height: 75px;
     border-top: 1px solid var(--border-color);
     backdrop-filter: blur(10px);
-    background: rgba(var(--card-bg-rgb, 255, 255, 255), 0.95);
 }
 
 .nav-btn {
@@ -1299,6 +1310,10 @@ body[dir="ltr"] {
         font-size: 18px;
     }
     
+    .header-actions {
+        gap: 6px;
+    }
+    
     .icon-btn {
         width: 40px;
         height: 40px;
@@ -1434,6 +1449,43 @@ body[dir="ltr"] {
 [data-theme="dark"] .nav-btn:hover,
 [data-theme="dark"] .tool-btn:hover {
     background: rgba(169, 155, 255, 0.1);
+}
+
+/* حل مشكلة الأزرار السفلية في الوضع الداكن */
+[data-theme="dark"] .bottom-nav {
+    background: #121212;
+    border-top-color: #333;
+}
+
+[data-theme="dark"] .nav-btn {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .nav-btn:hover {
+    background: rgba(169, 155, 255, 0.15);
+    color: #a99bff;
+}
+
+[data-theme="dark"] .nav-btn.active {
+    background: rgba(169, 155, 255, 0.25);
+    color: #a99bff;
+}
+
+[data-theme="dark"] .tool-btn {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .tool-btn:hover {
+    color: #a99bff;
+}
+
+[data-theme="dark"] .tool-btn.active {
+    color: #a99bff;
+}
+
+[data-theme="dark"] .editor-toolbar-container {
+    background: #121212;
+    border-top-color: #333;
 }
 
 /* Accessibility */
