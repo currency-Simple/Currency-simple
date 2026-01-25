@@ -57,19 +57,16 @@
         <div class="editor-container">
             <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
                 <canvas id="canvas"></canvas>
-                
-                <!-- أزرار التحكم العائمة -->
-                <div class="floating-controls">
-                    <button onclick="toggleTextCard()" class="floating-btn text-btn">
-                        <span class="material-symbols-outlined">text_fields</span>
-                        <span>إضافة نص</span>
-                    </button>
-                </div>
             </div>
             
             <!-- أدوات التحرير -->
             <div class="editor-toolbar-container">
                 <div class="editor-toolbar">
+                    <button class="tool-btn" onclick="toggleTextCard()">
+                        <span class="material-symbols-outlined">text_fields</span>
+                        <span>نص</span>
+                    </button>
+
                     <button class="tool-btn" onclick="toggleToolPanel('uploadPanel')">
                         <span class="material-symbols-outlined">upload</span>
                         <span>رفع</span>
@@ -186,26 +183,14 @@
                 <div class="horizontal-controls" id="fontGrid"></div>
             </div>
 
-            <!-- لوحة حجم النص -->
+            <!-- لوحة حجم النص - محدثة -->
             <div id="fontSizePanel" class="tool-panel">
                 <div class="tool-section">
                     <h4>حجم النص</h4>
-                    <input type="range" id="fontSizeSlider" min="10" max="100" value="50" class="size-slider">
-                    <span id="fontSizeDisplay">50</span>
-                </div>
-                <div class="tool-buttons-grid">
-                    <button class="tool-action-btn" onclick="increaseTextSize()">
-                        <span class="material-symbols-outlined">zoom_in</span>
-                        <span>تكبير النص</span>
-                    </button>
-                    <button class="tool-action-btn" onclick="decreaseTextSize()">
-                        <span class="material-symbols-outlined">zoom_out</span>
-                        <span>تصغير النص</span>
-                    </button>
-                    <button class="tool-action-btn" onclick="resetText()">
-                        <span class="material-symbols-outlined">refresh</span>
-                        <span>إعادة تعيين</span>
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-top: 20px;">
+                        <input type="range" id="fontSizeSlider" min="10" max="100" value="50" class="size-slider" style="flex: 1;">
+                        <span id="fontSizeDisplay" style="min-width: 45px; text-align: center; font-size: 18px; font-weight: bold; color: var(--primary-color);">50</span>
+                    </div>
                 </div>
             </div>
 
