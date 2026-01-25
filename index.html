@@ -43,7 +43,14 @@
             <button onclick="goBackToImages()" class="icon-btn back-btn">
                 <span class="material-symbols-outlined">arrow_back</span>
             </button>
-            <h1>تحرير</h1>
+            <div class="header-actions">
+                <button onclick="shareImage()" class="icon-btn share-header-btn">
+                    <span class="material-symbols-outlined">share</span>
+                </button>
+                <button onclick="downloadImage()" class="icon-btn download-header-btn">
+                    <span class="material-symbols-outlined">download</span>
+                </button>
+            </div>
         </div>
         
         <!-- حاوية المحرر -->
@@ -51,45 +58,11 @@
             <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
                 <canvas id="canvas"></canvas>
                 
-                <!-- بطاقة تحكم بالنص -->
-                <div class="text-control-card" id="textControlCard" style="display: none;">
-                    <div class="text-control-header">
-                        <span>تحكم بالنص</span>
-                        <button class="close-control-btn" onclick="closeTextControlCard()">×</button>
-                    </div>
-                    <div class="text-control-buttons">
-                        <button class="text-control-btn" onclick="rotateTextClockwise()">
-                            <span class="material-symbols-outlined">rotate_right</span>
-                            <span>تدوير يمين</span>
-                        </button>
-                        <button class="text-control-btn" onclick="rotateTextCounterClockwise()">
-                            <span class="material-symbols-outlined">rotate_left</span>
-                            <span>تدوير يسار</span>
-                        </button>
-                        <button class="text-control-btn" onclick="increaseTextSize()">
-                            <span class="material-symbols-outlined">zoom_in</span>
-                            <span>تكبير</span>
-                        </button>
-                        <button class="text-control-btn" onclick="decreaseTextSize()">
-                            <span class="material-symbols-outlined">zoom_out</span>
-                            <span>تصغير</span>
-                        </button>
-                        <button class="text-control-btn" onclick="resetText()">
-                            <span class="material-symbols-outlined">refresh</span>
-                            <span>إعادة تعيين</span>
-                        </button>
-                    </div>
-                </div>
-                
                 <!-- أزرار التحكم العائمة -->
                 <div class="floating-controls">
-                    <button onclick="shareImage()" class="floating-btn share-btn">
-                        <span class="material-symbols-outlined">share</span>
-                        <span>مشاركة</span>
-                    </button>
-                    <button onclick="downloadImage()" class="floating-btn download-btn">
-                        <span class="material-symbols-outlined">download</span>
-                        <span>تنزيل</span>
+                    <button onclick="toggleTextCard()" class="floating-btn text-btn">
+                        <span class="material-symbols-outlined">text_fields</span>
+                        <span>إضافة نص</span>
                     </button>
                 </div>
             </div>
@@ -102,16 +75,6 @@
                         <span>رفع</span>
                     </button>
 
-                    <button class="tool-btn" onclick="toggleTextCard()">
-                        <span class="material-symbols-outlined">text_fields</span>
-                        <span>نص</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('backgroundPanel')">
-                        <span class="material-symbols-outlined">format_color_fill</span>
-                        <span>خلفية</span>
-                    </button>
-
                     <button class="tool-btn" onclick="toggleToolPanel('fontPanel')">
                         <span class="material-symbols-outlined">brand_family</span>
                         <span>خط</span>
@@ -119,7 +82,7 @@
 
                     <button class="tool-btn" onclick="toggleToolPanel('fontSizePanel')">
                         <span class="material-symbols-outlined">format_size</span>
-                        <span>حجم النص</span>
+                        <span>حجم</span>
                     </button>
 
                     <button class="tool-btn" onclick="toggleToolPanel('colorPanel')">
@@ -129,12 +92,17 @@
 
                     <button class="tool-btn" onclick="toggleToolPanel('strokePanel')">
                         <span class="material-symbols-outlined">format_color_text</span>
-                        <span>حواف نص</span>
+                        <span>حواف</span>
                     </button>
 
                     <button class="tool-btn" onclick="toggleToolPanel('effectsPanel')">
                         <span class="material-symbols-outlined">bedtime</span>
                         <span>تأثيرات</span>
+                    </button>
+
+                    <button class="tool-btn" onclick="toggleToolPanel('backgroundPanel')">
+                        <span class="material-symbols-outlined">format_color_fill</span>
+                        <span>خلفية</span>
                     </button>
 
                     <button class="tool-btn" onclick="toggleToolPanel('blurPanel')">
@@ -144,7 +112,7 @@
 
                     <button class="tool-btn" onclick="toggleToolPanel('borderPanel')">
                         <span class="material-symbols-outlined">border_style</span>
-                        <span>حواف</span>
+                        <span>حواف صورة</span>
                     </button>
 
                     <button class="tool-btn" onclick="toggleToolPanel('rotatePanel')">
@@ -226,9 +194,17 @@
                     <span id="fontSizeDisplay">50</span>
                 </div>
                 <div class="tool-buttons-grid">
-                    <button class="tool-action-btn" onclick="openTextControlCard()">
-                        <span class="material-symbols-outlined">open_with</span>
-                        <span>فتح تحكم النص</span>
+                    <button class="tool-action-btn" onclick="increaseTextSize()">
+                        <span class="material-symbols-outlined">zoom_in</span>
+                        <span>تكبير النص</span>
+                    </button>
+                    <button class="tool-action-btn" onclick="decreaseTextSize()">
+                        <span class="material-symbols-outlined">zoom_out</span>
+                        <span>تصغير النص</span>
+                    </button>
+                    <button class="tool-action-btn" onclick="resetText()">
+                        <span class="material-symbols-outlined">refresh</span>
+                        <span>إعادة تعيين</span>
                     </button>
                 </div>
             </div>
