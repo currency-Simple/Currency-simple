@@ -6,19 +6,20 @@ let keyboardOpen = false;
 let textCardVisible = false;
 let textControlCardVisible = false;
 
-// ذاكرة مؤقتة للصور المحملة
-let imageCache = new Map();
-let loadingQueue = [];
-let concurrentLoads = 0;
-const MAX_CONCURRENT_LOADS = 3;
-
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('App starting...');
+    console.log('🚀 App starting...');
     
+    // تهيئة الإعدادات
+    loadSettings();
+    
+    // تحميل الفئات
     loadCategories();
+    
+    // عرض الصفحة الأولية
     showPage('categories');
     
+    // إعداد مستمعات الكيبورد
     setupKeyboardListeners();
     
     // إعداد بطاقة النص بعد تحميل الصفحة
@@ -26,14 +27,44 @@ window.addEventListener('DOMContentLoaded', () => {
         setupTextCard();
         setupTextControlCard();
         setupFontSizeControl();
+        setupBackgroundControls();
     }, 500);
 });
+
+// إعداد عناصر التحكم في الخلفية
+function setupBackgroundControls() {
+    console.log('🎨 Setting up background controls...');
+    
+    // تحديث الخلفية عند تغيير الألوان
+    const backgroundColorGrid = document.getElementById('backgroundColorGrid');
+    if (backgroundColorGrid) {
+        backgroundColorGrid.addEventListener('click', () => {
+            setTimeout(() => {
+                if (typeof updateBackground === 'function') {
+                    updateBackground();
+                }
+            }, 100);
+        });
+    }
+    
+    // تحديث الخلفية عند تغيير الحجم
+    const backgroundSizeGrid = document.getElementById('backgroundSizeGrid');
+    if (backgroundSizeGrid) {
+        backgroundSizeGrid.addEventListener('click', () => {
+            setTimeout(() => {
+                if (typeof updateBackground === 'function') {
+                    updateBackground();
+                }
+            }, 100);
+        });
+    }
+}
 
 // إعداد بطاقة النص الجديدة
 function setupTextCard() {
     const canvasWrapper = document.getElementById('canvasWrapperFixed');
     if (!canvasWrapper) {
-        console.error('canvasWrapperFixed not found');
+        console.error('❌ canvasWrapperFixed not found');
         return;
     }
     
@@ -48,22 +79,30 @@ function setupTextCard() {
     textCard.innerHTML = `
         <div class="text-card-header">
             <span>إضافة نص إلى الصورة</span>
-            <button class="close-card-btn" onclick="closeTextCard()">×</button>
+            <button class="close-card-btn" onclick="closeTextCard()" aria-label="إغلاق">
+                <span class="material-symbols-outlined">close</span>
+            </button>
         </div>
         <div class="text-card-content">
-            <textarea id="textCardInput" placeholder="اكتب النص هنا..." rows="4"></textarea>
+            <textarea id="textCardInput" placeholder="اكتب النص هنا..." rows="4" 
+                      aria-label="مربع نص لإضافة نص إلى الصورة"></textarea>
             <div class="text-card-buttons">
-                <button class="text-card-btn cancel-btn" onclick="closeTextCard()">إلغاء</button>
-                <button class="text-card-btn delete-btn" onclick="clearTextFromCard()" id="deleteTextFromCardBtn" style="display: none;">
+                <button class="text-card-btn cancel-btn" onclick="closeTextCard()" aria-label="إلغاء">
+                    إلغاء
+                </button>
+                <button class="text-card-btn delete-btn" onclick="clearTextFromCard()" id="deleteTextFromCardBtn" 
+                        style="display: none;" aria-label="حذف النص">
                     حذف
                 </button>
-                <button class="text-card-btn ok-btn" onclick="applyTextToImage()">موافق</button>
+                <button class="text-card-btn ok-btn" onclick="applyTextToImage()" aria-label="تطبيق النص">
+                    موافق
+                </button>
             </div>
         </div>
     `;
     
     canvasWrapper.appendChild(textCard);
-    console.log('Text card setup complete');
+    console.log('✅ Text card setup complete');
     
     const textInput = document.getElementById('textCardInput');
     if (textInput) {
@@ -74,18 +113,28 @@ function setupTextCard() {
         });
         
         textInput.addEventListener('input', updateDeleteButtonState);
+        
+        // إضافة اختصارات لوحة المفاتيح
+        textInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                applyTextToImage();
+            } else if (e.key === 'Escape') {
+                closeTextCard();
+            }
+        });
     }
 }
 
 function setupTextControlCard() {
     const canvasWrapper = document.getElementById('canvasWrapperFixed');
     if (!canvasWrapper) {
-        console.error('canvasWrapperFixed not found');
+        console.error('❌ canvasWrapperFixed not found');
         return;
     }
     
     // تم إنشاؤه في HTML
-    console.log('Text control card setup complete');
+    console.log('✅ Text control card setup complete');
 }
 
 function setupFontSizeControl() {
@@ -110,13 +159,24 @@ function setupFontSizeControl() {
                 }
             }
         });
+        
+        // إضافة اختصارات لوحة المفاتيح
+        fontSizeSlider.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                increaseTextSize();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                decreaseTextSize();
+            }
+        });
     }
 }
 
 function toggleTextCard() {
     const textCard = document.getElementById('textCard');
     if (!textCard) {
-        console.error('Text card not found');
+        console.error('❌ Text card not found');
         return;
     }
     
@@ -144,9 +204,13 @@ function openTextCard() {
         setTimeout(() => {
             textInput.focus();
             textInput.select();
+            // إظهار لوحة المفاتيح على الأجهزة المحمولة
+            if ('virtualKeyboard' in navigator && navigator.virtualKeyboard.show) {
+                navigator.virtualKeyboard.show();
+            }
         }, 100);
         
-        console.log('Text card opened');
+        console.log('📝 Text card opened');
     }
 }
 
@@ -157,7 +221,13 @@ function closeTextCard() {
     if (textCard && textInput) {
         textCard.style.display = 'none';
         textCardVisible = false;
-        console.log('Text card closed');
+        
+        // إخفاء لوحة المفاتيح
+        if ('virtualKeyboard' in navigator && navigator.virtualKeyboard.hide) {
+            navigator.virtualKeyboard.hide();
+        }
+        
+        console.log('📝 Text card closed');
     }
 }
 
@@ -166,7 +236,7 @@ function openTextControlCard() {
     if (textControlCard) {
         textControlCard.style.display = 'block';
         textControlCardVisible = true;
-        console.log('Text control card opened');
+        console.log('🎛️ Text control card opened');
     }
 }
 
@@ -175,7 +245,7 @@ function closeTextControlCard() {
     if (textControlCard) {
         textControlCard.style.display = 'none';
         textControlCardVisible = false;
-        console.log('Text control card closed');
+        console.log('🎛️ Text control card closed');
     }
 }
 
@@ -201,7 +271,7 @@ function clearTextFromCard() {
     updateDeleteButtonState();
     textInput.focus();
     
-    console.log('Text cleared from card');
+    console.log('🗑️ Text cleared from card');
 }
 
 function applyTextToImage() {
@@ -219,12 +289,12 @@ function applyTextToImage() {
     closeTextCard();
     
     if (text) {
-        showAlert('تم إضافة النص إلى الصورة', 'success');
+        showAlert('✅ تم إضافة النص إلى الصورة', 'success');
     } else {
-        showAlert('تم حذف النص من الصورة', 'success');
+        showAlert('✅ تم حذف النص من الصورة', 'success');
     }
     
-    console.log('Text applied to image:', text);
+    console.log('📝 Text applied to image:', text);
 }
 
 function clearTextFromImage() {
@@ -234,7 +304,7 @@ function clearTextFromImage() {
         renderFullCanvas();
     }
     
-    console.log('Text cleared from image');
+    console.log('🗑️ Text cleared from image');
 }
 
 function rotateTextClockwise() {
@@ -245,7 +315,7 @@ function rotateTextClockwise() {
                 renderFullCanvas();
             }
         }
-        showAlert('تم تدوير النص 15° يميناً', 'success');
+        showAlert('↻ تم تدوير النص 15° يميناً', 'success');
     }
 }
 
@@ -257,7 +327,7 @@ function rotateTextCounterClockwise() {
                 renderFullCanvas();
             }
         }
-        showAlert('تم تدوير النص 15° يساراً', 'success');
+        showAlert('↺ تم تدوير النص 15° يساراً', 'success');
     }
 }
 
@@ -286,7 +356,7 @@ function increaseTextSize() {
                 }
             }
             
-            showAlert('تم تكبير النص', 'success');
+            showAlert('➕ تم تكبير النص', 'success');
         }
     }
 }
@@ -316,7 +386,7 @@ function decreaseTextSize() {
                 }
             }
             
-            showAlert('تم تصغير النص', 'success');
+            showAlert('➖ تم تصغير النص', 'success');
         }
     }
 }
@@ -341,7 +411,7 @@ function resetText() {
             }
         }
         
-        showAlert('تم إعادة تعيين النص', 'success');
+        showAlert('🔄 تم إعادة تعيين النص', 'success');
     }
 }
 
@@ -359,12 +429,38 @@ function setupKeyboardListeners() {
             }
         }, 100);
     });
+    
+    // مستمعات اختصارات لوحة المفاتيح
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + S لحفظ
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            downloadImage();
+        }
+        
+        // Ctrl/Cmd + P للمشاركة
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            shareImage();
+        }
+        
+        // Escape لإغلاق البطاقات
+        if (e.key === 'Escape') {
+            if (textCardVisible) {
+                closeTextCard();
+            }
+            if (textControlCardVisible) {
+                closeTextControlCard();
+            }
+            closeAllToolPanels();
+        }
+    });
 }
 
 function handleKeyboardOpen() {
     if (keyboardOpen) return;
     keyboardOpen = true;
-    console.log('Keyboard opened');
+    console.log('⌨️ Keyboard opened');
     
     document.body.classList.add('keyboard-open');
 }
@@ -372,61 +468,21 @@ function handleKeyboardOpen() {
 function handleKeyboardClose() {
     if (!keyboardOpen) return;
     keyboardOpen = false;
-    console.log('Keyboard closed');
+    console.log('⌨️ Keyboard closed');
     
     document.body.classList.remove('keyboard-open');
 }
 
-// نظام تحميل الصور المحسن
-async function loadImageWithCache(url) {
-    if (imageCache.has(url)) {
-        return imageCache.get(url);
-    }
-    
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        
-        img.onload = () => {
-            imageCache.set(url, img);
-            concurrentLoads--;
-            processQueue();
-            resolve(img);
-        };
-        
-        img.onerror = () => {
-            concurrentLoads--;
-            processQueue();
-            reject(new Error(`Failed to load image: ${url}`));
-        };
-        
-        loadingQueue.push(() => {
-            concurrentLoads++;
-            img.crossOrigin = 'anonymous';
-            img.src = url;
-        });
-        
-        processQueue();
-    });
-}
-
-function processQueue() {
-    while (loadingQueue.length > 0 && concurrentLoads < MAX_CONCURRENT_LOADS) {
-        const loadTask = loadingQueue.shift();
-        loadTask();
-    }
-}
-
 async function loadCategories() {
     categories = [];
-    console.log('Loading categories...');
+    console.log('📂 Loading categories...');
     
     try {
-        // تحميل الفئة الأولى فقط أولاً (تحسين الأداء)
-        const initialPromises = [];
+        const promises = [];
         
-        // تحميل أول 10 فئات فقط لبدء سريع
-        for (let i = 1; i <= 10; i++) {
-            initialPromises.push(
+        // تحميل الفئات من 1 إلى 100
+        for (let i = 1; i <= 100; i++) {
+            promises.push(
                 fetch(`data/images${i}.json`)
                     .then(res => {
                         if (!res.ok) throw new Error('Not found');
@@ -439,102 +495,93 @@ async function loadCategories() {
                                 name: data.name || `فئة ${i}`,
                                 coverImage: data.images[0].url,
                                 images: data.images,
-                                loaded: false
+                                description: data.description || ''
                             });
                         }
                     })
                     .catch(() => {
-                        console.log(`Category ${i} not found, skipping...`);
+                        console.log(`📂 Category ${i} not found, skipping...`);
                     })
             );
         }
         
-        await Promise.allSettled(initialPromises);
+        await Promise.allSettled(promises);
         
         if (categories.length === 0) {
-            console.log('No categories found, loading demo...');
+            console.log('📂 No categories found, loading demo...');
             loadDemoCategories();
         } else {
             categories.sort((a, b) => a.id - b.id);
             displayCategories();
-            console.log(`✓ تم تحميل ${categories.length} فئة`);
-            
-            // تحميل باقي الفئات في الخلفية
-            setTimeout(() => loadRemainingCategories(11, 100), 1000);
+            console.log(`✅ تم تحميل ${categories.length} فئة`);
         }
         
     } catch (error) {
-        console.error('Error loading categories:', error);
+        console.error('❌ Error loading categories:', error);
         loadDemoCategories();
     }
 }
 
-async function loadRemainingCategories(start, end) {
-    const promises = [];
-    
-    for (let i = start; i <= end; i++) {
-        promises.push(
-            fetch(`data/images${i}.json`)
-                .then(res => {
-                    if (!res.ok) throw new Error('Not found');
-                    return res.json();
-                })
-                .then(data => {
-                    if (data && data.images && data.images.length > 0) {
-                        const existingIndex = categories.findIndex(cat => cat.id === i);
-                        if (existingIndex === -1) {
-                            categories.push({
-                                id: i,
-                                name: data.name || `فئة ${i}`,
-                                coverImage: data.images[0].url,
-                                images: data.images,
-                                loaded: false
-                            });
-                        }
-                    }
-                })
-                .catch(() => {
-                    // تجاهل الأخطاء للفئات غير الموجودة
-                })
-        );
-    }
-    
-    await Promise.allSettled(promises);
-    
-    // إعادة ترتيب الفئات
-    categories.sort((a, b) => a.id - b.id);
-    
-    console.log(`✓ تم تحميل إجمالي ${categories.length} فئة`);
-}
-
 function loadDemoCategories() {
-    console.log('Loading demo categories...');
+    console.log('📂 Loading demo categories...');
     
-    for (let i = 1; i <= 4; i++) {
-        const images = [];
-        for (let j = 1; j <= 12; j++) {
-            const id = (i - 1) * 12 + j;
-            images.push({
-                id: id,
-                url: `https://images.pexels.com/photos/${1000000 + id}/pexels-photo-${1000000 + id}.jpeg?auto=compress&cs=tinysrgb&w=400`,
-                title: `صورة ${id}`
-            });
+    const demoData = [
+        {
+            name: "الطبيعة",
+            description: "مناظر طبيعية خلابة من حول العالم",
+            images: [
+                { id: 1, url: "https://images.pexels.com/photos/7615523/pexels-photo-7615523.jpeg", title: "جبال" },
+                { id: 2, url: "https://images.pexels.com/photos/35570918/pexels-photo-35570918.jpeg", title: "شلال" },
+                { id: 3, url: "https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg", title: "غابة" }
+            ]
+        },
+        {
+            name: "المدن",
+            description: "أجمل المدن والمعالم الحضرية",
+            images: [
+                { id: 4, url: "https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg", title: "إيطاليا" },
+                { id: 5, url: "https://images.pexels.com/photos/326055/pexels-photo-326055.jpeg", title: "بحيرة" },
+                { id: 6, url: "https://images.pexels.com/photos/1562/italian-landscape-mountains-nature.jpg", title: "مناظر" }
+            ]
+        },
+        {
+            name: "الفنون",
+            description: "لوحات فنية وتصميمات إبداعية",
+            images: [
+                { id: 7, url: "https://images.pexels.com/photos/1252869/pexels-photo-1252869.jpeg", title: "طريق جبلي" },
+                { id: 8, url: "https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg", title: "شروق الشمس" },
+                { id: 9, url: "https://images.pexels.com/photos/1323550/pexels-photo-1323550.jpeg", title: "غروب" }
+            ]
+        },
+        {
+            name: "الحيوانات",
+            description: "صور حيوانات برية و أليفة",
+            images: [
+                { id: 10, url: "https://images.pexels.com/photos/1591373/pexels-photo-1591373.jpeg", title: "شاطئ" },
+                { id: 11, url: "https://images.pexels.com/photos/462024/pexels-photo-462024.jpeg", title: "أشجار" },
+                { id: 12, url: "https://images.pexels.com/photos/1366630/pexels-photo-1366630.jpeg", title: "حقول" }
+            ]
         }
+    ];
+    
+    demoData.forEach((data, index) => {
         categories.push({
-            id: i,
-            name: `فئة تجريبية ${i}`,
-            coverImage: images[0].url,
-            images: images,
-            loaded: false
+            id: index + 1,
+            name: data.name,
+            coverImage: data.images[0].url,
+            images: data.images,
+            description: data.description
         });
-    }
+    });
+    
     displayCategories();
+    console.log(`✅ تم تحميل ${categories.length} فئة تجريبية`);
 }
 
 function displayCategories() {
     const grid = document.getElementById('categoriesGrid');
     if (!grid) {
-        console.error('Categories grid not found');
+        console.error('❌ Categories grid not found');
         return;
     }
     
@@ -544,20 +591,34 @@ function displayCategories() {
         const item = document.createElement('div');
         item.className = 'category-item';
         item.onclick = () => openCategory(cat);
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', `فتح فئة ${cat.name}`);
+        
         item.innerHTML = `
             <img src="${cat.coverImage}" alt="${cat.name}" loading="lazy" 
                  onerror="this.src='https://via.placeholder.com/300x400?text=No+Image'">
             <div class="category-overlay">
                 <div class="category-title">${cat.name}</div>
+                ${cat.description ? `<div class="category-description" style="font-size: 12px; opacity: 0.9;">${cat.description}</div>` : ''}
             </div>
         `;
+        
+        // إضافة مستمعات لوحة المفاتيح
+        item.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openCategory(cat);
+            }
+        });
+        
         grid.appendChild(item);
     });
     
-    console.log('✓ تم عرض', categories.length, 'فئة');
+    console.log(`✅ تم عرض ${categories.length} فئة`);
 }
 
-async function openCategory(cat) {
+function openCategory(cat) {
     currentCategory = cat;
     currentImages = cat.images;
     
@@ -566,95 +627,116 @@ async function openCategory(cat) {
         categoryTitle.textContent = cat.name;
     }
     
-    await displayImages();
+    displayImages();
     showPage('images');
     
-    console.log('✓ تم فتح الفئة:', cat.name);
+    console.log(`✅ تم فتح الفئة: ${cat.name}`);
 }
 
-async function displayImages() {
+function displayImages() {
     const grid = document.getElementById('imageGrid');
     if (!grid) {
-        console.error('Image grid not found');
+        console.error('❌ Image grid not found');
         return;
     }
     
     grid.innerHTML = '';
     
-    // إظهار عناصر نائبة أولاً
-    currentImages.forEach((img, index) => {
+    currentImages.forEach(img => {
         const item = document.createElement('div');
-        item.className = 'image-item loading';
-        item.innerHTML = `
-            <div class="image-placeholder"></div>
+        item.className = 'image-item';
+        item.onclick = () => selectImage(img);
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', `اختيار صورة ${img.title || img.id}`);
+        
+        const imgEl = document.createElement('img');
+        imgEl.src = img.url;
+        imgEl.alt = img.title || 'صورة';
+        imgEl.loading = 'lazy';
+        imgEl.onerror = function() {
+            this.src = 'https://via.placeholder.com/300x400?text=Error+Loading';
+        };
+        
+        // إضافة عنصر للعنوان
+        const titleEl = document.createElement('div');
+        titleEl.className = 'image-title';
+        titleEl.textContent = img.title || `صورة ${img.id}`;
+        titleEl.style.cssText = `
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            color: white;
+            padding: 8px;
+            font-size: 12px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         `;
+        
+        item.appendChild(imgEl);
+        item.appendChild(titleEl);
+        
+        // إظهار العنوان عند التمرير
+        item.addEventListener('mouseenter', () => {
+            titleEl.style.opacity = '1';
+        });
+        
+        item.addEventListener('mouseleave', () => {
+            titleEl.style.opacity = '0';
+        });
+        
+        // مستمعات لوحة المفاتيح
+        item.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectImage(img);
+            }
+        });
+        
         grid.appendChild(item);
     });
     
-    // تحميل الصور واحدة تلو الأخرى مع cache
-    for (let i = 0; i < currentImages.length; i++) {
-        const img = currentImages[i];
-        const item = grid.children[i];
-        
-        try {
-            const imageElement = await loadImageWithCache(img.url);
-            
-            item.className = 'image-item';
-            item.innerHTML = '';
-            item.onclick = () => selectImage(img);
-            
-            const imgEl = document.createElement('img');
-            imgEl.src = imageElement.src;
-            imgEl.alt = img.title || 'صورة';
-            imgEl.loading = 'lazy';
-            imgEl.onerror = function() {
-                this.src = 'https://via.placeholder.com/300x400?text=Error';
-            };
-            
-            item.appendChild(imgEl);
-            
-            // إضافة تأثير ظهور تدريجي
-            setTimeout(() => {
-                item.style.opacity = '1';
-                item.style.transform = 'scale(1)';
-            }, (i % 10) * 50); // تأخير متدرج لتحسين الأداء
-            
-        } catch (error) {
-            item.className = 'image-item';
-            item.innerHTML = '';
-            item.onclick = () => selectImage(img);
-            
-            const imgEl = document.createElement('img');
-            imgEl.src = 'https://via.placeholder.com/300x400?text=Error';
-            imgEl.alt = 'صورة غير متوفرة';
-            
-            item.appendChild(imgEl);
-        }
-    }
-    
-    console.log('✓ تم عرض', currentImages.length, 'صورة');
+    console.log(`✅ تم عرض ${currentImages.length} صورة`);
 }
 
 function selectImage(img) {
-    console.log('✓ تم اختيار الصورة:', img.id);
+    console.log(`✅ تم اختيار الصورة: ${img.id}`);
     
+    // حفظ الصورة المختارة في localStorage
     localStorage.setItem('selectedImage', JSON.stringify(img));
+    
+    // عرض مؤشر التحميل
+    showLoadingIndicator('جاري تحميل الصورة...');
+    
+    // الانتقال إلى صفحة المحرر
     showPage('editor');
     
+    // تحميل الصورة إلى المحرر بعد تأخير قصير
     setTimeout(() => {
         if (typeof loadImageToEditor === 'function') {
             loadImageToEditor(img.url);
         } else {
-            console.error('loadImageToEditor function not found');
+            console.error('❌ loadImageToEditor function not found');
+            showAlert('خطأ في تحميل المحرر', 'error');
         }
-    }, 200);
+        hideLoadingIndicator();
+    }, 300);
 }
 
 function showPage(pageName) {
-    console.log('Navigating to:', pageName);
+    console.log(`➡️ Navigating to: ${pageName}`);
+    
+    // إغلاق لوحة المفاتيح أولاً
+    handleKeyboardClose();
     
     const pages = document.querySelectorAll('.page');
-    pages.forEach(p => p.classList.remove('active'));
+    pages.forEach(p => {
+        p.classList.remove('active');
+        p.setAttribute('aria-hidden', 'true');
+    });
     
     const navBtns = document.querySelectorAll('.nav-btn');
     navBtns.forEach(b => b.classList.remove('active'));
@@ -669,6 +751,22 @@ function showPage(pageName) {
     const page = document.getElementById(pageMap[pageName]);
     if (page) {
         page.classList.add('active');
+        page.setAttribute('aria-hidden', 'false');
+        
+        // التركيز على عنصر مناسب في الصفحة
+        setTimeout(() => {
+            if (pageName === 'categories' || pageName === 'images') {
+                const firstItem = page.querySelector('.category-item, .image-item');
+                if (firstItem) {
+                    firstItem.focus();
+                }
+            } else if (pageName === 'editor') {
+                const canvas = document.getElementById('canvas');
+                if (canvas) {
+                    canvas.focus();
+                }
+            }
+        }, 100);
     }
     
     const navMap = {
@@ -682,23 +780,41 @@ function showPage(pageName) {
         btn.classList.add('active');
     }
     
+    // إغلاق جميع الأدوات عند الانتقال من المحرر
     if (pageName !== 'editor') {
         closeAllToolPanels();
-        handleKeyboardClose();
         closeTextControlCard();
+        closeTextCard();
     }
+    
+    // تحديث عنوان الصفحة
+    document.title = getPageTitle(pageName);
+}
+
+function getPageTitle(pageName) {
+    const titles = {
+        'categories': 'الفئات - محرر النصوص على الصور',
+        'images': 'الصور - محرر النصوص على الصور',
+        'editor': 'التحرير - محرر النصوص على الصور',
+        'settings': 'الإعدادات - محرر النصوص على الصور'
+    };
+    return titles[pageName] || 'محرر النصوص على الصور';
 }
 
 function closeAllToolPanels() {
     const panels = document.querySelectorAll('.tool-panel');
     panels.forEach(panel => {
         panel.classList.remove('active');
+        panel.setAttribute('aria-hidden', 'true');
     });
     
     const buttons = document.querySelectorAll('.tool-btn');
     buttons.forEach(btn => {
         btn.classList.remove('active');
+        btn.setAttribute('aria-expanded', 'false');
     });
+    
+    console.log('✅ جميع أدوات التحكم مغلقة');
 }
 
 function goBackToImages() {
@@ -711,88 +827,105 @@ function goBackToImages() {
 
 async function downloadImage() {
     try {
-        console.log('بدء عملية التنزيل...');
+        console.log('⬇️ بدء عملية التنزيل...');
         
         const canvas = document.getElementById('canvas');
         if (!canvas || canvas.width === 0) {
-            showAlert('يرجى اختيار صورة أولاً', 'error');
+            showAlert('⚠️ يرجى اختيار صورة أولاً', 'error');
             return;
         }
         
-        showLoadingIndicator('جاري إنشاء الصورة النهائية...');
+        showLoadingIndicator('🎨 جاري إنشاء الصورة النهائية...');
         
         let exportCanvas;
         if (typeof prepareImageForExport === 'function') {
             exportCanvas = prepareImageForExport();
             if (!exportCanvas) {
                 hideLoadingIndicator();
-                showAlert('فشل في تحضير الصورة', 'error');
+                showAlert('❌ فشل في تحضير الصورة', 'error');
                 return;
             }
         } else {
             exportCanvas = canvas;
         }
         
+        // تأخير قصير للسماح بعرض مؤشر التحميل
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-        const filename = `edited-image-${timestamp}.png`;
+        // إنشاء اسم ملف مع التاريخ والوقت
+        const now = new Date();
+        const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}${now.getSeconds().toString().padStart(2,'0')}`;
+        const filename = `صورة-معدلة-${timestamp}.png`;
         
         exportCanvas.toBlob((blob) => {
             if (!blob) {
                 hideLoadingIndicator();
-                showAlert('فشل في إنشاء الصورة', 'error');
+                showAlert('❌ فشل في إنشاء الصورة', 'error');
                 return;
             }
             
+            // إنشاء رابط التنزيل
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.download = filename;
             link.href = url;
+            link.style.display = 'none';
             
+            // إضافة الرابط إلى الصفحة والنقر عليه
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
+            // تحرير الذاكرة بعد ثانية
             setTimeout(() => URL.revokeObjectURL(url), 1000);
             
             hideLoadingIndicator();
-            showAlert('✓ تم تنزيل الصورة بنجاح!', 'success');
+            showAlert('✅ تم تنزيل الصورة بنجاح!', 'success');
             
-            console.log('✓ Download completed');
+            console.log('✅ Download completed:', filename);
+            
+            // تسجيل الحدث (إذا كان هناك تحليلات)
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'download', {
+                    'event_category': 'engagement',
+                    'event_label': 'image_download'
+                });
+            }
             
         }, 'image/png', 1.0);
         
     } catch (error) {
-        console.error('خطأ في التنزيل:', error);
+        console.error('❌ خطأ في التنزيل:', error);
         hideLoadingIndicator();
-        showAlert('حدث خطأ أثناء التنزيل', 'error');
+        showAlert('❌ حدث خطأ أثناء التنزيل', 'error');
     }
 }
 
 async function shareImage() {
     try {
-        console.log('بدء عملية المشاركة...');
+        console.log('📤 بدء عملية المشاركة...');
         
         const canvas = document.getElementById('canvas');
         if (!canvas || canvas.width === 0) {
-            showAlert('يرجى اختيار صورة أولاً', 'error');
+            showAlert('⚠️ يرجى اختيار صورة أولاً', 'error');
             return;
         }
         
+        // التحقق من دعم المشاركة
         if (!navigator.share) {
-            showAlert('المشاركة غير مدعومة في هذا المتصفح', 'info');
+            showAlert('ℹ️ المشاركة غير مدعومة في هذا المتصفح', 'info');
+            // استبدال بالتنزيل
             return downloadImage();
         }
         
-        showLoadingIndicator('جاري تحضير الصورة للمشاركة...');
+        showLoadingIndicator('📤 جاري تحضير الصورة للمشاركة...');
         
         let exportCanvas;
         if (typeof prepareImageForExport === 'function') {
             exportCanvas = prepareImageForExport();
             if (!exportCanvas) {
                 hideLoadingIndicator();
-                showAlert('فشل في تحضير الصورة', 'error');
+                showAlert('❌ فشل في تحضير الصورة', 'error');
                 return;
             }
         } else {
@@ -804,99 +937,153 @@ async function shareImage() {
         exportCanvas.toBlob(async (blob) => {
             if (!blob) {
                 hideLoadingIndicator();
-                showAlert('فشل في إنشاء الصورة', 'error');
+                showAlert('❌ فشل في إنشاء الصورة', 'error');
                 return;
             }
             
-            const file = new File([blob], 'edited-image.png', { 
+            const file = new File([blob], 'صورة-معدلة.png', { 
                 type: 'image/png',
                 lastModified: Date.now()
             });
             
             try {
+                // التحقق من إمكانية المشاركة
                 if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
                     hideLoadingIndicator();
-                    showAlert('لا يمكن مشاركة الملف في هذا الجهاز', 'info');
+                    showAlert('ℹ️ لا يمكن مشاركة الملف في هذا الجهاز', 'info');
                     return downloadImage();
                 }
                 
+                // المشاركة
                 await navigator.share({
                     files: [file],
                     title: 'صورة معدلة',
-                    text: 'شاهد هذه الصورة!'
+                    text: 'شاهد هذه الصورة المعدلة!',
+                    url: window.location.href
                 });
                 
                 hideLoadingIndicator();
-                showAlert('✓ تم المشاركة بنجاح!', 'success');
-                console.log('✓ Share completed');
+                showAlert('✅ تم المشاركة بنجاح!', 'success');
+                console.log('✅ Share completed');
+                
+                // تسجيل الحدث (إذا كان هناك تحليلات)
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'share', {
+                        'event_category': 'engagement',
+                        'event_label': 'image_share'
+                    });
+                }
                 
             } catch (shareError) {
                 hideLoadingIndicator();
                 
                 if (shareError.name === 'AbortError') {
-                    console.log('تم إلغاء المشاركة من قبل المستخدم');
+                    console.log('⚠️ تم إلغاء المشاركة من قبل المستخدم');
                     return;
                 }
                 
-                console.error('خطأ في المشاركة:', shareError);
-                showAlert('فشلت المشاركة', 'error');
+                console.error('❌ خطأ في المشاركة:', shareError);
+                showAlert('❌ فشلت المشاركة', 'error');
+                // استبدال بالتنزيل
                 downloadImage();
             }
             
         }, 'image/png', 1.0);
         
     } catch (error) {
-        console.error('خطأ في المشاركة:', error);
+        console.error('❌ خطأ في المشاركة:', error);
         hideLoadingIndicator();
-        showAlert('حدث خطأ أثناء المشاركة', 'error');
+        showAlert('❌ حدث خطأ أثناء المشاركة', 'error');
     }
 }
 
 function showAlert(message, type = 'info') {
+    // إزالة أي تنبيهات سابقة
     const existingAlert = document.querySelector('.custom-alert');
     if (existingAlert) {
         existingAlert.remove();
     }
     
+    // إنشاء التنبيه الجديد
     const alert = document.createElement('div');
     alert.className = `custom-alert ${type}`;
+    alert.setAttribute('role', 'alert');
+    alert.setAttribute('aria-live', 'assertive');
+    
     alert.innerHTML = `
         <span>${message}</span>
-        <button onclick="this.parentElement.remove()" style="
-            background: none;
-            border: none;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 0 10px;
-        ">×</button>
+        <button onclick="this.parentElement.remove()" aria-label="إغلاق التنبيه">
+            <span class="material-symbols-outlined">close</span>
+        </button>
     `;
     
     document.body.appendChild(alert);
     
-    setTimeout(() => {
+    // إضافة صوت التنبيه (اختياري)
+    if (typeof Audio !== 'undefined') {
+        try {
+            const alertSound = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ');
+            alertSound.volume = 0.3;
+            alertSound.play();
+        } catch (e) {
+            // تجاهل أخطاء الصوت
+        }
+    }
+    
+    // إخفاء التنبيه تلقائياً بعد 4 ثواني
+    const timeout = setTimeout(() => {
         if (alert.parentElement) {
             alert.remove();
         }
     }, 4000);
+    
+    // إلغاء الإخفاء التلقائي عند التركيز على التنبيه
+    alert.addEventListener('mouseenter', () => {
+        clearTimeout(timeout);
+    });
+    
+    alert.addEventListener('mouseleave', () => {
+        setTimeout(() => {
+            if (alert.parentElement) {
+                alert.remove();
+            }
+        }, 4000);
+    });
+    
+    // التركيز على زر الإغلاق
+    setTimeout(() => {
+        const closeBtn = alert.querySelector('button');
+        if (closeBtn) {
+            closeBtn.focus();
+        }
+    }, 100);
 }
 
-function showLoadingIndicator(message = 'جاري المعالجة...') {
+function showLoadingIndicator(message = '🔄 جاري المعالجة...') {
+    // إزالة أي مؤشرات تحميل سابقة
     const existingLoader = document.querySelector('.custom-loader');
     if (existingLoader) {
         existingLoader.remove();
     }
     
+    // إنشاء مؤشر التحميل
     const loader = document.createElement('div');
     loader.className = 'custom-loader';
+    loader.setAttribute('role', 'status');
+    loader.setAttribute('aria-live', 'polite');
+    loader.setAttribute('aria-label', 'جاري التحميل');
+    
     loader.innerHTML = `
         <div class="loader-content">
-            <div class="loader-spinner"></div>
+            <div class="loader-spinner" aria-hidden="true"></div>
             <div class="loader-text">${message}</div>
         </div>
     `;
     
     document.body.appendChild(loader);
+    
+    // منع التمرير أثناء التحميل
+    document.body.style.overflow = 'hidden';
 }
 
 function hideLoadingIndicator() {
@@ -904,12 +1091,17 @@ function hideLoadingIndicator() {
     if (loader) {
         loader.remove();
     }
+    
+    // إعادة تفعيل التمرير
+    document.body.style.overflow = '';
 }
 
-// تهيئة النص
+// تهيئة النص والمتغيرات العالمية
 window.currentText = '';
 window.textScale = 1;
 window.textRotation = 0;
+
+// تصدير الوظائف العامة
 window.showPage = showPage;
 window.goBackToImages = goBackToImages;
 window.downloadImage = downloadImage;
@@ -925,3 +1117,81 @@ window.rotateTextCounterClockwise = rotateTextCounterClockwise;
 window.increaseTextSize = increaseTextSize;
 window.decreaseTextSize = decreaseTextSize;
 window.resetText = resetText;
+window.clearTextFromImage = clearTextFromImage;
+
+// تهيئة الإعدادات
+function loadSettings() {
+    const theme = localStorage.getItem('theme') || 'light';
+    const language = localStorage.getItem('language') || 'ar';
+    
+    if (typeof changeTheme === 'function') {
+        changeTheme(theme);
+    }
+    
+    if (typeof changeLanguage === 'function') {
+        changeLanguage(language);
+    }
+    
+    console.log('⚙️ Settings loaded:', { theme, language });
+}
+
+// تسجيل الأخطاء العالمية
+window.addEventListener('error', (e) => {
+    console.error('🌍 Global error:', e.error);
+    showAlert('حدث خطأ غير متوقع. يرجى تحديث الصفحة.', 'error');
+});
+
+// منع إغلاق الصفحة أثناء التعديل
+window.addEventListener('beforeunload', (e) => {
+    if (window.currentText && window.currentText.trim() !== '') {
+        e.preventDefault();
+        e.returnValue = 'لديك تعديلات غير محفوظة. هل تريد المغادرة؟';
+        return e.returnValue;
+    }
+});
+
+// خدمة Worker لتخزين البيانات (اختياري)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('🔧 Service Worker registered:', registration);
+            })
+            .catch(error => {
+                console.log('🔧 Service Worker registration failed:', error);
+            });
+    });
+}
+
+// تهيئة PWA
+if ('standalone' in navigator || window.matchMedia('(display-mode: standalone)').matches) {
+    console.log('📱 Running as PWA');
+    document.documentElement.classList.add('pwa-mode');
+}
+
+// دعم وضع عدم الاتصال
+window.addEventListener('online', () => {
+    showAlert('✅ تم استعادة الاتصال بالإنترنت', 'success');
+});
+
+window.addEventListener('offline', () => {
+    showAlert('⚠️ أنت غير متصل بالإنترنت', 'warning');
+});
+
+// تهيئة تحميل متأخر للصور
+document.addEventListener('DOMContentLoaded', () => {
+    const images = document.querySelectorAll('img[loading="lazy"]');
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+        
+        images.forEach(img => imageObserver.observe(img));
+    }
+});
