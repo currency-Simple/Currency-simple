@@ -280,7 +280,6 @@ function setupEventListeners() {
             
             // تحديث حجم النص فوراً
             window.textScale = value / 50;
-            textScale = window.textScale;
             if (window.currentText && window.currentText.trim() !== '') {
                 renderFullCanvas();
             }
@@ -346,7 +345,7 @@ function handleTouchStart(e) {
         const dx = touch2.clientX - touch1.clientX;
         const dy = touch2.clientY - touch1.clientY;
         initialDistance = Math.sqrt(dx * dx + dy * dy);
-        initialScale = textScale;
+        initialScale = window.textScale || 1;
         initialAngle = Math.atan2(dy, dx);
         
         console.log('بدء التكبير/التصغير - المسافة الأولية:', initialDistance);
@@ -403,13 +402,12 @@ function handleTouchMove(e) {
         // حساب التكبير/التصغير
         if (initialDistance > 0) {
             const scaleMultiplier = currentDistance / initialDistance;
-            textScale = Math.max(0.2, Math.min(3, initialScale * scaleMultiplier));
-            window.textScale = textScale;
+            window.textScale = Math.max(0.2, Math.min(2, initialScale * scaleMultiplier));
             
             // تحديث شريط التحكم
             const fontSizeSlider = document.getElementById('fontSizeSlider');
             if (fontSizeSlider) {
-                const newValue = Math.round(textScale * 50);
+                const newValue = Math.round(window.textScale * 50);
                 fontSizeSlider.value = Math.max(10, Math.min(100, newValue));
                 const display = document.getElementById('fontSizeDisplay');
                 if (display) {
@@ -420,14 +418,13 @@ function handleTouchMove(e) {
         
         // حساب التدوير
         const angleChange = currentAngle - initialAngle;
-        textRotation = (textRotation + angleChange * (180 / Math.PI)) % 360;
-        window.textRotation = textRotation;
+        window.textRotation = (window.textRotation + angleChange * (180 / Math.PI)) % 360;
         initialAngle = currentAngle;
         
         lastRenderTime = now;
         renderFullCanvas();
         
-        console.log('حجم النص:', textScale.toFixed(2));
+        console.log('حجم النص:', window.textScale.toFixed(2));
     }
 }
 
@@ -435,7 +432,7 @@ function handleTouchEnd(e) {
     e.preventDefault();
     
     if (isResizing) {
-        console.log('انتهى التكبير/التصغير - الحجم النهائي:', textScale.toFixed(2));
+        console.log('انتهى التكبير/التصغير - الحجم النهائي:', window.textScale.toFixed(2));
     }
     
     isDragging = false;
@@ -443,7 +440,7 @@ function handleTouchEnd(e) {
     stickerDragging = false;
     selectedSticker = null;
     initialDistance = 0;
-    initialScale = textScale;
+    initialScale = 1;
     initialAngle = 0;
 }
 
@@ -503,7 +500,7 @@ function calculateCanvasDimensions() {
     let targetHeight = containerHeight;
     
     // حساب الأبعاد بناءً على حجم الخلفية
-    if (currentImage && backgroundSize !== 'original' && backgroundSize !== 'cover') {
+    if (backgroundSize !== 'original' && backgroundSize !== 'cover') {
         if (backgroundSize.includes(':')) {
             const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
             const aspectRatio = widthRatio / heightRatio;
@@ -522,6 +519,7 @@ function calculateCanvasDimensions() {
             targetWidth = targetHeight * imageAspect;
         }
     } else if (backgroundSize === 'original' && currentImage) {
+        // استخدام الأبعاد الأصلية مع التكبير للاستفادة من المساحة المتاحة
         const widthRatio = targetWidth / originalImageWidth;
         const heightRatio = targetHeight / originalImageHeight;
         const scale = Math.min(widthRatio, heightRatio, 1);
@@ -578,9 +576,7 @@ function loadImageToEditor(imageUrl) {
         
         textX = 0.5;
         textY = 0.5;
-        textScale = 1;
         window.textScale = 1;
-        textRotation = 0;
         window.textRotation = 0;
         
         // تحديث شريط التحكم
@@ -617,8 +613,10 @@ function renderFullCanvas() {
     isRendering = true;
     
     try {
+        // تنظيف الكانفاس
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
+        // رسم الخلفية أولاً
         if (backgroundColor !== 'transparent') {
             ctx.fillStyle = backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -652,6 +650,7 @@ function renderFullCanvas() {
                 }
             }
             
+            // حساب موضع الصورة في المنتصف
             const x = (canvas.width - imageWidth) / 2;
             const y = (canvas.height - imageHeight) / 2;
             
@@ -670,6 +669,7 @@ function renderFullCanvas() {
                 ctx.filter = currentFilterValue + FILTERS[currentFilter].filter;
             }
             
+            // استخدام جودة عالية
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             
@@ -729,8 +729,9 @@ function renderTextContent() {
     const strokeColor = window.currentStrokeColor || '#000000';
     const cardColor = window.currentCardColor || '#000000';
     
+    // حساب حجم الخط الأساسي بناءً على حجم الكانفاس
     const baseFontSize = Math.min(canvas.width, canvas.height) * 0.08;
-    let finalFontSize = baseFontSize * textScale;
+    let finalFontSize = baseFontSize * (window.textScale || 1);
     
     const fontKey = `${fontFamily}_${finalFontSize}`;
     if (!fontCache.has(fontKey)) {
@@ -770,7 +771,7 @@ function renderTextContent() {
     const centerY = textY * canvas.height;
     
     ctx.translate(centerX, centerY);
-    ctx.rotate(textRotation * Math.PI / 180);
+    ctx.rotate((window.textRotation || 0) * Math.PI / 180);
     
     if (shadowEnabled) {
         ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
@@ -788,282 +789,4 @@ function renderTextContent() {
         const y = -(totalHeight / 2) + (index * lineHeight) + (lineHeight / 2);
         const x = 0;
         
-        const textMetrics = ctx.measureText(line);
-        
-        if (cardEnabled) {
-            const padding = adjustedFontSize * 0.5;
-            const bgWidth = textMetrics.width + (padding * 2);
-            const bgHeight = adjustedFontSize + padding;
-            const bgX = -(bgWidth / 2);
-            const bgY = y - (adjustedFontSize / 2) - (padding / 2);
-            
-            ctx.save();
-            ctx.fillStyle = cardColor;
-            ctx.globalAlpha = bgOpacity / 100;
-            ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
-            ctx.restore();
-        }
-        
-        if (strokeWidth > 0) {
-            ctx.strokeStyle = strokeColor;
-            ctx.lineWidth = strokeWidth;
-            ctx.strokeText(line, x, y);
-        }
-        
-        ctx.fillStyle = textColor;
-        ctx.fillText(line, x, y);
-    });
-    
-    ctx.restore();
-}
-
-function wrapText(text, maxWidth, ctx, fontSize) {
-    if (!text) return [];
-    
-    const cacheKey = `${text}_${maxWidth}_${fontSize}`;
-    if (fontCache.has(cacheKey)) {
-        return fontCache.get(cacheKey);
-    }
-    
-    const words = text.split(' ');
-    const lines = [];
-    let currentLine = words[0] || '';
-    
-    for (let i = 1; i < words.length; i++) {
-        const word = words[i];
-        const width = ctx.measureText(currentLine + " " + word).width;
-        
-        if (width < maxWidth) {
-            currentLine += " " + word;
-        } else {
-            lines.push(currentLine);
-            currentLine = word;
-        }
-    }
-    
-    if (currentLine) {
-        lines.push(currentLine);
-    }
-    
-    fontCache.set(cacheKey, lines);
-    return lines;
-}
-
-function prepareImageForExport() {
-    const exportCanvas = document.createElement('canvas');
-    
-    let exportWidth = originalImageWidth;
-    let exportHeight = originalImageHeight;
-    
-    if (backgroundSize !== 'original') {
-        if (backgroundSize === 'cover') {
-            exportWidth = Math.max(originalImageWidth, 1920);
-            exportHeight = Math.max(originalImageHeight, 1080);
-        } else if (backgroundSize.includes(':')) {
-            const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
-            const aspectRatio = widthRatio / heightRatio;
-            
-            exportWidth = Math.max(originalImageWidth, 1200);
-            exportHeight = Math.round(exportWidth / aspectRatio);
-        } else {
-            exportWidth = Math.max(originalImageWidth, 1200);
-            exportHeight = Math.max(originalImageHeight, 800);
-        }
-    }
-    
-    const borderSpace = imageBorderWidth;
-    exportCanvas.width = exportWidth + (borderSpace * 2);
-    exportCanvas.height = exportHeight + (borderSpace * 2);
-    
-    const exportCtx = exportCanvas.getContext('2d', { 
-        willReadFrequently: false,
-        alpha: true 
-    });
-    
-    exportCtx.imageSmoothingEnabled = true;
-    exportCtx.imageSmoothingQuality = 'high';
-    
-    if (backgroundColor !== 'transparent') {
-        exportCtx.fillStyle = backgroundColor;
-        exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-    }
-    
-    exportCtx.save();
-    
-    let imageWidth = exportWidth;
-    let imageHeight = exportHeight;
-    
-    if (backgroundSize === 'cover') {
-        const imageAspect = originalImageWidth / originalImageHeight;
-        const canvasAspect = imageWidth / imageHeight;
-        
-        if (canvasAspect > imageAspect) {
-            imageHeight = imageWidth / imageAspect;
-        } else {
-            imageWidth = imageHeight * imageAspect;
-        }
-    } else if (backgroundSize !== 'original' && backgroundSize.includes(':')) {
-        const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
-        const aspectRatio = widthRatio / heightRatio;
-        
-        if (imageWidth / imageHeight > aspectRatio) {
-            imageHeight = imageWidth / aspectRatio;
-        } else {
-            imageWidth = imageHeight * aspectRatio;
-        }
-    }
-    
-    const x = (exportCanvas.width - imageWidth) / 2;
-    const y = (exportCanvas.height - imageHeight) / 2;
-    
-    exportCtx.translate(x + imageWidth / 2, y + imageHeight / 2);
-    exportCtx.rotate(imageRotation * Math.PI / 180);
-    
-    if (imageFlipH) exportCtx.scale(-1, 1);
-    if (imageFlipV) exportCtx.scale(1, -1);
-    
-    if (imageBlur > 0) {
-        exportCtx.filter = `blur(${imageBlur}px)`;
-    }
-    
-    if (currentFilter !== 'none' && FILTERS[currentFilter]) {
-        const currentFilterValue = exportCtx.filter !== 'none' ? exportCtx.filter + ' ' : '';
-        exportCtx.filter = currentFilterValue + FILTERS[currentFilter].filter;
-    }
-    
-    exportCtx.drawImage(currentImage, -imageWidth / 2, -imageHeight / 2, imageWidth, imageHeight);
-    
-    exportCtx.filter = 'none';
-    exportCtx.restore();
-    
-    if (borderSpace > 0) {
-        exportCtx.strokeStyle = imageBorderColor;
-        exportCtx.lineWidth = borderSpace;
-        exportCtx.lineCap = 'square';
-        exportCtx.lineJoin = 'miter';
-        
-        exportCtx.strokeRect(
-            borderSpace / 2,
-            borderSpace / 2,
-            exportCanvas.width - borderSpace,
-            exportCanvas.height - borderSpace
-        );
-    }
-    
-    canvasStickers.forEach(sticker => {
-        exportCtx.save();
-        const scaleX = exportCanvas.width / canvas.width;
-        const scaleY = exportCanvas.height / canvas.height;
-        const x = sticker.x * scaleX;
-        const y = sticker.y * scaleY;
-        const w = sticker.width * scaleX;
-        const h = sticker.height * scaleY;
-        exportCtx.translate(x + w / 2, y + h / 2);
-        exportCtx.rotate(sticker.rotation * Math.PI / 180);
-        exportCtx.drawImage(sticker.img, -w / 2, -h / 2, w, h);
-        exportCtx.restore();
-    });
-    
-    if (window.currentText && window.currentText.trim() !== '') {
-        exportCtx.save();
-        
-        const strokeWidth = parseInt(document.getElementById('strokeWidth')?.value || "3");
-        const shadowEnabled = document.getElementById('shadowEnabled')?.checked !== false;
-        const cardEnabled = document.getElementById('cardEnabled')?.checked || false;
-        const fontFamily = window.currentFontFamily || "'ABeeZee', sans-serif";
-        
-        const textColor = window.currentTextColor || '#FFFFFF';
-        const strokeColor = window.currentStrokeColor || '#000000';
-        const cardColor = window.currentCardColor || '#000000';
-        
-        const baseFontSize = Math.min(exportCanvas.width, exportCanvas.height) * 0.08;
-        const scaledFontSize = baseFontSize * textScale;
-        
-        exportCtx.font = 'bold ' + scaledFontSize + 'px ' + fontFamily;
-        exportCtx.textAlign = 'center';
-        exportCtx.textBaseline = 'middle';
-        exportCtx.direction = 'rtl';
-        
-        const maxLineWidth = exportCanvas.width * 0.9;
-        const lines = wrapText(window.currentText, maxLineWidth, exportCtx, scaledFontSize);
-        
-        const lineHeight = scaledFontSize * 1.4;
-        const totalHeight = lines.length * lineHeight;
-        const centerX = textX * exportCanvas.width;
-        const centerY = textY * exportCanvas.height;
-        
-        exportCtx.translate(centerX, centerY);
-        exportCtx.rotate(textRotation * Math.PI / 180);
-        
-        if (shadowEnabled) {
-            exportCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-            exportCtx.shadowBlur = shadowIntensity;
-            exportCtx.shadowOffsetX = shadowIntensity / 2;
-            exportCtx.shadowOffsetY = shadowIntensity / 2;
-        }
-        
-        lines.forEach((line, index) => {
-            const y = -(totalHeight / 2) + (index * lineHeight) + (lineHeight / 2);
-            const x = 0;
-            
-            const textMetrics = exportCtx.measureText(line);
-            
-            if (cardEnabled) {
-                const padding = scaledFontSize * 0.5;
-                const bgWidth = textMetrics.width + (padding * 2);
-                const bgHeight = scaledFontSize + padding;
-                const bgX = -(bgWidth / 2);
-                const bgY = y - (scaledFontSize / 2) - (padding / 2);
-                
-                exportCtx.save();
-                exportCtx.fillStyle = cardColor;
-                exportCtx.globalAlpha = bgOpacity / 100;
-                exportCtx.fillRect(bgX, bgY, bgWidth, bgHeight);
-                exportCtx.restore();
-            }
-            
-            if (strokeWidth > 0) {
-                exportCtx.strokeStyle = strokeColor;
-                exportCtx.lineWidth = strokeWidth;
-                exportCtx.strokeText(line, x, y);
-            }
-            
-            exportCtx.fillStyle = textColor;
-            exportCtx.fillText(line, x, y);
-        });
-        
-        exportCtx.restore();
-    }
-    
-    return exportCanvas;
-}
-
-function setBorderColor(color) {
-    imageBorderColor = color;
-    window.imageBorderColor = color;
-    console.log('✓ تم تغيير لون حواف الصورة إلى:', color);
-    renderFullCanvas();
-}
-
-function updateBackground() {
-    backgroundColor = window.currentBackgroundColor || '#FFFFFF';
-    backgroundSize = window.currentBackgroundSize || 'original';
-    adjustImageForBorder();
-    renderFullCanvas();
-}
-
-// تصدير جميع الدوال المهمة
-window.prepareImageForExport = prepareImageForExport;
-window.renderFullCanvas = renderFullCanvas;
-window.renderTextOnCanvas = renderFullCanvas;
-window.updateTextOnCanvas = updateTextOnCanvas;
-window.loadImageToEditor = loadImageToEditor;
-window.addSticker = addSticker;
-window.deleteSelectedSticker = deleteSelectedSticker;
-window.rotateImage = rotateImage;
-window.flipImageH = flipImageH;
-window.flipImageV = flipImageV;
-window.applyFilter = applyFilter;
-window.setBorderColor = setBorderColor;
-window.updateBackground = updateBackground;
-window.FILTERS = FILTERS;
+        const textMetrics = ctx.
