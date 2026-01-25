@@ -1,52 +1,71 @@
-// قائمة الخطوط مع خطوط افتراضية مضمونة
+// قائمة الخطوط من Bunny Fonts
 const ALL_FONTS = [
-    { name: "Arial Arabic", family: "Arial, sans-serif", demo: "نص تجريبي", weight: "bold" },
-    { name: "Tahoma Arabic", family: "Tahoma, Geneva, sans-serif", demo: "خط عربي", weight: "bold" },
-    { name: "Amatic SC", family: "'Amatic SC', cursive", demo: "Creative", weight: "700" },
-    { name: "Anton", family: "'Anton', sans-serif", demo: "BOLD", weight: "400" },
-    { name: "Archivo Black", family: "'Archivo Black', sans-serif", demo: "Heavy", weight: "400" },
-    { name: "Archivo", family: "'Archivo', sans-serif", demo: "Modern", weight: "600" },
-    { name: "Audiowide", family: "'Audiowide', sans-serif", demo: "Tech", weight: "400" },
-    { name: "Badeen Display", family: "'Badeen Display', display", demo: "عرض", weight: "400" },
-    { name: "Bangers", family: "'Bangers', system-ui", demo: "POP!", weight: "400" },
-    { name: "Bebas Neue", family: "'Bebas Neue', sans-serif", demo: "TITLE", weight: "400" },
-    { name: "Bitcount", family: "'Bitcount Single', monospace", demo: "01010", weight: "400" },
-    { name: "Buda", family: "'Buda', display", demo: "Unique", weight: "300" },
-    { name: "Cairo Play", family: "'Cairo Play', sans-serif", demo: "قاهرة", weight: "600" },
-    { name: "Creepster", family: "'Creepster', system-ui", demo: "Scary", weight: "400" },
-    { name: "Dancing Script", family: "'Dancing Script', cursive", demo: "Dance", weight: "700" },
-    { name: "Eater", family: "'Eater', system-ui", demo: "Horror", weight: "400" },
-    { name: "Edu Hand", family: "'Edu SA Hand', cursive", demo: "Hand", weight: "700" },
-    { name: "Fjalla One", family: "'Fjalla One', sans-serif", demo: "Strong", weight: "400" },
-    { name: "Fredericka", family: "'Fredericka the Great', serif", demo: "Great", weight: "400" },
-    { name: "Gravitas One", family: "'Gravitas One', serif", demo: "Heavy", weight: "400" },
-    { name: "Lalezar", family: "'Lalezar', system-ui", demo: "لاله زار", weight: "400" },
-    { name: "Lobster Two", family: "'Lobster Two', serif", demo: "Fancy", weight: "700" },
-    { name: "Macondo", family: "'Macondo', system-ui", demo: "Fun", weight: "400" },
-    { name: "Mada", family: "'Mada', sans-serif", demo: "مدى", weight: "700" },
-    { name: "Momo Signature", family: "'Momo Signature', cursive", demo: "Sign", weight: "400" },
-    { name: "Monoton", family: "'Monoton', system-ui", demo: "LINE", weight: "400" },
-    { name: "Moo Lah Lah", family: "'Moo Lah Lah', system-ui", demo: "Moo", weight: "400" },
-    { name: "Noto Nastaliq", family: "'Noto Nastaliq Urdu', serif", demo: "نستعلیق", weight: "700" },
-    { name: "Noto Serif", family: "'Noto Serif', serif", demo: "Classic", weight: "700" },
-    { name: "Oswald", family: "'Oswald', sans-serif", demo: "Clean", weight: "700" },
-    { name: "Pacifico", family: "'Pacifico', cursive", demo: "Beach", weight: "400" },
-    { name: "Playfair", family: "'Playfair Display', serif", demo: "Elegant", weight: "700" },
-    { name: "Playwrite GB", family: "'Playwrite GB J Guides', cursive", demo: "Write", weight: "400" },
-    { name: "Reem Kufi", family: "'Reem Kufi', sans-serif", demo: "ريم كوفي", weight: "700" },
-    { name: "Rock Salt", family: "'Rock Salt', cursive", demo: "Rock", weight: "400" },
-    { name: "Rubik Storm", family: "'Rubik Storm', system-ui", demo: "Storm", weight: "400" },
-    { name: "Ruwudu", family: "'Ruwudu', serif", demo: "روودو", weight: "700" },
-    { name: "Gothic Condensed", family: "'Special Gothic Condensed One', sans-serif", demo: "Thin", weight: "400" },
-    { name: "Gothic Expanded", family: "'Special Gothic Expanded One', sans-serif", demo: "Wide", weight: "400" },
-    { name: "Zalando Sans", family: "'Zalando Sans Expanded', sans-serif", demo: "Expand", weight: "600" }
+    { name: "ABeeZee", family: "'ABeeZee', sans-serif", demo: "نص تجريبي" },
+    { name: "Abhaya Libre", family: "'Abhaya Libre', serif", demo: "خط عربي" },
+    { name: "Aboreto", family: "'Aboreto', display", demo: "Creative" },
+    { name: "Abril Fatface", family: "'Abril Fatface', serif", demo: "Elegant" },
+    { name: "Abyssinica SIL", family: "'Abyssinica SIL', serif", demo: "Ethiopic" },
+    { name: "Aclonica", family: "'Aclonica', sans-serif", demo: "Modern" },
+    { name: "Acme", family: "'Acme', sans-serif", demo: "Clean" },
+    { name: "Advent Pro", family: "'Advent Pro', sans-serif", demo: "Light" },
+    { name: "Aguafina Script", family: "'Aguafina Script', cursive", demo: "Script" },
+    { name: "Akaya Telivigala", family: "'Akaya Telivigala', display", demo: "Telugu" },
+    { name: "Akronim", family: "'Akronim', display", demo: "Stylish" },
+    { name: "Aladin", family: "'Aladin', cursive", demo: "Fantasy" },
+    { name: "Aldrich", family: "'Aldrich', sans-serif", demo: "Tech" },
+    { name: "Alegreya", family: "'Alegreya', serif", demo: "Serif" },
+    { name: "Alegreya SC", family: "'Alegreya SC', serif", demo: "Small Caps" },
+    { name: "Alex Brush", family: "'Alex Brush', cursive", demo: "Handwriting" },
+    { name: "Alfa Slab One", family: "'Alfa Slab One', serif", demo: "Slab" },
+    { name: "Allan", family: "'Allan', cursive", demo: "Cursive" },
+    { name: "Almendra", family: "'Almendra', serif", demo: "Classic" },
+    { name: "Almendra SC", family: "'Almendra SC', serif", demo: "Small Caps" },
+    { name: "Alumni Sans", family: "'Alumni Sans', sans-serif", demo: "Sans" },
+    { name: "Alumni Sans Inline", family: "'Alumni Sans Inline One', display", demo: "Inline" },
+    { name: "Amatic SC", family: "'Amatic SC', cursive", demo: "Handwriting" },
+    { name: "Amita", family: "'Amita', cursive", demo: "Devanagari" },
+    { name: "Arbutus", family: "'Arbutus', serif", demo: "Serif" },
+    { name: "Architects Daughter", family: "'Architects Daughter', cursive", demo: "Handwriting" },
+    { name: "Are You Serious", family: "'Are You Serious', cursive", demo: "Fun" },
+    { name: "Aref Ruqaa", family: "'Aref Ruqaa', serif", demo: "Arabic" },
+    { name: "Asset", family: "'Asset', display", demo: "Display" },
+    { name: "Astloch", family: "'Astloch', serif", demo: "Serif" },
+    { name: "Atomic Age", family: "'Atomic Age', display", demo: "Retro" },
+    { name: "Aubrey", family: "'Aubrey', display", demo: "Display" },
+    { name: "Audiowide", family: "'Audiowide', monospace", demo: "Tech" },
+    { name: "Bahiana", family: "'Bahiana', display", demo: "Display" },
+    { name: "Bakbak One", family: "'Bakbak One', sans-serif", demo: "Sans" },
+    { name: "Ballet", family: "'Ballet', cursive", demo: "Elegant" },
+    { name: "Bangers", family: "'Bangers', cursive", demo: "Comic" },
+    { name: "Barriecito", family: "'Barriecito', display", demo: "Display" },
+    { name: "Beau Rivage", family: "'Beau Rivage', cursive", demo: "Handwriting" },
+    { name: "Berkshire Swash", family: "'Berkshire Swash', cursive", demo: "Swash" },
+    { name: "Beth Ellen", family: "'Beth Ellen', cursive", demo: "Cursive" },
+    { name: "Bhutuka Expanded", family: "'Bhutuka Expanded One', sans-serif", demo: "Expanded" },
+    { name: "Big Shoulders Display", family: "'Big Shoulders Display', sans-serif", demo: "Display" },
+    { name: "Bigelow Rules", family: "'Bigelow Rules', serif", demo: "Rules" },
+    { name: "Black And White Picture", family: "'Black And White Picture', sans-serif", demo: "Korean" },
+    { name: "Bonbon", family: "'Bonbon', cursive", demo: "Cursive" },
+    { name: "Bungee Inline", family: "'Bungee Inline', display", demo: "Inline" },
+    { name: "Bungee Outline", family: "'Bungee Outline', display", demo: "Outline" },
+    { name: "Bungee Shade", family: "'Bungee Shade', display", demo: "Shade" },
+    { name: "Butcherman", family: "'Butcherman', display", demo: "Horror" },
+    { name: "Caesar Dressing", family: "'Caesar Dressing', display", demo: "Roman" },
+    { name: "Damion", family: "'Damion', cursive", demo: "Cursive" },
+    { name: "Dr Sugiyama", family: "'Dr Sugiyama', cursive", demo: "Script" },
+    { name: "Faster One", family: "'Faster One', cursive", demo: "Speed" },
+    { name: "Fleur De Leah", family: "'Fleur De Leah', cursive", demo: "Elegant" },
+    { name: "Hanalei", family: "'Hanalei', display", demo: "Display" },
+    { name: "Libre Barcode 39 Text", family: "'Libre Barcode 39 Text', display", demo: "Barcode" },
+    { name: "Monofett", family: "'Monofett', monospace", demo: "Monospace" },
+    { name: "Monoton", family: "'Monoton', cursive", demo: "Display" },
+    { name: "Mrs Sheppards", family: "'Mrs Sheppards', cursive", demo: "Victorian" },
+    { name: "Nosifer", family: "'Nosifer', display", demo: "Horror" },
+    { name: "Rubik Beastly", family: "'Rubik Beastly', display", demo: "Beastly" },
+    { name: "Sixtyfour", family: "'Sixtyfour', monospace", demo: "Pixel" }
 ];
 
 let currentFontFamily = ALL_FONTS[0].family;
-let currentFontWeight = ALL_FONTS[0].weight;
-
-// ذاكرة مؤقتة للخطوط المحملة
-const loadedFonts = new Set();
 
 // تهيئة قائمة الخطوط
 function initializeFonts() {
@@ -64,70 +83,23 @@ function initializeFonts() {
         fontItem.className = 'font-item';
         if (index === 0) fontItem.classList.add('selected');
         
-        fontItem.onclick = () => selectFont(font.family, font.weight, fontItem);
+        fontItem.onclick = () => selectFont(font.family, fontItem);
         
         const fontSample = document.createElement('span');
         fontSample.style.fontFamily = font.family;
-        fontSample.style.fontWeight = font.weight;
         fontSample.textContent = font.demo;
-        
-        // تحميل الخط عند النقر
-        fontItem.addEventListener('click', () => {
-            loadFont(font.family);
-        });
         
         fontItem.appendChild(fontSample);
         fontGrid.appendChild(fontItem);
     });
     
-    // تحميل الخط الافتراضي أولاً
-    loadFont(ALL_FONTS[0].family);
-    
     console.log('✓ تم تحميل', ALL_FONTS.length, 'خط');
 }
 
-// تحميل خط واحد فقط عند الحاجة
-function loadFont(fontFamily) {
-    if (loadedFonts.has(fontFamily)) {
-        return;
-    }
-    
-    loadedFonts.add(fontFamily);
-    console.log('🔄 جاري تحميل الخط:', fontFamily);
-    
-    // استخدام Web Font Loader لضمان التحميل
-    if (typeof WebFont !== 'undefined') {
-        WebFont.load({
-            google: {
-                families: [fontFamily]
-            },
-            active: () => {
-                console.log('✓ تم تحميل الخط:', fontFamily);
-                if (window.currentText && window.currentText.trim() !== '') {
-                    setTimeout(() => {
-                        if (typeof renderFullCanvas === 'function') {
-                            renderFullCanvas();
-                        }
-                    }, 100);
-                }
-            }
-        });
-    } else {
-        // طريقة احتياطية
-        const link = document.createElement('link');
-        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}&display=swap`;
-        link.rel = 'stylesheet';
-        link.onload = () => {
-            console.log('✓ تم تحميل الخط (احتياطي):', fontFamily);
-        };
-        document.head.appendChild(link);
-    }
-}
-
 // اختيار خط
-function selectFont(fontFamily, fontWeight, fontElement) {
+function selectFont(fontFamily, fontElement) {
     currentFontFamily = fontFamily;
-    currentFontWeight = fontWeight;
+    window.currentFontFamily = fontFamily;
     
     // تحديث واجهة المستخدم
     document.querySelectorAll('.font-item').forEach(item => {
@@ -140,31 +112,36 @@ function selectFont(fontFamily, fontWeight, fontElement) {
     
     // تحديث النص على الكانفاس
     if (window.currentText && window.currentText.trim() !== '') {
-        setTimeout(() => {
-            if (typeof renderFullCanvas === 'function') {
-                renderFullCanvas();
-            }
-        }, 50);
+        if (typeof renderFullCanvas === 'function') {
+            renderFullCanvas();
+        }
     }
     
     console.log('✓ تم اختيار الخط:', fontFamily);
 }
 
-// تحميل Web Font Loader
-(function() {
-    const wf = document.createElement('script');
-    wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
-    wf.async = true;
-    wf.onload = function() {
-        console.log('Web Font Loader جاهز');
-        initializeFonts();
-    };
-    document.head.appendChild(wf);
-})();
+// تحميل الخطوط عند بدء التطبيق
+window.addEventListener('DOMContentLoaded', () => {
+    console.log('⏳ جاري تحميل الخطوط...');
+    
+    // التأكد من تحميل الخطوط
+    if (document.fonts) {
+        document.fonts.ready.then(() => {
+            console.log('✓ تم تحميل جميع الخطوط');
+            setTimeout(() => {
+                initializeFonts();
+            }, 300);
+        });
+    } else {
+        // متصفح قديم - تحميل مباشر
+        setTimeout(() => {
+            initializeFonts();
+        }, 1000);
+    }
+});
 
 // تصدير الدوال والمتغيرات
 window.initializeFonts = initializeFonts;
 window.selectFont = selectFont;
 window.currentFontFamily = currentFontFamily;
-window.currentFontWeight = currentFontWeight;
 window.ALL_FONTS = ALL_FONTS;
