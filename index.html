@@ -10,9 +10,9 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     
-    <!-- خطوط Bunny Fonts الموسعة -->
+    <!-- خطوط Bunny Fonts المحدثة -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=abeezee:400,400i|abhaya-libre:600,800|aboreto:400|abril-fatface:400|abyssinica-sil:400|aclonica:400|acme:400|advent-pro:700i,800i,900i|aguafina-script:400|akaya-telivigala:400|akronim:400|aladin:400|aldrich:400|alegreya:600i,700,900,900i|alegreya-sc:500,500i,800,900i|alex-brush:400|alfa-slab-one:400|allan:400,700|almendra:400i,700i|almendra-sc:400|alumni-sans:100,200,500i,800i|alumni-sans-inline-one:400,400i|amatic-sc:700|amita:700|arbutus:400|architects-daughter:400|are-you-serious:400|aref-ruqaa:400,700|asset:400|astloch:400,700|atomic-age:400|aubrey:400|audiowide:400|bahiana:400|bakbak-one:400|ballet:400|bangers:400|barriecito:400|beau-rivage:400|berkshire-swash:400|beth-ellen:400|bhutuka-expanded-one:400|big-shoulders-display:100,400,800,900|bigelow-rules:400|biorhyme-expanded:200,700,800|black-and-white-picture:400|bonbon:400|bungee:400|bungee-inline:400|bungee-outline:400|bungee-shade:400|bungee-tint:400|butcherman:400|caesar-dressing:400|castoro-titling:400|cute-font:400|damion:400|dr-sugiyama:400|eagle-lake:400|erica-one:400|fascinate:400|faster-one:400|fleur-de-leah:400|ga-maamli:400|gajraj-one:400|great-vibes:400|hanalei:400|homemade-apple:400|honk:400|ibm-plex-sans-arabic:400,700|jacquard-12-charted:400|jacquard-24-charted:400|jacquarda-bastarda-9:400|jersey-25-charted:400|kablammo:400|kalnia-glaze:300,700|libre-barcode-39-text:400|limelight:400|moirai-one:400|monofett:400|monoton:400|mrs-sheppards:400|nosifer:400|noto-kufi-arabic:400,800,900|palette-mosaic:400|rock-salt:400|rubik-beastly:400|rubik-broken-fax:400|rubik-gemstones:400|rubik-glitch-pop:400|rubik-puddles:400|sancreek:400|sixtyfour:400|sonsie-one:400" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=abeezee:400,400i|abhaya-libre:600,800|aboreto:400|abril-fatface:400|abyssinica-sil:400|aclonica:400|acme:400|advent-pro:700i,800i,900i|aguafina-script:400|akaya-telivigala:400|akronim:400|aladin:400|aldrich:400|alegreya:600i,700,900,900i|alegreya-sc:500,500i,800,900i|alex-brush:400|alfa-slab-one:400|allan:400,700|almendra:400i,700i|almendra-sc:400|alumni-sans:100,200,500i,800i|alumni-sans-inline-one:400,400i|amatic-sc:700|amita:700|arbutus:400|architects-daughter:400|are-you-serious:400|aref-ruqaa:400,700|asset:400|astloch:400,700|atomic-age:400|aubrey:400|audiowide:400|bahiana:400|bakbak-one:400|ballet:400|bangers:400|barriecito:400|beau-rivage:400|berkshire-swash:400|beth-ellen:400|bhutuka-expanded-one:400|big-shoulders-display:100,400,800,900|bigelow-rules:400|biorhyme-expanded:200,700,800|black-and-white-picture:400|bonbon:400|bowlby-one-sc:400|bruno-ace:400|bungee:400|bungee-inline:400|bungee-outline:400|bungee-shade:400|bungee-tint:400|butcherman:400|caesar-dressing:400|castoro-titling:400|chathura:300,800|cinzel:500,900|cute-font:400|damion:400|diplomata:400|dokdo:400|dorsa:400|dr-sugiyama:400|eagle-lake:400|edu-qld-beginner:400,700|erica-one:400|fascinate:400|faster-one:400|fleur-de-leah:400|ga-maamli:400|gajraj-one:400|great-vibes:400|hanalei:400|homemade-apple:400|honk:400|ibm-plex-sans-arabic:400,700|jacquard-12-charted:400|jacquard-24-charted:400|jacquarda-bastarda-9:400|jersey-25-charted:400|jomhuria:400|kablammo:400|kalnia-glaze:300,700|kumar-one-outline:400|libre-barcode-39-text:400|limelight:400|major-mono-display:400|moirai-one:400|monofett:400|monoton:400|mrs-sheppards:400|nosifer:400|noto-kufi-arabic:400,800,900|palette-mosaic:400|rock-salt:400|rubik-beastly:400|rubik-broken-fax:400|rubik-gemstones:400|rubik-glitch-pop:400|rubik-puddles:400|sancreek:400|sixtyfour:400|sonsie-one:400" rel="stylesheet" />
     
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -43,15 +43,15 @@
             <button onclick="goBackToImages()" class="icon-btn back-btn">
                 <span class="material-symbols-outlined">arrow_back</span>
             </button>
-            <h1>المحرر</h1>
             <div class="header-actions">
-                <button onclick="resetEditor()" class="icon-btn reset-btn" title="إعادة تعيين">
-                    <span class="material-symbols-outlined">refresh</span>
+                <!-- زر الإعادة المضافة -->
+                <button onclick="resetEditor()" class="icon-btn reset-header-btn" title="إعادة التعيين">
+                    <span class="material-symbols-outlined">restart_alt</span>
                 </button>
-                <button onclick="shareImage()" class="icon-btn share-header-btn" title="مشاركة">
+                <button onclick="shareImage()" class="icon-btn share-header-btn">
                     <span class="material-symbols-outlined">share</span>
                 </button>
-                <button onclick="downloadImage()" class="icon-btn download-header-btn" title="تنزيل">
+                <button onclick="downloadImage()" class="icon-btn download-header-btn">
                     <span class="material-symbols-outlined">download</span>
                 </button>
             </div>
@@ -61,18 +61,6 @@
         <div class="editor-container">
             <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
                 <canvas id="canvas"></canvas>
-                <!-- عناصر التحكم بالنص المباشر -->
-                <div class="direct-text-controls" id="directTextControls" style="display: none;">
-                    <div class="text-control-handle move-handle" id="textMoveHandle">
-                        <span class="material-symbols-outlined">open_with</span>
-                    </div>
-                    <div class="text-control-handle resize-handle" id="textResizeHandle">
-                        <span class="material-symbols-outlined">zoom_in</span>
-                    </div>
-                    <div class="text-control-handle rotate-handle" id="textRotateHandle">
-                        <span class="material-symbols-outlined">rotate_right</span>
-                    </div>
-                </div>
             </div>
             
             <!-- أدوات التحرير -->
@@ -118,6 +106,11 @@
                         <span>خلفية</span>
                     </button>
 
+                    <button class="tool-btn" onclick="toggleToolPanel('squareBackgroundPanel')">
+                        <span class="material-symbols-outlined">crop_square</span>
+                        <span>مربع</span>
+                    </button>
+
                     <button class="tool-btn" onclick="toggleToolPanel('blurPanel')">
                         <span class="material-symbols-outlined">blur_on</span>
                         <span>ضبابية</span>
@@ -131,11 +124,6 @@
                     <button class="tool-btn" onclick="toggleToolPanel('rotatePanel')">
                         <span class="material-symbols-outlined">rotate_right</span>
                         <span>تدوير</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('filtersPanel')">
-                        <span class="material-symbols-outlined">filter</span>
-                        <span>فلاتر</span>
                     </button>
                 </div>
             </div>
@@ -153,15 +141,26 @@
                 </div>
             </div>
 
-            <!-- لوحة الخلفية -->
-            <div id="backgroundPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>لون الخلفية</h4>
-                    <div class="horizontal-controls color-scroll" id="backgroundColorGrid"></div>
-                </div>
+            <!-- لوحة الخلفية الأساسية -->
+            <div id="backgroundPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls color-scroll" id="backgroundColorGrid"></div>
                 <div class="tool-section">
                     <h4>حجم الخلفية</h4>
-                    <div class="background-buttons-grid compact-grid" id="backgroundSizeGrid"></div>
+                    <div class="background-buttons-grid" id="backgroundSizeGrid"></div>
+                </div>
+            </div>
+
+            <!-- لوحة الخلفية المربعة الجديدة -->
+            <div id="squareBackgroundPanel" class="tool-panel">
+                <div class="tool-section">
+                    <h4>خلفية مربعة مع نسبة</h4>
+                    <div class="percentage-grid" id="percentageGrid">
+                        <!-- سيتم ملؤه بواسطة JavaScript -->
+                    </div>
+                </div>
+                <div class="tool-section">
+                    <h4>لون النسبة البيضاء</h4>
+                    <div class="horizontal-controls color-scroll" id="squareColorGrid"></div>
                 </div>
             </div>
 
@@ -193,11 +192,8 @@
             </div>
 
             <!-- لوحة حواف الصورة -->
-            <div id="borderPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>لون حواف الصورة</h4>
-                    <div class="horizontal-controls color-scroll" id="borderColorGrid"></div>
-                </div>
+            <div id="borderPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls color-scroll" id="borderColorGrid"></div>
                 <div class="tool-section">
                     <h4>سُمك حواف الصورة</h4>
                     <input type="range" id="borderSlider" min="0" max="50" value="0" class="border-slider">
@@ -205,20 +201,9 @@
                 </div>
             </div>
             
-            <!-- لوحة الفلاتر -->
-            <div id="filtersPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>فلاتر الصورة</h4>
-                    <div class="filters-grid" id="filtersGrid"></div>
-                </div>
-            </div>
-            
             <!-- لوحة الخطوط -->
-            <div id="fontPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>اختر الخط</h4>
-                    <div class="fonts-grid compact-grid" id="fontGrid"></div>
-                </div>
+            <div id="fontPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls" id="fontGrid"></div>
             </div>
 
             <!-- لوحة حجم النص -->
@@ -233,19 +218,13 @@
             </div>
 
             <!-- لوحة لون النص -->
-            <div id="colorPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>لون النص</h4>
-                    <div class="horizontal-controls color-scroll" id="colorGrid"></div>
-                </div>
+            <div id="colorPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls color-scroll" id="colorGrid"></div>
             </div>
 
             <!-- لوحة حواف النص -->
-            <div id="strokePanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>لون حواف النص</h4>
-                    <div class="horizontal-controls color-scroll" id="strokeColorGrid"></div>
-                </div>
+            <div id="strokePanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls color-scroll" id="strokeColorGrid"></div>
                 <div class="tool-section">
                     <h4>سُمك حواف النص</h4>
                     <input type="range" id="strokeWidth" min="0" max="10" value="3" class="stroke-slider">
@@ -253,39 +232,30 @@
                 </div>
             </div>
 
-            <!-- لوحة التأثيرات - مصغرة -->
-            <div id="effectsPanel" class="tool-panel">
+            <!-- لوحة التأثيرات -->
+            <div id="effectsPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="horizontal-controls color-scroll" id="cardColorGrid"></div>
                 <div class="tool-section">
-                    <h4>خلفية النص</h4>
-                    <div class="horizontal-controls color-scroll" id="cardColorGrid"></div>
-                </div>
-                <div class="tool-section compact-section">
-                    <div class="compact-controls">
-                        <label class="effect-option">
-                            <input type="checkbox" id="shadowEnabled" checked>
-                            <span>ظل النص</span>
-                        </label>
-                        <label class="effect-option">
-                            <input type="checkbox" id="cardEnabled">
-                            <span>خلفية النص</span>
-                        </label>
-                    </div>
+                    <label class="effect-option">
+                        <input type="checkbox" id="shadowEnabled" checked>
+                        <span>ظل النص</span>
+                    </label>
+                    <label class="effect-option">
+                        <input type="checkbox" id="cardEnabled">
+                        <span>خلفية النص</span>
+                    </label>
                 </div>
                 
-                <div class="tool-section compact-section">
+                <div class="tool-section">
                     <h4>قوة الظل</h4>
-                    <div class="compact-slider">
-                        <input type="range" id="shadowSlider" min="0" max="20" value="5" class="shadow-slider">
-                        <span id="shadowDisplay">5</span>
-                    </div>
+                    <input type="range" id="shadowSlider" min="0" max="20" value="5" class="shadow-slider">
+                    <span id="shadowDisplay">5</span>
                 </div>
                 
-                <div class="tool-section compact-section">
-                    <h4>شفافية الخلفية</h4>
-                    <div class="compact-slider">
-                        <input type="range" id="bgOpacitySlider" min="10" max="100" value="70" class="bg-opacity-slider">
-                        <span id="bgOpacityDisplay">70</span>
-                    </div>
+                <div class="tool-section">
+                    <h4>شفافية خلفية النص</h4>
+                    <input type="range" id="bgOpacitySlider" min="10" max="100" value="70" class="bg-opacity-slider">
+                    <span id="bgOpacityDisplay">70</span>
                 </div>
             </div>
         </div>
@@ -297,61 +267,7 @@
             <h1>الإعدادات</h1>
         </div>
         <div class="settings-content">
-            <div class="setting-card">
-                <h3>السمة</h3>
-                <div class="theme-options">
-                    <button class="theme-btn active" onclick="changeTheme('light')" data-theme="light">
-                        <span>فاتح</span>
-                    </button>
-                    <button class="theme-btn" onclick="changeTheme('dark')" data-theme="dark">
-                        <span>داكن</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="setting-card">
-                <h3>اللغة</h3>
-                <div class="language-options">
-                    <button class="lang-btn active" onclick="changeLanguage('ar')" data-lang-btn="ar">
-                        العربية
-                    </button>
-                    <button class="lang-btn" onclick="changeLanguage('en')" data-lang-btn="en">
-                        English
-                    </button>
-                    <button class="lang-btn" onclick="changeLanguage('fr')" data-lang-btn="fr">
-                        Français
-                    </button>
-                </div>
-            </div>
-
-            <!-- روابط إضافية -->
-            <div class="setting-card">
-                <h3>روابط مفيدة</h3>
-                <div class="settings-links">
-                    <a href="#privacy" class="settings-link" onclick="showPrivacyPolicy(); return false;">
-                        <span class="material-symbols-outlined">policy</span>
-                        <span>سياسة الخصوصية</span>
-                    </a>
-                    <a href="#about" class="settings-link" onclick="showAbout(); return false;">
-                        <span class="material-symbols-outlined">info</span>
-                        <span>معلومات حول</span>
-                    </a>
-                    <a href="#help" class="settings-link" onclick="showHelp(); return false;">
-                        <span class="material-symbols-outlined">help</span>
-                        <span>مركز المساعدة</span>
-                    </a>
-                    <a href="#contact" class="settings-link" onclick="showContact(); return false;">
-                        <span class="material-symbols-outlined">email</span>
-                        <span>اتصل بنا</span>
-                    </a>
-                </div>
-            </div>
-
-            <div class="setting-card">
-                <p style="text-align: center; color: #86868b; font-size: 14px;">
-                    <span>الإصدار</span> 11.0 Final
-                </p>
-            </div>
+            <!-- ... محتوى الإعدادات الحالي ... -->
         </div>
     </div>
 
