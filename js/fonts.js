@@ -1,4 +1,4 @@
-// قائمة الخطوط من Bunny Fonts
+// قائمة الخطوط الموسعة من Bunny Fonts
 const ALL_FONTS = [
     { name: "ABeeZee", family: "'ABeeZee', sans-serif", demo: "نص تجريبي" },
     { name: "Abhaya Libre", family: "'Abhaya Libre', serif", demo: "خط عربي" },
@@ -44,25 +44,56 @@ const ALL_FONTS = [
     { name: "Bhutuka Expanded", family: "'Bhutuka Expanded One', sans-serif", demo: "Expanded" },
     { name: "Big Shoulders Display", family: "'Big Shoulders Display', sans-serif", demo: "Display" },
     { name: "Bigelow Rules", family: "'Bigelow Rules', serif", demo: "Rules" },
+    { name: "Biorhyme Expanded", family: "'Biorhyme Expanded', serif", demo: "Expanded" },
     { name: "Black And White Picture", family: "'Black And White Picture', sans-serif", demo: "Korean" },
     { name: "Bonbon", family: "'Bonbon', cursive", demo: "Cursive" },
+    { name: "Bungee", family: "'Bungee', cursive", demo: "Bold" },
     { name: "Bungee Inline", family: "'Bungee Inline', display", demo: "Inline" },
     { name: "Bungee Outline", family: "'Bungee Outline', display", demo: "Outline" },
     { name: "Bungee Shade", family: "'Bungee Shade', display", demo: "Shade" },
+    { name: "Bungee Tint", family: "'Bungee Tint', display", demo: "Tint" },
     { name: "Butcherman", family: "'Butcherman', display", demo: "Horror" },
     { name: "Caesar Dressing", family: "'Caesar Dressing', display", demo: "Roman" },
+    { name: "Castoro Titling", family: "'Castoro Titling', serif", demo: "Titling" },
+    { name: "Cute Font", family: "'Cute Font', display", demo: "Cute" },
     { name: "Damion", family: "'Damion', cursive", demo: "Cursive" },
     { name: "Dr Sugiyama", family: "'Dr Sugiyama', cursive", demo: "Script" },
+    { name: "Eagle Lake", family: "'Eagle Lake', cursive", demo: "Elegant" },
+    { name: "Erica One", family: "'Erica One', cursive", demo: "One" },
+    { name: "Fascinate", family: "'Fascinate', cursive", demo: "Fascinating" },
     { name: "Faster One", family: "'Faster One', cursive", demo: "Speed" },
     { name: "Fleur De Leah", family: "'Fleur De Leah', cursive", demo: "Elegant" },
+    { name: "Ga Maamli", family: "'Ga Maamli', cursive", demo: "Maamli" },
+    { name: "Gajraj One", family: "'Gajraj One', display", demo: "Gajraj" },
+    { name: "Great Vibes", family: "'Great Vibes', cursive", demo: "Vibes" },
     { name: "Hanalei", family: "'Hanalei', display", demo: "Display" },
+    { name: "Homemade Apple", family: "'Homemade Apple', cursive", demo: "Apple" },
+    { name: "Honk", family: "'Honk', display", demo: "Funny" },
+    { name: "IBM Plex Sans Arabic", family: "'IBM Plex Sans Arabic', sans-serif", demo: "IBM Arabic" },
+    { name: "Jacquard 12 Charted", family: "'Jacquard 12 Charted', display", demo: "Charted" },
+    { name: "Jacquard 24 Charted", family: "'Jacquard 24 Charted', display", demo: "24 Charted" },
+    { name: "Jacquarda Bastarda 9", family: "'Jacquarda Bastarda 9', display", demo: "Bastarda" },
+    { name: "Jersey 25 Charted", family: "'Jersey 25 Charted', display", demo: "Jersey" },
+    { name: "Kablammo", family: "'Kablammo', display", demo: "Pop" },
+    { name: "Kalnia Glaze", family: "'Kalnia Glaze', serif", demo: "Glaze" },
     { name: "Libre Barcode 39 Text", family: "'Libre Barcode 39 Text', display", demo: "Barcode" },
+    { name: "Limelight", family: "'Limelight', cursive", demo: "Spotlight" },
+    { name: "Moirai One", family: "'Moirai One', display", demo: "Moirai" },
     { name: "Monofett", family: "'Monofett', monospace", demo: "Monospace" },
     { name: "Monoton", family: "'Monoton', cursive", demo: "Display" },
     { name: "Mrs Sheppards", family: "'Mrs Sheppards', cursive", demo: "Victorian" },
     { name: "Nosifer", family: "'Nosifer', display", demo: "Horror" },
+    { name: "Noto Kufi Arabic", family: "'Noto Kufi Arabic', sans-serif", demo: "Arabic Kufi" },
+    { name: "Palette Mosaic", family: "'Palette Mosaic', display", demo: "Mosaic" },
+    { name: "Rock Salt", family: "'Rock Salt', cursive", demo: "Handwritten" },
     { name: "Rubik Beastly", family: "'Rubik Beastly', display", demo: "Beastly" },
-    { name: "Sixtyfour", family: "'Sixtyfour', monospace", demo: "Pixel" }
+    { name: "Rubik Broken Fax", family: "'Rubik Broken Fax', display", demo: "Broken" },
+    { name: "Rubik Gemstones", family: "'Rubik Gemstones', display", demo: "Gemstones" },
+    { name: "Rubik Glitch Pop", family: "'Rubik Glitch Pop', display", demo: "Glitch" },
+    { name: "Rubik Puddles", family: "'Rubik Puddles', display", demo: "Puddles" },
+    { name: "Sancreek", family: "'Sancreek', cursive", demo: "Western" },
+    { name: "Sixtyfour", family: "'Sixtyfour', monospace", demo: "Pixel" },
+    { name: "Sonsie One", family: "'Sonsie One', display", demo: "Sonsie" }
 ];
 
 let currentFontFamily = ALL_FONTS[0].family;
@@ -76,7 +107,6 @@ function initializeFonts() {
     }
     
     fontGrid.innerHTML = '';
-    fontGrid.className = 'horizontal-controls';
     
     ALL_FONTS.forEach((font, index) => {
         const fontItem = document.createElement('div');
@@ -87,7 +117,8 @@ function initializeFonts() {
         
         const fontSample = document.createElement('span');
         fontSample.style.fontFamily = font.family;
-        fontSample.textContent = font.demo;
+        fontSample.textContent = font.demo.substring(0, 15);
+        fontSample.title = font.name;
         
         fontItem.appendChild(fontSample);
         fontGrid.appendChild(fontItem);
