@@ -1121,4 +1121,61 @@ function loadSettings() {
 
 // تسجيل الأخطاء العالمية
 window.addEventListener('error', (e) => {
-    console.error('🌍 Global error
+    console.error('🌍 Global error:', e.error);
+    showAlert('حدث خطأ غير متوقع. يرجى تحديث الصفحة.', 'error');
+});
+
+// منع إغلاق الصفحة أثناء التعديل
+window.addEventListener('beforeunload', (e) => {
+    if (window.currentText && window.currentText.trim() !== '') {
+        e.preventDefault();
+        e.returnValue = 'لديك تعديلات غير محفوظة. هل تريد المغادرة؟';
+        return e.returnValue;
+    }
+});
+
+// خدمة Worker لتخزين البيانات (اختياري)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('🔧 Service Worker registered:', registration);
+            })
+            .catch(error => {
+                console.log('🔧 Service Worker registration failed:', error);
+            });
+    });
+}
+
+// تهيئة PWA
+if ('standalone' in navigator || window.matchMedia('(display-mode: standalone)').matches) {
+    console.log('📱 Running as PWA');
+    document.documentElement.classList.add('pwa-mode');
+}
+
+// دعم وضع عدم الاتصال
+window.addEventListener('online', () => {
+    showAlert('✅ تم استعادة الاتصال بالإنترنت', 'success');
+});
+
+window.addEventListener('offline', () => {
+    showAlert('⚠️ أنت غير متصل بالإنترنت', 'warning');
+});
+
+// تهيئة تحميل متأخر للصور
+document.addEventListener('DOMContentLoaded', () => {
+    const images = document.querySelectorAll('img[loading="lazy"]');
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+        
+        images.forEach(img => imageObserver.observe(img));
+    }
+});
