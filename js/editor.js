@@ -280,6 +280,7 @@ function setupEventListeners() {
             
             // تحديث حجم النص فوراً
             window.textScale = value / 50;
+            textScale = window.textScale;
             if (window.currentText && window.currentText.trim() !== '') {
                 renderFullCanvas();
             }
@@ -345,7 +346,7 @@ function handleTouchStart(e) {
         const dx = touch2.clientX - touch1.clientX;
         const dy = touch2.clientY - touch1.clientY;
         initialDistance = Math.sqrt(dx * dx + dy * dy);
-        initialScale = window.textScale || 1;
+        initialScale = textScale;
         initialAngle = Math.atan2(dy, dx);
         
         console.log('بدء التكبير/التصغير - المسافة الأولية:', initialDistance);
@@ -402,12 +403,13 @@ function handleTouchMove(e) {
         // حساب التكبير/التصغير
         if (initialDistance > 0) {
             const scaleMultiplier = currentDistance / initialDistance;
-            window.textScale = Math.max(0.2, Math.min(2, initialScale * scaleMultiplier));
+            textScale = Math.max(0.2, Math.min(3, initialScale * scaleMultiplier));
+            window.textScale = textScale;
             
             // تحديث شريط التحكم
             const fontSizeSlider = document.getElementById('fontSizeSlider');
             if (fontSizeSlider) {
-                const newValue = Math.round(window.textScale * 50);
+                const newValue = Math.round(textScale * 50);
                 fontSizeSlider.value = Math.max(10, Math.min(100, newValue));
                 const display = document.getElementById('fontSizeDisplay');
                 if (display) {
@@ -418,13 +420,14 @@ function handleTouchMove(e) {
         
         // حساب التدوير
         const angleChange = currentAngle - initialAngle;
-        window.textRotation = (window.textRotation + angleChange * (180 / Math.PI)) % 360;
+        textRotation = (textRotation + angleChange * (180 / Math.PI)) % 360;
+        window.textRotation = textRotation;
         initialAngle = currentAngle;
         
         lastRenderTime = now;
         renderFullCanvas();
         
-        console.log('حجم النص:', window.textScale.toFixed(2));
+        console.log('حجم النص:', textScale.toFixed(2));
     }
 }
 
@@ -432,7 +435,7 @@ function handleTouchEnd(e) {
     e.preventDefault();
     
     if (isResizing) {
-        console.log('انتهى التكبير/التصغير - الحجم النهائي:', window.textScale.toFixed(2));
+        console.log('انتهى التكبير/التصغير - الحجم النهائي:', textScale.toFixed(2));
     }
     
     isDragging = false;
@@ -440,7 +443,7 @@ function handleTouchEnd(e) {
     stickerDragging = false;
     selectedSticker = null;
     initialDistance = 0;
-    initialScale = 1;
+    initialScale = textScale;
     initialAngle = 0;
 }
 
@@ -500,7 +503,7 @@ function calculateCanvasDimensions() {
     let targetHeight = containerHeight;
     
     // حساب الأبعاد بناءً على حجم الخلفية
-    if (backgroundSize !== 'original' && backgroundSize !== 'cover') {
+    if (currentImage && backgroundSize !== 'original' && backgroundSize !== 'cover') {
         if (backgroundSize.includes(':')) {
             const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
             const aspectRatio = widthRatio / heightRatio;
@@ -519,7 +522,6 @@ function calculateCanvasDimensions() {
             targetWidth = targetHeight * imageAspect;
         }
     } else if (backgroundSize === 'original' && currentImage) {
-        // استخدام الأبعاد الأصلية مع التكبير للاستفادة من المساحة المتاحة
         const widthRatio = targetWidth / originalImageWidth;
         const heightRatio = targetHeight / originalImageHeight;
         const scale = Math.min(widthRatio, heightRatio, 1);
@@ -576,7 +578,9 @@ function loadImageToEditor(imageUrl) {
         
         textX = 0.5;
         textY = 0.5;
+        textScale = 1;
         window.textScale = 1;
+        textRotation = 0;
         window.textRotation = 0;
         
         // تحديث شريط التحكم
@@ -613,10 +617,8 @@ function renderFullCanvas() {
     isRendering = true;
     
     try {
-        // تنظيف الكانفاس
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // رسم الخلفية أولاً
         if (backgroundColor !== 'transparent') {
             ctx.fillStyle = backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -650,7 +652,6 @@ function renderFullCanvas() {
                 }
             }
             
-            // حساب موضع الصورة في المنتصف
             const x = (canvas.width - imageWidth) / 2;
             const y = (canvas.height - imageHeight) / 2;
             
@@ -669,7 +670,6 @@ function renderFullCanvas() {
                 ctx.filter = currentFilterValue + FILTERS[currentFilter].filter;
             }
             
-            // استخدام جودة عالية
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             
@@ -729,9 +729,8 @@ function renderTextContent() {
     const strokeColor = window.currentStrokeColor || '#000000';
     const cardColor = window.currentCardColor || '#000000';
     
-    // حساب حجم الخط الأساسي بناءً على حجم الكانفاس
     const baseFontSize = Math.min(canvas.width, canvas.height) * 0.08;
-    let finalFontSize = baseFontSize * (window.textScale || 1);
+    let finalFontSize = baseFontSize * textScale;
     
     const fontKey = `${fontFamily}_${finalFontSize}`;
     if (!fontCache.has(fontKey)) {
@@ -771,7 +770,7 @@ function renderTextContent() {
     const centerY = textY * canvas.height;
     
     ctx.translate(centerX, centerY);
-    ctx.rotate((window.textRotation || 0) * Math.PI / 180);
+    ctx.rotate(textRotation * Math.PI / 180);
     
     if (shadowEnabled) {
         ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
@@ -853,11 +852,9 @@ function wrapText(text, maxWidth, ctx, fontSize) {
 function prepareImageForExport() {
     const exportCanvas = document.createElement('canvas');
     
-    // استخدام الأبعاد الأصلية للصورة
     let exportWidth = originalImageWidth;
     let exportHeight = originalImageHeight;
     
-    // ضبط الحجم بناءً على حجم الخلفية المختار
     if (backgroundSize !== 'original') {
         if (backgroundSize === 'cover') {
             exportWidth = Math.max(originalImageWidth, 1920);
@@ -886,7 +883,6 @@ function prepareImageForExport() {
     exportCtx.imageSmoothingEnabled = true;
     exportCtx.imageSmoothingQuality = 'high';
     
-    // رسم الخلفية أولاً
     if (backgroundColor !== 'transparent') {
         exportCtx.fillStyle = backgroundColor;
         exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
@@ -897,7 +893,6 @@ function prepareImageForExport() {
     let imageWidth = exportWidth;
     let imageHeight = exportHeight;
     
-    // ضبط حجم الصورة بناءً على حجم الخلفية
     if (backgroundSize === 'cover') {
         const imageAspect = originalImageWidth / originalImageHeight;
         const canvasAspect = imageWidth / imageHeight;
@@ -918,7 +913,6 @@ function prepareImageForExport() {
         }
     }
     
-    // حساب موضع الصورة في المنتصف
     const x = (exportCanvas.width - imageWidth) / 2;
     const y = (exportCanvas.height - imageHeight) / 2;
     
@@ -983,7 +977,7 @@ function prepareImageForExport() {
         const cardColor = window.currentCardColor || '#000000';
         
         const baseFontSize = Math.min(exportCanvas.width, exportCanvas.height) * 0.08;
-        const scaledFontSize = baseFontSize * (window.textScale || 1);
+        const scaledFontSize = baseFontSize * textScale;
         
         exportCtx.font = 'bold ' + scaledFontSize + 'px ' + fontFamily;
         exportCtx.textAlign = 'center';
@@ -999,7 +993,7 @@ function prepareImageForExport() {
         const centerY = textY * exportCanvas.height;
         
         exportCtx.translate(centerX, centerY);
-        exportCtx.rotate((window.textRotation || 0) * Math.PI / 180);
+        exportCtx.rotate(textRotation * Math.PI / 180);
         
         if (shadowEnabled) {
             exportCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
@@ -1051,7 +1045,6 @@ function setBorderColor(color) {
     renderFullCanvas();
 }
 
-// دالة جديدة لتحديث الخلفية
 function updateBackground() {
     backgroundColor = window.currentBackgroundColor || '#FFFFFF';
     backgroundSize = window.currentBackgroundSize || 'original';
