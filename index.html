@@ -10,7 +10,6 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     
-    <!-- خطوط Bunny Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=abeezee:400,400i|abhaya-libre:600,800|aboreto:400|abril-fatface:400|abyssinica-sil:400|aclonica:400|acme:400|advent-pro:700i,800i,900i|aguafina-script:400|akaya-telivigala:400|akronim:400|aladin:400|aldrich:400|alegreya:600i,700,900,900i|alegreya-sc:500,500i,800,900i|alex-brush:400|alfa-slab-one:400|allan:400,700|almendra:400i,700i|almendra-sc:400|alumni-sans:100,200,500i,800i|alumni-sans-inline-one:400,400i|amatic-sc:700|amita:700|arbutus:400|architects-daughter:400|are-you-serious:400|aref-ruqaa:400,700|asset:400|astloch:400,700|atomic-age:400|aubrey:400|audiowide:400|bahiana:400|bakbak-one:400|ballet:400|bangers:400|barriecito:400|beau-rivage:400|berkshire-swash:400|beth-ellen:400|bhutuka-expanded-one:400|big-shoulders-display:100,400,800,900|bigelow-rules:400|black-and-white-picture:400|bonbon:400|bungee-inline:400|bungee-outline:400|bungee-shade:400|butcherman:400|caesar-dressing:400|damion:400|dr-sugiyama:400|faster-one:400|fleur-de-leah:400|hanalei:400|libre-barcode-39-text:400|monofett:400|monoton:400|mrs-sheppards:400|nosifer:400|rubik-beastly:400|sixtyfour:400" rel="stylesheet" />
     
@@ -44,6 +43,9 @@
                 <span class="material-symbols-outlined">arrow_back</span>
             </button>
             <div class="header-actions">
+                <button onclick="resetEditor()" class="icon-btn reset-header-btn" title="إعادة تعيين">
+                    <span class="material-symbols-outlined">refresh</span>
+                </button>
                 <button onclick="shareImage()" class="icon-btn share-header-btn">
                     <span class="material-symbols-outlined">share</span>
                 </button>
@@ -183,7 +185,7 @@
                 <div class="horizontal-controls" id="fontGrid"></div>
             </div>
 
-            <!-- لوحة حجم النص - محدثة -->
+            <!-- لوحة حجم النص -->
             <div id="fontSizePanel" class="tool-panel">
                 <div class="tool-section">
                     <h4>حجم النص</h4>
@@ -271,7 +273,6 @@
                 </div>
             </div>
 
-            <!-- روابط إضافية -->
             <div class="setting-card">
                 <h3>روابط مفيدة</h3>
                 <div class="settings-links">
