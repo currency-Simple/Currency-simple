@@ -1,5 +1,3 @@
-[file name]: app.js
-[file content begin]
 // متغيرات عامة
 let categories = [];
 let currentCategory = null;
@@ -7,6 +5,12 @@ let currentImages = [];
 let keyboardOpen = false;
 let textCardVisible = false;
 let textControlCardVisible = false;
+
+// ذاكرة مؤقتة للصور المحملة
+let imageCache = new Map();
+let loadingQueue = [];
+let concurrentLoads = 0;
+const MAX_CONCURRENT_LOADS = 3;
 
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
@@ -20,6 +24,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // إعداد بطاقة النص بعد تحميل الصفحة
     setTimeout(() => {
         setupTextCard();
+        setupTextControlCard();
         setupFontSizeControl();
     }, 500);
 });
@@ -72,6 +77,17 @@ function setupTextCard() {
     }
 }
 
+function setupTextControlCard() {
+    const canvasWrapper = document.getElementById('canvasWrapperFixed');
+    if (!canvasWrapper) {
+        console.error('canvasWrapperFixed not found');
+        return;
+    }
+    
+    // تم إنشاؤه في HTML
+    console.log('Text control card setup complete');
+}
+
 function setupFontSizeControl() {
     const fontSizeSlider = document.getElementById('fontSizeSlider');
     if (fontSizeSlider) {
@@ -84,12 +100,11 @@ function setupFontSizeControl() {
             
             // تحديث حجم النص
             if (window.textScale !== undefined) {
-                window.textScale = value / 50;
+                window.textScale = value / 50; // تحويل القيمة 10-100 إلى 0.2-2
                 if (window.currentText && window.currentText.trim() !== '') {
                     setTimeout(() => {
                         if (typeof renderFullCanvas === 'function') {
                             renderFullCanvas();
-                            updateTextControlFrame();
                         }
                     }, 50);
                 }
@@ -146,6 +161,24 @@ function closeTextCard() {
     }
 }
 
+function openTextControlCard() {
+    const textControlCard = document.getElementById('textControlCard');
+    if (textControlCard) {
+        textControlCard.style.display = 'block';
+        textControlCardVisible = true;
+        console.log('Text control card opened');
+    }
+}
+
+function closeTextControlCard() {
+    const textControlCard = document.getElementById('textControlCard');
+    if (textControlCard) {
+        textControlCard.style.display = 'none';
+        textControlCardVisible = false;
+        console.log('Text control card closed');
+    }
+}
+
 function updateDeleteButtonState() {
     const deleteBtn = document.getElementById('deleteTextFromCardBtn');
     const textInput = document.getElementById('textCardInput');
@@ -164,7 +197,7 @@ function clearTextFromCard() {
     if (!textInput) return;
     
     textInput.value = '';
-    deleteText();
+    clearTextFromImage();
     updateDeleteButtonState();
     textInput.focus();
     
@@ -180,12 +213,6 @@ function applyTextToImage() {
     
     if (typeof renderFullCanvas === 'function') {
         renderFullCanvas();
-        if (text) {
-            updateTextControlFrame();
-            showTextControlFrame();
-        } else {
-            hideTextControlFrame();
-        }
     }
     
     updateDeleteButtonState();
@@ -193,7 +220,6 @@ function applyTextToImage() {
     
     if (text) {
         showAlert('تم إضافة النص إلى الصورة', 'success');
-        showTextTransformControls();
     } else {
         showAlert('تم حذف النص من الصورة', 'success');
     }
@@ -201,300 +227,14 @@ function applyTextToImage() {
     console.log('Text applied to image:', text);
 }
 
-function deleteText() {
+function clearTextFromImage() {
     window.currentText = '';
     
     if (typeof renderFullCanvas === 'function') {
         renderFullCanvas();
     }
     
-    hideTextControlFrame();
-    hideDeleteTextButton();
-    
-    console.log('Text deleted from image');
-}
-
-// وظائف التحكم بالنص المتقدم
-function showTextTransformControls() {
-    if (window.currentText && window.currentText.trim() !== '') {
-        updateTextControlFrame();
-        showTextControlFrame();
-        showDeleteTextButton();
-        showAlert('يمكنك الآن تحريك وتدوير وتكبير النص باستخدام الإطار الزرق', 'info');
-    }
-}
-
-function showTextControlFrame() {
-    const frame = document.getElementById('textControlFrame');
-    if (frame) {
-        frame.style.display = 'block';
-        setupTextFrameControls();
-    }
-}
-
-function hideTextControlFrame() {
-    const frame = document.getElementById('textControlFrame');
-    if (frame) {
-        frame.style.display = 'none';
-    }
-}
-
-function updateTextControlFrame() {
-    if (!window.currentText || !window.currentText.trim()) {
-        hideTextControlFrame();
-        return;
-    }
-    
-    const canvas = document.getElementById('canvas');
-    if (!canvas) return;
-    
-    const frame = document.getElementById('textControlFrame');
-    if (!frame) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const textX = window.textX || 0.5;
-    const textY = window.textY || 0.5;
-    
-    // حساب أبعاد النص
-    const ctx = canvas.getContext('2d');
-    const fontSize = Math.min(canvas.width, canvas.height) * 0.08 * (window.textScale || 1);
-    const fontFamily = window.currentFontFamily || "'Agu Display', display";
-    ctx.font = `bold ${fontSize}px ${fontFamily}`;
-    
-    const lines = window.currentText.split('\n');
-    const maxWidth = Math.max(...lines.map(line => ctx.measureText(line).width));
-    const totalHeight = lines.length * fontSize * 1.4;
-    
-    // حساب موضع الإطار
-    const frameWidth = maxWidth + 40;
-    const frameHeight = totalHeight + 40;
-    const frameX = (textX * canvas.width) - (frameWidth / 2) + rect.left;
-    const frameY = (textY * canvas.height) - (frameHeight / 2) + rect.top;
-    
-    // تحديث الإطار
-    frame.style.width = `${frameWidth}px`;
-    frame.style.height = `${frameHeight}px`;
-    frame.style.left = `${frameX}px`;
-    frame.style.top = `${frameY}px`;
-    frame.style.transform = `rotate(${window.textRotation || 0}deg)`;
-}
-
-function setupTextFrameControls() {
-    const frame = document.getElementById('textControlFrame');
-    if (!frame) return;
-    
-    // إزالة الأحداث القديمة
-    frame.replaceWith(frame.cloneNode(true));
-    const newFrame = document.getElementById('textControlFrame');
-    
-    let isDragging = false;
-    let isResizing = false;
-    let isRotating = false;
-    let startX, startY;
-    let startWidth, startHeight;
-    let startRotation;
-    
-    newFrame.addEventListener('mousedown', startDrag);
-    newFrame.addEventListener('touchstart', startDragTouch);
-    
-    function startDrag(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (e.target.classList.contains('delete-handle')) {
-            deleteText();
-            return;
-        }
-        
-        if (e.target.classList.contains('rotate-handle')) {
-            startRotation = window.textRotation || 0;
-            startX = e.clientX;
-            startY = e.clientY;
-            isRotating = true;
-        } else if (e.target === newFrame) {
-            startX = e.clientX;
-            startY = e.clientY;
-            isDragging = true;
-        }
-        
-        document.addEventListener('mousemove', onDrag);
-        document.addEventListener('mouseup', stopDrag);
-    }
-    
-    function startDragTouch(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (e.touches.length === 1) {
-            const touch = e.touches[0];
-            
-            if (e.target.classList.contains('delete-handle')) {
-                deleteText();
-                return;
-            }
-            
-            if (e.target.classList.contains('rotate-handle')) {
-                startRotation = window.textRotation || 0;
-                startX = touch.clientX;
-                startY = touch.clientY;
-                isRotating = true;
-            } else if (e.target === newFrame) {
-                startX = touch.clientX;
-                startY = touch.clientY;
-                isDragging = true;
-            }
-        } else if (e.touches.length === 2) {
-            isResizing = true;
-            const touch1 = e.touches[0];
-            const touch2 = e.touches[1];
-            startX = (touch1.clientX + touch2.clientX) / 2;
-            startY = (touch1.clientY + touch2.clientY) / 2;
-            startWidth = parseFloat(newFrame.style.width);
-            startHeight = parseFloat(newFrame.style.height);
-        }
-        
-        document.addEventListener('touchmove', onDragTouch);
-        document.addEventListener('touchend', stopDrag);
-    }
-    
-    function onDrag(e) {
-        if (!isDragging && !isResizing && !isRotating) return;
-        
-        e.preventDefault();
-        
-        if (isDragging) {
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            
-            const canvas = document.getElementById('canvas');
-            const rect = canvas.getBoundingClientRect();
-            
-            window.textX = ((parseFloat(newFrame.style.left) - rect.left + dx) + (parseFloat(newFrame.style.width) / 2)) / canvas.width;
-            window.textY = ((parseFloat(newFrame.style.top) - rect.top + dy) + (parseFloat(newFrame.style.height) / 2)) / canvas.height;
-            
-            newFrame.style.left = `${parseFloat(newFrame.style.left) + dx}px`;
-            newFrame.style.top = `${parseFloat(newFrame.style.top) + dy}px`;
-            
-            startX = e.clientX;
-            startY = e.clientY;
-            
-            if (typeof renderFullCanvas === 'function') {
-                renderFullCanvas();
-            }
-        } else if (isRotating) {
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-            window.textRotation = (startRotation + angle) % 360;
-            
-            newFrame.style.transform = `rotate(${window.textRotation}deg)`;
-            
-            if (typeof renderFullCanvas === 'function') {
-                renderFullCanvas();
-            }
-        }
-    }
-    
-    function onDragTouch(e) {
-        if (!isDragging && !isResizing && !isRotating) return;
-        
-        e.preventDefault();
-        
-        if (isDragging && e.touches.length === 1) {
-            const touch = e.touches[0];
-            const dx = touch.clientX - startX;
-            const dy = touch.clientY - startY;
-            
-            const canvas = document.getElementById('canvas');
-            const rect = canvas.getBoundingClientRect();
-            
-            window.textX = ((parseFloat(newFrame.style.left) - rect.left + dx) + (parseFloat(newFrame.style.width) / 2)) / canvas.width;
-            window.textY = ((parseFloat(newFrame.style.top) - rect.top + dy) + (parseFloat(newFrame.style.height) / 2)) / canvas.height;
-            
-            newFrame.style.left = `${parseFloat(newFrame.style.left) + dx}px`;
-            newFrame.style.top = `${parseFloat(newFrame.style.top) + dy}px`;
-            
-            startX = touch.clientX;
-            startY = touch.clientY;
-            
-            if (typeof renderFullCanvas === 'function') {
-                renderFullCanvas();
-            }
-        } else if (isResizing && e.touches.length === 2) {
-            const touch1 = e.touches[0];
-            const touch2 = e.touches[1];
-            const currentX = (touch1.clientX + touch2.clientX) / 2;
-            const currentY = (touch1.clientY + touch2.clientY) / 2;
-            
-            const dx = currentX - startX;
-            const dy = currentY - startY;
-            const scale = 1 + (dx + dy) / 500;
-            
-            const newWidth = startWidth * scale;
-            const newHeight = startHeight * scale;
-            
-            newFrame.style.width = `${newWidth}px`;
-            newFrame.style.height = `${newHeight}px`;
-            
-            // تحديث حجم النص
-            const fontSizeSlider = document.getElementById('fontSizeSlider');
-            if (fontSizeSlider) {
-                const currentScale = window.textScale || 1;
-                const newScale = currentScale * scale;
-                const newValue = Math.max(10, Math.min(100, Math.round(newScale * 50)));
-                fontSizeSlider.value = newValue;
-                window.textScale = newScale;
-                
-                const display = document.getElementById('fontSizeDisplay');
-                if (display) {
-                    display.textContent = newValue;
-                }
-            }
-            
-            if (typeof renderFullCanvas === 'function') {
-                renderFullCanvas();
-            }
-        } else if (isRotating && e.touches.length === 1) {
-            const touch = e.touches[0];
-            const dx = touch.clientX - startX;
-            const dy = touch.clientY - startY;
-            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-            window.textRotation = (startRotation + angle) % 360;
-            
-            newFrame.style.transform = `rotate(${window.textRotation}deg)`;
-            
-            if (typeof renderFullCanvas === 'function') {
-                renderFullCanvas();
-            }
-        }
-    }
-    
-    function stopDrag() {
-        isDragging = false;
-        isResizing = false;
-        isRotating = false;
-        
-        document.removeEventListener('mousemove', onDrag);
-        document.removeEventListener('touchmove', onDragTouch);
-        document.removeEventListener('mouseup', stopDrag);
-        document.removeEventListener('touchend', stopDrag);
-        
-        updateTextControlFrame();
-    }
-}
-
-function showDeleteTextButton() {
-    const deleteBtn = document.getElementById('deleteTextBtn');
-    if (deleteBtn) {
-        deleteBtn.style.display = 'flex';
-    }
-}
-
-function hideDeleteTextButton() {
-    const deleteBtn = document.getElementById('deleteTextBtn');
-    if (deleteBtn) {
-        deleteBtn.style.display = 'none';
-    }
+    console.log('Text cleared from image');
 }
 
 function rotateTextClockwise() {
@@ -503,7 +243,6 @@ function rotateTextClockwise() {
         if (window.currentText && window.currentText.trim() !== '') {
             if (typeof renderFullCanvas === 'function') {
                 renderFullCanvas();
-                updateTextControlFrame();
             }
         }
         showAlert('تم تدوير النص 15° يميناً', 'success');
@@ -516,7 +255,6 @@ function rotateTextCounterClockwise() {
         if (window.currentText && window.currentText.trim() !== '') {
             if (typeof renderFullCanvas === 'function') {
                 renderFullCanvas();
-                updateTextControlFrame();
             }
         }
         showAlert('تم تدوير النص 15° يساراً', 'success');
@@ -543,7 +281,6 @@ function increaseTextSize() {
                     setTimeout(() => {
                         if (typeof renderFullCanvas === 'function') {
                             renderFullCanvas();
-                            updateTextControlFrame();
                         }
                     }, 50);
                 }
@@ -574,7 +311,6 @@ function decreaseTextSize() {
                     setTimeout(() => {
                         if (typeof renderFullCanvas === 'function') {
                             renderFullCanvas();
-                            updateTextControlFrame();
                         }
                     }, 50);
                 }
@@ -589,8 +325,6 @@ function resetText() {
     if (window.textRotation !== undefined) {
         window.textRotation = 0;
         window.textScale = 1;
-        window.textX = 0.5;
-        window.textY = 0.5;
         
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         if (fontSizeSlider) {
@@ -604,7 +338,6 @@ function resetText() {
         if (window.currentText && window.currentText.trim() !== '') {
             if (typeof renderFullCanvas === 'function') {
                 renderFullCanvas();
-                updateTextControlFrame();
             }
         }
         
@@ -644,16 +377,56 @@ function handleKeyboardClose() {
     document.body.classList.remove('keyboard-open');
 }
 
+// نظام تحميل الصور المحسن
+async function loadImageWithCache(url) {
+    if (imageCache.has(url)) {
+        return imageCache.get(url);
+    }
+    
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        
+        img.onload = () => {
+            imageCache.set(url, img);
+            concurrentLoads--;
+            processQueue();
+            resolve(img);
+        };
+        
+        img.onerror = () => {
+            concurrentLoads--;
+            processQueue();
+            reject(new Error(`Failed to load image: ${url}`));
+        };
+        
+        loadingQueue.push(() => {
+            concurrentLoads++;
+            img.crossOrigin = 'anonymous';
+            img.src = url;
+        });
+        
+        processQueue();
+    });
+}
+
+function processQueue() {
+    while (loadingQueue.length > 0 && concurrentLoads < MAX_CONCURRENT_LOADS) {
+        const loadTask = loadingQueue.shift();
+        loadTask();
+    }
+}
+
 async function loadCategories() {
     categories = [];
     console.log('Loading categories...');
     
     try {
-        const promises = [];
+        // تحميل الفئة الأولى فقط أولاً (تحسين الأداء)
+        const initialPromises = [];
         
-        // تحميل الفئات من 1 إلى 100
-        for (let i = 1; i <= 100; i++) {
-            promises.push(
+        // تحميل أول 10 فئات فقط لبدء سريع
+        for (let i = 1; i <= 10; i++) {
+            initialPromises.push(
                 fetch(`data/images${i}.json`)
                     .then(res => {
                         if (!res.ok) throw new Error('Not found');
@@ -665,7 +438,8 @@ async function loadCategories() {
                                 id: i,
                                 name: data.name || `فئة ${i}`,
                                 coverImage: data.images[0].url,
-                                images: data.images
+                                images: data.images,
+                                loaded: false
                             });
                         }
                     })
@@ -675,7 +449,7 @@ async function loadCategories() {
             );
         }
         
-        await Promise.allSettled(promises);
+        await Promise.allSettled(initialPromises);
         
         if (categories.length === 0) {
             console.log('No categories found, loading demo...');
@@ -684,12 +458,53 @@ async function loadCategories() {
             categories.sort((a, b) => a.id - b.id);
             displayCategories();
             console.log(`✓ تم تحميل ${categories.length} فئة`);
+            
+            // تحميل باقي الفئات في الخلفية
+            setTimeout(() => loadRemainingCategories(11, 100), 1000);
         }
         
     } catch (error) {
         console.error('Error loading categories:', error);
         loadDemoCategories();
     }
+}
+
+async function loadRemainingCategories(start, end) {
+    const promises = [];
+    
+    for (let i = start; i <= end; i++) {
+        promises.push(
+            fetch(`data/images${i}.json`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Not found');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && data.images && data.images.length > 0) {
+                        const existingIndex = categories.findIndex(cat => cat.id === i);
+                        if (existingIndex === -1) {
+                            categories.push({
+                                id: i,
+                                name: data.name || `فئة ${i}`,
+                                coverImage: data.images[0].url,
+                                images: data.images,
+                                loaded: false
+                            });
+                        }
+                    }
+                })
+                .catch(() => {
+                    // تجاهل الأخطاء للفئات غير الموجودة
+                })
+        );
+    }
+    
+    await Promise.allSettled(promises);
+    
+    // إعادة ترتيب الفئات
+    categories.sort((a, b) => a.id - b.id);
+    
+    console.log(`✓ تم تحميل إجمالي ${categories.length} فئة`);
 }
 
 function loadDemoCategories() {
@@ -709,7 +524,8 @@ function loadDemoCategories() {
             id: i,
             name: `فئة تجريبية ${i}`,
             coverImage: images[0].url,
-            images: images
+            images: images,
+            loaded: false
         });
     }
     displayCategories();
@@ -729,7 +545,8 @@ function displayCategories() {
         item.className = 'category-item';
         item.onclick = () => openCategory(cat);
         item.innerHTML = `
-            <img src="${cat.coverImage}" alt="${cat.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400?text=No+Image'">
+            <img src="${cat.coverImage}" alt="${cat.name}" loading="lazy" 
+                 onerror="this.src='https://via.placeholder.com/300x400?text=No+Image'">
             <div class="category-overlay">
                 <div class="category-title">${cat.name}</div>
             </div>
@@ -740,7 +557,7 @@ function displayCategories() {
     console.log('✓ تم عرض', categories.length, 'فئة');
 }
 
-function openCategory(cat) {
+async function openCategory(cat) {
     currentCategory = cat;
     currentImages = cat.images;
     
@@ -749,13 +566,13 @@ function openCategory(cat) {
         categoryTitle.textContent = cat.name;
     }
     
-    displayImages();
+    await displayImages();
     showPage('images');
     
     console.log('✓ تم فتح الفئة:', cat.name);
 }
 
-function displayImages() {
+async function displayImages() {
     const grid = document.getElementById('imageGrid');
     if (!grid) {
         console.error('Image grid not found');
@@ -764,22 +581,56 @@ function displayImages() {
     
     grid.innerHTML = '';
     
-    currentImages.forEach(img => {
+    // إظهار عناصر نائبة أولاً
+    currentImages.forEach((img, index) => {
         const item = document.createElement('div');
-        item.className = 'image-item';
-        item.onclick = () => selectImage(img);
-        
-        const imgEl = document.createElement('img');
-        imgEl.src = img.url;
-        imgEl.alt = img.title || 'صورة';
-        imgEl.loading = 'lazy';
-        imgEl.onerror = function() {
-            this.src = 'https://via.placeholder.com/300x400?text=Error';
-        };
-        
-        item.appendChild(imgEl);
+        item.className = 'image-item loading';
+        item.innerHTML = `
+            <div class="image-placeholder"></div>
+        `;
         grid.appendChild(item);
     });
+    
+    // تحميل الصور واحدة تلو الأخرى مع cache
+    for (let i = 0; i < currentImages.length; i++) {
+        const img = currentImages[i];
+        const item = grid.children[i];
+        
+        try {
+            const imageElement = await loadImageWithCache(img.url);
+            
+            item.className = 'image-item';
+            item.innerHTML = '';
+            item.onclick = () => selectImage(img);
+            
+            const imgEl = document.createElement('img');
+            imgEl.src = imageElement.src;
+            imgEl.alt = img.title || 'صورة';
+            imgEl.loading = 'lazy';
+            imgEl.onerror = function() {
+                this.src = 'https://via.placeholder.com/300x400?text=Error';
+            };
+            
+            item.appendChild(imgEl);
+            
+            // إضافة تأثير ظهور تدريجي
+            setTimeout(() => {
+                item.style.opacity = '1';
+                item.style.transform = 'scale(1)';
+            }, (i % 10) * 50); // تأخير متدرج لتحسين الأداء
+            
+        } catch (error) {
+            item.className = 'image-item';
+            item.innerHTML = '';
+            item.onclick = () => selectImage(img);
+            
+            const imgEl = document.createElement('img');
+            imgEl.src = 'https://via.placeholder.com/300x400?text=Error';
+            imgEl.alt = 'صورة غير متوفرة';
+            
+            item.appendChild(imgEl);
+        }
+    }
     
     console.log('✓ تم عرض', currentImages.length, 'صورة');
 }
@@ -834,7 +685,7 @@ function showPage(pageName) {
     if (pageName !== 'editor') {
         closeAllToolPanels();
         handleKeyboardClose();
-        hideTextControlFrame();
+        closeTextControlCard();
     }
 }
 
@@ -1059,8 +910,6 @@ function hideLoadingIndicator() {
 window.currentText = '';
 window.textScale = 1;
 window.textRotation = 0;
-window.textX = 0.5;
-window.textY = 0.5;
 window.showPage = showPage;
 window.goBackToImages = goBackToImages;
 window.downloadImage = downloadImage;
@@ -1069,11 +918,10 @@ window.showAlert = showAlert;
 window.toggleTextCard = toggleTextCard;
 window.closeTextCard = closeTextCard;
 window.openTextCard = openTextCard;
+window.closeTextControlCard = closeTextControlCard;
+window.openTextControlCard = openTextControlCard;
 window.rotateTextClockwise = rotateTextClockwise;
 window.rotateTextCounterClockwise = rotateTextCounterClockwise;
 window.increaseTextSize = increaseTextSize;
 window.decreaseTextSize = decreaseTextSize;
 window.resetText = resetText;
-window.deleteText = deleteText;
-window.showTextTransformControls = showTextTransformControls;
-[file content end]
