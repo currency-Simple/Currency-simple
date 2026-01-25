@@ -34,7 +34,7 @@ let imageBorderWidth = 0;
 let imageBorderColor = '#000000';
 let currentFilter = 'none';
 
-// متغيرات الخلفية الجديدة
+// متغيرات الخلفية
 let backgroundColor = '#FFFFFF';
 let backgroundSize = 'original';
 let backgroundCanvas = null;
@@ -43,24 +43,35 @@ let backgroundCtx = null;
 // تصدير imageBorderColor لـ window
 window.imageBorderColor = imageBorderColor;
 
-// متغيرات تأثيرات النص الجديدة
+// متغيرات تأثيرات النص
 let shadowIntensity = 5;
 let bgOpacity = 70;
 
 // الفلاتر المتاحة
-const FILTERS = {
-    'none': { name: 'بدون فلتر', filter: 'none' },
-    'grayscale': { name: 'أبيض وأسود', filter: 'grayscale(100%)' },
-    'sepia': { name: 'سيبيا', filter: 'sepia(100%)' },
-    'invert': { name: 'عكس الألوان', filter: 'invert(100%)' },
-    'brightness': { name: 'سطوع', filter: 'brightness(150%)' },
-    'contrast': { name: 'تباين', filter: 'contrast(150%)' },
-    'saturate': { name: 'تشبع', filter: 'saturate(200%)' },
-    'hue': { name: 'تدوير الألوان', filter: 'hue-rotate(180deg)' },
-    'vintage': { name: 'قديم', filter: 'sepia(50%) contrast(120%) brightness(110%)' },
-    'warm': { name: 'دافئ', filter: 'sepia(30%) saturate(130%)' },
-    'cool': { name: 'بارد', filter: 'hue-rotate(180deg) saturate(120%)' }
-};
+const FILTERS = [
+    { name: 'بدون فلتر', value: 'none', filter: 'none' },
+    { name: 'أبيض وأسود', value: 'grayscale', filter: 'grayscale(100%)' },
+    { name: 'سيبيا', value: 'sepia', filter: 'sepia(100%)' },
+    { name: 'عكس الألوان', value: 'invert', filter: 'invert(100%)' },
+    { name: 'سطوع', value: 'brightness', filter: 'brightness(150%)' },
+    { name: 'تباين', value: 'contrast', filter: 'contrast(150%)' },
+    { name: 'تشبع', value: 'saturate', filter: 'saturate(200%)' },
+    { name: 'تدوير الألوان', value: 'hue', filter: 'hue-rotate(180deg)' },
+    { name: 'قديم', value: 'vintage', filter: 'sepia(50%) contrast(120%) brightness(110%)' },
+    { name: 'دافئ', value: 'warm', filter: 'sepia(30%) saturate(130%)' },
+    { name: 'بارد', value: 'cool', filter: 'hue-rotate(180deg) saturate(120%)' },
+    { name: 'حزين', value: 'sad', filter: 'grayscale(50%) brightness(90%)' },
+    { name: 'سعيد', value: 'happy', filter: 'saturate(150%) brightness(110%)' },
+    { name: 'ليلي', value: 'night', filter: 'brightness(70%) contrast(120%)' },
+    { name: 'شروق', value: 'sunrise', filter: 'sepia(20%) saturate(140%) brightness(110%)' }
+];
+
+// التحكم المباشر في النص
+let directTextActive = false;
+let textMoving = false;
+let textScaling = false;
+let textRotating = false;
+let textControls = null;
 
 // ذاكرة مؤقتة لتحسين الأداء
 let fontCache = new Map();
@@ -69,11 +80,11 @@ let renderThrottleDelay = 16;
 let isRendering = false;
 
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('Editor initializing...');
+    console.log('🎨 Editor initializing...');
     
     canvas = document.getElementById('canvas');
     if (!canvas) {
-        console.error('Canvas element not found');
+        console.error('❌ Canvas element not found');
         return;
     }
     
@@ -84,6 +95,9 @@ window.addEventListener('DOMContentLoaded', () => {
     
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
+    
+    // إنشاء عناصر التحكم بالنص المباشر
+    setupDirectTextControls();
     
     // إنشاء كانفاس للخلفية
     backgroundCanvas = document.createElement('canvas');
@@ -110,9 +124,218 @@ window.addEventListener('DOMContentLoaded', () => {
     setupTouchControls();
     setupImageControls();
     setupTextEffectsControls();
+    setupFiltersGrid();
     
-    console.log('Editor initialized');
+    console.log('✅ Editor initialized');
 });
+
+function setupDirectTextControls() {
+    textControls = document.getElementById('directTextControls');
+    if (!textControls) return;
+    
+    const moveHandle = document.getElementById('textMoveHandle');
+    const resizeHandle = document.getElementById('textResizeHandle');
+    const rotateHandle = document.getElementById('textRotateHandle');
+    
+    if (moveHandle) {
+        moveHandle.addEventListener('mousedown', startTextMove);
+        moveHandle.addEventListener('touchstart', startTextMoveTouch);
+    }
+    
+    if (resizeHandle) {
+        resizeHandle.addEventListener('mousedown', startTextResize);
+        resizeHandle.addEventListener('touchstart', startTextResizeTouch);
+    }
+    
+    if (rotateHandle) {
+        rotateHandle.addEventListener('mousedown', startTextRotate);
+        rotateHandle.addEventListener('touchstart', startTextRotateTouch);
+    }
+    
+    // إضافة مستمعات عامة للفأرة
+    document.addEventListener('mousemove', handleTextControlMove);
+    document.addEventListener('mouseup', stopTextControl);
+    
+    // إضافة مستمعات عامة لللمس
+    document.addEventListener('touchmove', handleTextControlMoveTouch);
+    document.addEventListener('touchend', stopTextControlTouch);
+}
+
+function updateTextControlsPosition() {
+    if (!textControls || !window.currentText) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = rect.left + (textX * canvas.width);
+    const y = rect.top + (textY * canvas.height);
+    
+    textControls.style.left = (x - 20) + 'px';
+    textControls.style.top = (y - 20) + 'px';
+    textControls.style.display = 'block';
+    
+    directTextActive = true;
+}
+
+function hideTextControls() {
+    if (textControls) {
+        textControls.style.display = 'none';
+        directTextActive = false;
+    }
+}
+
+function startTextMove(e) {
+    e.preventDefault();
+    textMoving = true;
+    startX = e.clientX;
+    startY = e.clientY;
+}
+
+function startTextMoveTouch(e) {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+        textMoving = true;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    }
+}
+
+function startTextResize(e) {
+    e.preventDefault();
+    textScaling = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    initialScale = window.textScale || 1;
+}
+
+function startTextResizeTouch(e) {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+        textScaling = true;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        initialScale = window.textScale || 1;
+    }
+}
+
+function startTextRotate(e) {
+    e.preventDefault();
+    textRotating = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    initialAngle = window.textRotation || 0;
+}
+
+function startTextRotateTouch(e) {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+        textRotating = true;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        initialAngle = window.textRotation || 0;
+    }
+}
+
+function handleTextControlMove(e) {
+    if (!textMoving && !textScaling && !textRotating) return;
+    
+    e.preventDefault();
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    
+    if (textMoving) {
+        const rect = canvas.getBoundingClientRect();
+        const newX = (e.clientX - rect.left) / canvas.width;
+        const newY = (e.clientY - rect.top) / canvas.height;
+        
+        textX = Math.max(0.1, Math.min(0.9, newX));
+        textY = Math.max(0.1, Math.min(0.9, newY));
+        
+        updateTextControlsPosition();
+        renderFullCanvas();
+        
+    } else if (textScaling) {
+        const scaleDelta = deltaY * -0.01;
+        window.textScale = Math.max(0.2, Math.min(3, initialScale + scaleDelta));
+        
+        // تحديث شريط التحكم
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        if (fontSizeSlider) {
+            fontSizeSlider.value = Math.round(window.textScale * 50);
+            const display = document.getElementById('fontSizeDisplay');
+            if (display) {
+                display.textContent = fontSizeSlider.value;
+            }
+        }
+        
+        renderFullCanvas();
+        
+    } else if (textRotating) {
+        const angleDelta = deltaX * 0.5;
+        window.textRotation = (initialAngle + angleDelta) % 360;
+        renderFullCanvas();
+    }
+    
+    startX = e.clientX;
+    startY = e.clientY;
+}
+
+function handleTextControlMoveTouch(e) {
+    if (!textMoving && !textScaling && !textRotating) return;
+    
+    e.preventDefault();
+    if (e.touches.length !== 1) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    
+    if (textMoving) {
+        const rect = canvas.getBoundingClientRect();
+        const newX = (touch.clientX - rect.left) / canvas.width;
+        const newY = (touch.clientY - rect.top) / canvas.height;
+        
+        textX = Math.max(0.1, Math.min(0.9, newX));
+        textY = Math.max(0.1, Math.min(0.9, newY));
+        
+        updateTextControlsPosition();
+        renderFullCanvas();
+        
+    } else if (textScaling) {
+        const scaleDelta = deltaY * -0.01;
+        window.textScale = Math.max(0.2, Math.min(3, initialScale + scaleDelta));
+        
+        // تحديث شريط التحكم
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        if (fontSizeSlider) {
+            fontSizeSlider.value = Math.round(window.textScale * 50);
+            const display = document.getElementById('fontSizeDisplay');
+            if (display) {
+                display.textContent = fontSizeSlider.value;
+            }
+        }
+        
+        renderFullCanvas();
+        
+    } else if (textRotating) {
+        const angleDelta = deltaX * 0.5;
+        window.textRotation = (initialAngle + angleDelta) % 360;
+        renderFullCanvas();
+    }
+    
+    startX = touch.clientX;
+    startY = touch.clientY;
+}
+
+function stopTextControl() {
+    textMoving = false;
+    textScaling = false;
+    textRotating = false;
+}
+
+function stopTextControlTouch(e) {
+    textMoving = false;
+    textScaling = false;
+    textRotating = false;
+}
 
 function setupTextEffectsControls() {
     const shadowSlider = document.getElementById('shadowSlider');
@@ -148,6 +371,32 @@ function setupTextEffectsControls() {
             }, 50);
         });
     }
+}
+
+function setupFiltersGrid() {
+    const filtersGrid = document.getElementById('filtersGrid');
+    if (!filtersGrid) return;
+    
+    filtersGrid.innerHTML = '';
+    
+    FILTERS.forEach(filter => {
+        const filterItem = document.createElement('div');
+        filterItem.className = 'filter-item';
+        if (filter.value === currentFilter) filterItem.classList.add('selected');
+        
+        filterItem.innerHTML = `
+            <div style="width: 40px; height: 40px; border-radius: 8px; background: var(--primary-color); opacity: 0.7; margin: 0 auto 5px;"></div>
+            <span>${filter.name}</span>
+        `;
+        
+        filterItem.onclick = () => {
+            document.querySelectorAll('.filter-item').forEach(item => item.classList.remove('selected'));
+            filterItem.classList.add('selected');
+            applyFilter(filter.value);
+        };
+        
+        filtersGrid.appendChild(filterItem);
+    });
 }
 
 function setupImageControls() {
@@ -226,8 +475,93 @@ function applyFilter(filterName) {
     currentFilter = filterName;
     renderFullCanvas();
     
-    const filterDisplay = FILTERS[filterName] ? FILTERS[filterName].name : 'بدون فلتر';
+    const filter = FILTERS.find(f => f.value === filterName);
+    const filterDisplay = filter ? filter.name : 'بدون فلتر';
     showAlert(`تم تطبيق فلتر: ${filterDisplay}`, 'success');
+}
+
+// دالة إعادة تعيين المحرر
+function resetEditor() {
+    if (!confirm('هل تريد إعادة تعيين المحرر؟ ستفقد جميع التغييرات غير المحفوظة.')) {
+        return;
+    }
+    
+    // إعادة تعيين جميع المتغيرات
+    window.currentText = '';
+    window.textScale = 1;
+    window.textRotation = 0;
+    window.currentTextColor = "#FFFFFF";
+    window.currentStrokeColor = "#000000";
+    window.currentCardColor = "#000000";
+    window.currentBorderColor = "#000000";
+    window.currentBackgroundColor = "#FFFFFF";
+    window.currentBackgroundSize = "original";
+    
+    // إعادة تعيين متغيرات المحرر
+    imageBlur = 0;
+    imageRotation = 0;
+    imageFlipH = false;
+    imageFlipV = false;
+    imageBorderWidth = 0;
+    imageBorderColor = '#000000';
+    currentFilter = 'none';
+    canvasStickers = [];
+    backgroundColor = '#FFFFFF';
+    backgroundSize = 'original';
+    
+    textX = 0.5;
+    textY = 0.5;
+    
+    // إعادة تعيين واجهة المستخدم
+    const fontSizeSlider = document.getElementById('fontSizeSlider');
+    if (fontSizeSlider) {
+        fontSizeSlider.value = 50;
+        const display = document.getElementById('fontSizeDisplay');
+        if (display) {
+            display.textContent = '50';
+        }
+    }
+    
+    const blurSlider = document.getElementById('blurSlider');
+    if (blurSlider) blurSlider.value = 0;
+    
+    const borderSlider = document.getElementById('borderSlider');
+    if (borderSlider) borderSlider.value = 0;
+    
+    const shadowSlider = document.getElementById('shadowSlider');
+    if (shadowSlider) shadowSlider.value = 5;
+    
+    const bgOpacitySlider = document.getElementById('bgOpacitySlider');
+    if (bgOpacitySlider) bgOpacitySlider.value = 70;
+    
+    const shadowEnabled = document.getElementById('shadowEnabled');
+    if (shadowEnabled) shadowEnabled.checked = true;
+    
+    const cardEnabled = document.getElementById('cardEnabled');
+    if (cardEnabled) cardEnabled.checked = false;
+    
+    // إعادة تعيين الألوان في الواجهة
+    if (typeof initializeColors === 'function') {
+        initializeColors();
+    }
+    
+    // إعادة تعيين الفلاتر
+    if (typeof setupFiltersGrid === 'function') {
+        setupFiltersGrid();
+    }
+    
+    // إخفاء عناصر التحكم بالنص
+    hideTextControls();
+    
+    // إعادة رسم الكانفاس
+    if (currentImage) {
+        renderFullCanvas();
+    } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    showAlert('تم إعادة تعيين المحرر بنجاح', 'success');
+    console.log('🔄 تم إعادة تعيين المحرر');
 }
 
 function setupEventListeners() {
@@ -285,6 +619,13 @@ function setupEventListeners() {
             }
         });
     }
+    
+    // إضافة مستمع للنقر خارج عناصر التحكم لإخفائها
+    document.addEventListener('click', (e) => {
+        if (directTextActive && textControls && !textControls.contains(e.target)) {
+            hideTextControls();
+        }
+    });
 }
 
 function setupTouchControls() {
@@ -307,6 +648,26 @@ function setupTouchControls() {
     canvas.addEventListener('mouseup', (e) => {
         handleTouchEnd({ preventDefault: () => e.preventDefault() });
     });
+    
+    // النقر على الكانفاس لإظهار/إخفاء عناصر التحكم بالنص
+    canvas.addEventListener('click', (e) => {
+        if (window.currentText && window.currentText.trim() !== '') {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / canvas.width;
+            const y = (e.clientY - rect.top) / canvas.height;
+            
+            // حساب إذا كان النقر بالقرب من النص
+            const textCenterX = textX;
+            const textCenterY = textY;
+            const distance = Math.sqrt(Math.pow(x - textCenterX, 2) + Math.pow(y - textCenterY, 2));
+            
+            if (distance < 0.2) { // إذا كان النقر بالقرب من النص
+                updateTextControlsPosition();
+            } else if (directTextActive) {
+                hideTextControls();
+            }
+        }
+    });
 }
 
 function handleTouchStart(e) {
@@ -318,6 +679,7 @@ function handleTouchStart(e) {
         const x = (touch.clientX - rect.left) / canvas.width;
         const y = (touch.clientY - rect.top) / canvas.height;
         
+        // التحقق من النقر على الملصقات أولاً
         for (let i = canvasStickers.length - 1; i >= 0; i--) {
             const sticker = canvasStickers[i];
             if (isTouchOnSticker(x * canvas.width, y * canvas.height, sticker)) {
@@ -330,10 +692,20 @@ function handleTouchStart(e) {
             }
         }
         
+        // التحقق من النقر على النص
         if (window.currentText && window.currentText.trim() !== '') {
-            isDragging = true;
-            startX = touch.clientX;
-            startY = touch.clientY;
+            const textCenterX = textX;
+            const textCenterY = textY;
+            const distance = Math.sqrt(Math.pow(x - textCenterX, 2) + Math.pow(y - textCenterY, 2));
+            
+            if (distance < 0.2) { // إذا كان اللمس بالقرب من النص
+                updateTextControlsPosition();
+                isDragging = true;
+                startX = touch.clientX;
+                startY = touch.clientY;
+            } else {
+                hideTextControls();
+            }
         }
     } else if (e.touches.length === 2 && window.currentText) {
         isDragging = false;
@@ -348,7 +720,7 @@ function handleTouchStart(e) {
         initialScale = window.textScale || 1;
         initialAngle = Math.atan2(dy, dx);
         
-        console.log('بدء التكبير/التصغير - المسافة الأولية:', initialDistance);
+        console.log('🔍 بدء التكبير/التصغير - المسافة الأولية:', initialDistance);
     }
 }
 
@@ -387,6 +759,7 @@ function handleTouchMove(e) {
         textX = x;
         textY = y;
         
+        updateTextControlsPosition();
         lastRenderTime = now;
         renderFullCanvas();
         
@@ -402,13 +775,13 @@ function handleTouchMove(e) {
         // حساب التكبير/التصغير
         if (initialDistance > 0) {
             const scaleMultiplier = currentDistance / initialDistance;
-            window.textScale = Math.max(0.2, Math.min(2, initialScale * scaleMultiplier));
+            window.textScale = Math.max(0.2, Math.min(3, initialScale * scaleMultiplier));
             
             // تحديث شريط التحكم
             const fontSizeSlider = document.getElementById('fontSizeSlider');
             if (fontSizeSlider) {
                 const newValue = Math.round(window.textScale * 50);
-                fontSizeSlider.value = Math.max(10, Math.min(100, newValue));
+                fontSizeSlider.value = Math.max(10, Math.min(150, newValue));
                 const display = document.getElementById('fontSizeDisplay');
                 if (display) {
                     display.textContent = fontSizeSlider.value;
@@ -424,7 +797,7 @@ function handleTouchMove(e) {
         lastRenderTime = now;
         renderFullCanvas();
         
-        console.log('حجم النص:', window.textScale.toFixed(2));
+        console.log('📏 حجم النص:', window.textScale.toFixed(2));
     }
 }
 
@@ -432,7 +805,7 @@ function handleTouchEnd(e) {
     e.preventDefault();
     
     if (isResizing) {
-        console.log('انتهى التكبير/التصغير - الحجم النهائي:', window.textScale.toFixed(2));
+        console.log('🔍 انتهى التكبير/التصغير - الحجم النهائي:', window.textScale.toFixed(2));
     }
     
     isDragging = false;
@@ -545,16 +918,21 @@ function adjustImageForBorder() {
     canvas.height = dimensions.height;
     canvas.style.width = dimensions.width + 'px';
     canvas.style.height = dimensions.height + 'px';
+    
+    // تحديث موقع عناصر التحكم بالنص
+    if (directTextActive) {
+        updateTextControlsPosition();
+    }
 }
 
 function loadImageToEditor(imageUrl) {
-    console.log('Loading image to editor:', imageUrl);
+    console.log('🖼️ Loading image to editor:', imageUrl);
     
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
     img.onload = function() {
-        console.log('Image loaded successfully');
+        console.log('✅ Image loaded successfully');
         
         currentImage = img;
         imageLoaded = true;
@@ -562,10 +940,11 @@ function loadImageToEditor(imageUrl) {
         originalImageWidth = img.naturalWidth || img.width;
         originalImageHeight = img.naturalHeight || img.height;
         
-        console.log('Original image dimensions:', originalImageWidth, 'x', originalImageHeight);
+        console.log('📐 Original image dimensions:', originalImageWidth, 'x', originalImageHeight);
         
         adjustImageForBorder();
         
+        // إعادة تعيين التعديلات
         imageBlur = 0;
         imageRotation = 0;
         imageFlipH = false;
@@ -589,13 +968,21 @@ function loadImageToEditor(imageUrl) {
             }
         }
         
+        // إعادة تعيين الفلاتر
+        if (typeof setupFiltersGrid === 'function') {
+            setupFiltersGrid();
+        }
+        
         renderFullCanvas();
         
-        console.log(`Display dimensions: ${canvas.width}x${canvas.height}`);
+        console.log(`📱 Display dimensions: ${canvas.width}x${canvas.height}`);
+        
+        // إخفاء عناصر التحكم بالنص
+        hideTextControls();
     };
     
     img.onerror = function(error) {
-        console.error('Failed to load image:', error);
+        console.error('❌ Failed to load image:', error);
         showAlert('فشل تحميل الصورة. الرجاء المحاولة مرة أخرى.', 'error');
     };
     
@@ -664,9 +1051,13 @@ function renderFullCanvas() {
                 ctx.filter = `blur(${imageBlur}px)`;
             }
             
-            if (currentFilter !== 'none' && FILTERS[currentFilter]) {
-                const currentFilterValue = ctx.filter !== 'none' ? ctx.filter + ' ' : '';
-                ctx.filter = currentFilterValue + FILTERS[currentFilter].filter;
+            // تطبيق الفلتر
+            if (currentFilter !== 'none') {
+                const filterObj = FILTERS.find(f => f.value === currentFilter);
+                if (filterObj) {
+                    const currentFilterValue = ctx.filter !== 'none' ? ctx.filter + ' ' : '';
+                    ctx.filter = currentFilterValue + filterObj.filter;
+                }
             }
             
             // استخدام جودة عالية
@@ -711,7 +1102,7 @@ function renderFullCanvas() {
         }
         
     } catch (error) {
-        console.error('Error rendering canvas:', error);
+        console.error('❌ Error rendering canvas:', error);
     } finally {
         isRendering = false;
         lastRenderTime = now;
@@ -932,9 +1323,12 @@ function prepareImageForExport() {
         exportCtx.filter = `blur(${imageBlur}px)`;
     }
     
-    if (currentFilter !== 'none' && FILTERS[currentFilter]) {
-        const currentFilterValue = exportCtx.filter !== 'none' ? exportCtx.filter + ' ' : '';
-        exportCtx.filter = currentFilterValue + FILTERS[currentFilter].filter;
+    if (currentFilter !== 'none') {
+        const filterObj = FILTERS.find(f => f.value === currentFilter);
+        if (filterObj) {
+            const currentFilterValue = exportCtx.filter !== 'none' ? exportCtx.filter + ' ' : '';
+            exportCtx.filter = currentFilterValue + filterObj.filter;
+        }
     }
     
     exportCtx.drawImage(currentImage, -imageWidth / 2, -imageHeight / 2, imageWidth, imageHeight);
@@ -1047,7 +1441,7 @@ function prepareImageForExport() {
 function setBorderColor(color) {
     imageBorderColor = color;
     window.imageBorderColor = color;
-    console.log('✓ تم تغيير لون حواف الصورة إلى:', color);
+    console.log('🎨 تم تغيير لون حواف الصورة إلى:', color);
     renderFullCanvas();
 }
 
@@ -1073,4 +1467,7 @@ window.flipImageV = flipImageV;
 window.applyFilter = applyFilter;
 window.setBorderColor = setBorderColor;
 window.updateBackground = updateBackground;
+window.resetEditor = resetEditor;
+window.updateTextControlsPosition = updateTextControlsPosition;
+window.hideTextControls = hideTextControls;
 window.FILTERS = FILTERS;
