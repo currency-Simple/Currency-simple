@@ -22,12 +22,8 @@ let currentTextColor = "#FFFFFF";
 let currentStrokeColor = "#000000";
 let currentCardColor = "#000000";
 let currentBorderColor = "#000000";
-
-// تخزين الألوان في window لاستخدامها في editor.js
-window.currentTextColor = currentTextColor;
-window.currentStrokeColor = currentStrokeColor;
-window.currentCardColor = currentCardColor;
-window.currentBorderColor = currentBorderColor;
+let currentShadowColor = "#000000";
+let currentBackgroundColor = "#000000";
 
 // تهيئة شبكات الألوان
 function initializeColors() {
@@ -72,17 +68,30 @@ function initializeColors() {
         console.log(`✓ تم تحميل ${COLORS.length} لون لحواف الصورة`);
     }
 
-    // شبكة ألوان خلفية النص (أفقية)
-    const cardGrid = document.getElementById('cardColorGrid');
-    if (cardGrid) {
-        cardGrid.innerHTML = '';
-        cardGrid.className = 'horizontal-controls color-scroll';
+    // شبكة ألوان الظل (أفقية)
+    const shadowGrid = document.getElementById('shadowColorGrid');
+    if (shadowGrid) {
+        shadowGrid.innerHTML = '';
+        shadowGrid.className = 'horizontal-controls color-scroll';
         COLORS.forEach((color, index) => {
-            const item = createColorItem(color, () => setCardColor(color));
+            const item = createColorItem(color, () => setShadowColor(color));
             if (color === "#000000") item.classList.add('selected');
-            cardGrid.appendChild(item);
+            shadowGrid.appendChild(item);
         });
-        console.log(`✓ تم تحميل ${COLORS.length} لون لخلفية النص`);
+        console.log(`✓ تم تحميل ${COLORS.length} لون للظل`);
+    }
+
+    // شبكة ألوان الخلفية (أفقية)
+    const backgroundGrid = document.getElementById('backgroundColorGrid');
+    if (backgroundGrid) {
+        backgroundGrid.innerHTML = '';
+        backgroundGrid.className = 'horizontal-controls color-scroll';
+        COLORS.forEach((color, index) => {
+            const item = createColorItem(color, () => setBackgroundColor(color));
+            if (color === "#000000") item.classList.add('selected');
+            backgroundGrid.appendChild(item);
+        });
+        console.log(`✓ تم تحميل ${COLORS.length} لون للخلفية`);
     }
 }
 
@@ -122,6 +131,11 @@ function setTextColor(color) {
     window.currentTextColor = color;
     console.log('✓ لون النص:', color);
     
+    // حفظ في التاريخ
+    if (typeof saveToHistory === 'function') {
+        saveToHistory();
+    }
+    
     // تحديث النمط فوراً
     if (window.currentText && window.currentText.trim() !== '') {
         if (typeof renderFullCanvas === 'function') {
@@ -136,6 +150,11 @@ function setStrokeColor(color) {
     window.currentStrokeColor = color;
     console.log('✓ لون حواف النص:', color);
     
+    // حفظ في التاريخ
+    if (typeof saveToHistory === 'function') {
+        saveToHistory();
+    }
+    
     // تحديث النمط فوراً
     if (window.currentText && window.currentText.trim() !== '') {
         if (typeof renderFullCanvas === 'function') {
@@ -148,12 +167,6 @@ function setStrokeColor(color) {
 function setBorderColor(color) {
     currentBorderColor = color;
     window.currentBorderColor = color;
-    
-    // تحديث متغير imageBorderColor في editor.js
-    if (typeof window.imageBorderColor !== 'undefined') {
-        window.imageBorderColor = color;
-    }
-    
     console.log('✓ لون حواف الصورة:', color);
     
     // تحديث الصورة فوراً
@@ -162,11 +175,35 @@ function setBorderColor(color) {
     }
 }
 
+// تعيين لون الظل
+function setShadowColor(color) {
+    currentShadowColor = color;
+    window.currentShadowColor = color;
+    console.log('✓ لون الظل:', color);
+    
+    // حفظ في التاريخ
+    if (typeof saveToHistory === 'function') {
+        saveToHistory();
+    }
+    
+    // تحديث النمط فوراً
+    if (window.currentText && window.currentText.trim() !== '') {
+        if (typeof renderFullCanvas === 'function') {
+            renderFullCanvas();
+        }
+    }
+}
+
 // تعيين لون الخلفية
-function setCardColor(color) {
-    currentCardColor = color;
+function setBackgroundColor(color) {
+    currentBackgroundColor = color;
     window.currentCardColor = color;
     console.log('✓ لون خلفية النص:', color);
+    
+    // حفظ في التاريخ
+    if (typeof saveToHistory === 'function') {
+        saveToHistory();
+    }
     
     // تحديث النمط فوراً
     if (window.currentText && window.currentText.trim() !== '') {
@@ -181,5 +218,6 @@ window.initializeColors = initializeColors;
 window.setTextColor = setTextColor;
 window.setStrokeColor = setStrokeColor;
 window.setBorderColor = setBorderColor;
-window.setCardColor = setCardColor;
+window.setShadowColor = setShadowColor;
+window.setBackgroundColor = setBackgroundColor;
 window.COLORS = COLORS;
