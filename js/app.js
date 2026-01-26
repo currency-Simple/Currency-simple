@@ -4,6 +4,7 @@ let currentCategory = null;
 let currentImages = [];
 let keyboardOpen = false;
 let textCardVisible = false;
+let effectsPanelExpanded = true;
 
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
@@ -25,6 +26,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         setupTextCard();
         setupBackgroundControls();
+        setupEffectsPanel();
     }, 500);
 });
 
@@ -54,6 +56,48 @@ function setupBackgroundControls() {
                 }
             }, 100);
         });
+    }
+}
+
+// إعداد لوحة التأثيرات
+function setupEffectsPanel() {
+    const effectsPanel = document.getElementById('effectsPanel');
+    const toggleBtn = document.querySelector('.toggle-expand .material-symbols-outlined');
+    
+    if (!effectsPanel || !toggleBtn) return;
+    
+    // ضبط الارتفاع بناءً على حجم الشاشة
+    if (window.innerWidth < 768) {
+        effectsPanel.style.maxHeight = '55vh';
+    } else {
+        effectsPanel.style.maxHeight = '65vh';
+    }
+    
+    effectsPanelExpanded = true;
+    toggleBtn.textContent = 'expand_less';
+}
+
+// تبديل حجم لوحة التأثيرات
+function toggleEffectsSize() {
+    const effectsPanel = document.getElementById('effectsPanel');
+    const toggleBtn = document.querySelector('.toggle-expand .material-symbols-outlined');
+    
+    if (!effectsPanel || !toggleBtn) return;
+    
+    effectsPanelExpanded = !effectsPanelExpanded;
+    
+    if (effectsPanelExpanded) {
+        // حالة مفتوحة بالكامل
+        if (window.innerWidth < 768) {
+            effectsPanel.style.maxHeight = '55vh';
+        } else {
+            effectsPanel.style.maxHeight = '65vh';
+        }
+        toggleBtn.textContent = 'expand_less';
+    } else {
+        // حالة مصغرة
+        effectsPanel.style.maxHeight = '40vh';
+        toggleBtn.textContent = 'expand_more';
     }
 }
 
@@ -917,6 +961,8 @@ window.openTextCard = openTextCard;
 window.clearTextFromImage = clearTextFromImage;
 window.clearTextFromCard = clearTextFromCard;
 window.applyTextToImage = applyTextToImage;
+window.toggleEffectsSize = toggleEffectsSize;
+window.setupEffectsPanel = setupEffectsPanel;
 
 // تهيئة الإعدادات
 function loadSettings() {
