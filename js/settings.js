@@ -6,7 +6,6 @@ const translations = {
         size: "الحجم",
         color: "اللون",
         stroke: "الحواف",
-        effects: "تأثيرات",
         shadow: "ظل",
         background: "خلفية",
         settings: "الإعدادات",
@@ -28,7 +27,6 @@ const translations = {
         size: "Size",
         color: "Color",
         stroke: "Stroke",
-        effects: "Effects",
         shadow: "Shadow",
         background: "Background",
         settings: "Settings",
@@ -50,7 +48,6 @@ const translations = {
         size: "Taille",
         color: "Couleur",
         stroke: "Contour",
-        effects: "Effets",
         shadow: "Ombre",
         background: "Arrière-plan",
         settings: "Paramètres",
@@ -210,10 +207,11 @@ function showAbout() {
             <ul style="text-align: right; line-height: 2; margin-bottom: 20px;">
                 <li>أكثر من 40 خط عربي وإنجليزي</li>
                 <li>مجموعة واسعة من الألوان</li>
-                <li>تأثيرات متقدمة للنص والصورة</li>
-                <li>تحكم بالحجم عبر اللمس (قرص وتكبير)</li>
+                <li>تأثيرات الظل والخلفية للنص</li>
+                <li>تحكم بالحجم والحركة عبر اللمس</li>
                 <li>تدوير وقلب الصور</li>
                 <li>حواف ملونة للصور والنصوص</li>
+                <li>إمكانية التراجع عن التعديلات</li>
                 <li>تصدير بجودة عالية</li>
             </ul>
             <p style="line-height: 1.8; margin-bottom: 15px; color: var(--text-secondary);">
@@ -248,16 +246,22 @@ function showHelp() {
             
             <h3 style="color: var(--text-color); margin: 20px 0 10px;">تحريك وتغيير حجم النص</h3>
             <p style="line-height: 1.8; margin-bottom: 15px;">
-                • لتحريك النص: المس النص واسحبه بإصبع واحد<br>
+                • لتحريك النص: المس النص واسحبه بإصبع واحد (حركة فورية)<br>
                 • لتغيير الحجم: استخدم إصبعين (قرص وتكبير) على النص<br>
                 • للتدوير: استخدم إصبعين ولف النص
             </p>
             
-            <h3 style="color: var(--text-color); margin: 20px 0 10px;">تغيير الخط واللون</h3>
+            <h3 style="color: var(--text-color); margin: 20px 0 10px;">تأثيرات النص</h3>
             <p style="line-height: 1.8; margin-bottom: 15px;">
-                • استخدم أداة "خط" لاختيار من بين 40 خط<br>
-                • استخدم أداة "لون" لتغيير لون النص<br>
-                • استخدم "حواف نص" لإضافة إطار حول النص
+                • زر "ظل": لتفعيل/تعطيل الظل وتغيير لونه وشدة<br>
+                • زر "خلفية": لتفعيل/تعطيل خلفية النص وتغيير لونها وشفافيتها<br>
+                • زر "حواف": لإضافة إطار حول النص
+            </p>
+            
+            <h3 style="color: var(--text-color); margin: 20px 0 10px;">إمكانية التراجع</h3>
+            <p style="line-height: 1.8; margin-bottom: 15px;">
+                • زر "↩️" في الأعلى: للتراجع عن آخر تعديل<br>
+                • يمكنك التراجع عن جميع التعديلات حتى تحميل الصورة
             </p>
             
             <h3 style="color: var(--text-color); margin: 20px 0 10px;">حفظ ومشاركة</h3>
