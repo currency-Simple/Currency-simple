@@ -129,6 +129,29 @@ body[dir="ltr"] {
     margin-left: auto;
 }
 
+.undo-header-btn {
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.undo-header-btn:not(:disabled) {
+    color: var(--primary-color);
+}
+
+.undo-header-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.undo-header-btn:not(:disabled):hover {
+    background: rgba(155, 135, 245, 0.1);
+    transform: scale(1.05);
+}
+
+.undo-header-btn:not(:disabled):active {
+    transform: scale(0.95);
+}
+
 .share-header-btn,
 .download-header-btn {
     width: 40px;
@@ -301,7 +324,7 @@ body[dir="ltr"] {
     object-fit: contain;
     display: block;
     margin: auto;
-    background: white !important;
+    background: transparent !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     border-radius: 12px;
     touch-action: none;
@@ -710,68 +733,36 @@ body[dir="ltr"] {
     display: block;
 }
 
-/* تحديد لوحة التأثيرات بمظهر خاص */
-#effectsPanel {
-    max-height: 65vh;
+/* تنسيقات خاصة للوحات الظل والخلفية */
+#shadowPanel,
+#backgroundPanel {
+    max-height: 55vh;
     overflow-y: auto;
     overflow-x: hidden;
     padding-bottom: 20px;
 }
 
-#effectsPanel .horizontal-controls {
-    max-height: 150px;
-    padding: 15px;
-    overflow-y: hidden;
-    overflow-x: auto;
-}
-
-#effectsPanel .tool-section {
+#shadowPanel .tool-section,
+#backgroundPanel .tool-section {
     padding: 15px 20px;
     margin-bottom: 15px;
     border-bottom: 1px solid var(--border-color);
 }
 
-#effectsPanel .tool-section:last-child {
+#shadowPanel .tool-section:last-child,
+#backgroundPanel .tool-section:last-child {
     border-bottom: none;
 }
 
-.effects-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 18px 24px;
-    background: var(--primary-color);
-    color: white;
-    font-weight: 700;
-    font-size: 18px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+/* تعديل تنسيق الأزرار النشطة للوحات الجديدة */
+.tool-btn.active[onclick*="shadowPanel"] {
+    color: var(--primary-color);
+    background: rgba(155, 135, 245, 0.15);
 }
 
-.effects-header .toggle-expand {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-.effects-header .toggle-expand:hover {
-    background: rgba(255,255,255,0.2);
-}
-
-.effects-header .toggle-expand:active {
-    background: rgba(255,255,255,0.3);
+.tool-btn.active[onclick*="backgroundPanel"] {
+    color: var(--primary-color);
+    background: rgba(155, 135, 245, 0.15);
 }
 
 .horizontal-scroll-panel {
@@ -946,8 +937,8 @@ body[dir="ltr"] {
 }
 
 #strokeWidthDisplay,
-#shadowDisplay,
-#bgOpacityDisplay,
+#shadowIntensityDisplay,
+#backgroundOpacityDisplay,
 #borderDisplay,
 #blurDisplay,
 #fontSizeDisplay {
@@ -1337,6 +1328,13 @@ body[dir="ltr"] {
         height: 40px;
     }
     
+    .undo-header-btn,
+    .share-header-btn,
+    .download-header-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
     .floating-controls {
         top: 10px;
         padding: 8px 16px;
@@ -1405,34 +1403,27 @@ body[dir="ltr"] {
         font-size: 14px;
     }
     
-    /* تحسينات لوحة التأثيرات للشاشات الصغيرة */
-    #effectsPanel {
-        max-height: 55vh;
+    /* تعديلات لوحات الظل والخلفية للشاشات الصغيرة */
+    #shadowPanel,
+    #backgroundPanel {
+        max-height: 50vh;
     }
     
-    #effectsPanel .tool-section {
+    #shadowPanel .tool-section,
+    #backgroundPanel .tool-section {
         padding: 12px 16px;
     }
     
-    #effectsPanel .effect-option {
+    #shadowPanel .effect-option,
+    #backgroundPanel .effect-option {
         padding: 10px 12px;
         font-size: 15px;
     }
     
-    #effectsPanel .color-scroll .color-item {
+    #shadowPanel .color-scroll .color-item,
+    #backgroundPanel .color-scroll .color-item {
         width: 42px;
         height: 42px;
-    }
-    
-    .effects-header {
-        padding: 15px 20px;
-        font-size: 16px;
-    }
-    
-    .effects-header .toggle-expand {
-        width: 32px;
-        height: 32px;
-        font-size: 20px;
     }
     
     .tool-panel {
@@ -1480,6 +1471,10 @@ body[dir="ltr"] {
 [data-theme="dark"] .nav-btn:hover,
 [data-theme="dark"] .tool-btn:hover {
     background: rgba(169, 155, 255, 0.1);
+}
+
+[data-theme="dark"] .canvas-wrapper-fixed {
+    background: #000000 !important;
 }
 
 /* حل مشكلة الأزرار السفلية في الوضع الداكن */
