@@ -9,19 +9,11 @@ let textCardVisible = false;
 window.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 App starting...');
     
-    // تهيئة الإعدادات
     loadSettings();
-    
-    // تحميل الفئات
     loadCategories();
-    
-    // عرض الصفحة الأولية
     showPage('categories');
-    
-    // إعداد مستمعات الكيبورد
     setupKeyboardListeners();
     
-    // إعداد بطاقة النص بعد تحميل الصفحة
     setTimeout(() => {
         setupTextCard();
         setupBackgroundControls();
@@ -32,7 +24,6 @@ window.addEventListener('DOMContentLoaded', () => {
 function setupBackgroundControls() {
     console.log('🎨 Setting up background controls...');
     
-    // تحديث الخلفية عند تغيير الألوان
     const backgroundColorGrid = document.getElementById('backgroundColorGrid');
     if (backgroundColorGrid) {
         backgroundColorGrid.addEventListener('click', () => {
@@ -44,7 +35,17 @@ function setupBackgroundControls() {
         });
     }
     
-    // تحديث الخلفية عند تغيير الحجم
+    const squareColorGrid = document.getElementById('squareColorGrid');
+    if (squareColorGrid) {
+        squareColorGrid.addEventListener('click', () => {
+            setTimeout(() => {
+                if (typeof updateBackground === 'function') {
+                    updateBackground();
+                }
+            }, 100);
+        });
+    }
+    
     const backgroundSizeGrid = document.getElementById('backgroundSizeGrid');
     if (backgroundSizeGrid) {
         backgroundSizeGrid.addEventListener('click', () => {
@@ -57,7 +58,7 @@ function setupBackgroundControls() {
     }
 }
 
-// إعداد بطاقة النص الجديدة
+// إعداد بطاقة النص
 function setupTextCard() {
     const canvasWrapper = document.getElementById('canvasWrapperFixed');
     if (!canvasWrapper) {
@@ -111,7 +112,6 @@ function setupTextCard() {
         
         textInput.addEventListener('input', updateDeleteButtonState);
         
-        // إضافة اختصارات لوحة المفاتيح
         textInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.ctrlKey) {
                 e.preventDefault();
@@ -154,22 +154,12 @@ function openTextCard() {
         setTimeout(() => {
             textInput.focus();
             textInput.select();
-            // إظهار لوحة المفاتيح على الأجهزة المحمولة
             if ('virtualKeyboard' in navigator && navigator.virtualKeyboard.show) {
                 navigator.virtualKeyboard.show();
             }
         }, 100);
         
         console.log('📝 Text card opened');
-        
-        // إظهار عناصر التحكم بالنص إذا كان هناك نص
-        if (window.currentText && window.currentText.trim() !== '') {
-            if (typeof updateTextControlsPosition === 'function') {
-                setTimeout(() => {
-                    updateTextControlsPosition();
-                }, 200);
-            }
-        }
     }
 }
 
@@ -181,7 +171,6 @@ function closeTextCard() {
         textCard.style.display = 'none';
         textCardVisible = false;
         
-        // إخفاء لوحة المفاتيح
         if ('virtualKeyboard' in navigator && navigator.virtualKeyboard.hide) {
             navigator.virtualKeyboard.hide();
         }
@@ -231,20 +220,8 @@ function applyTextToImage() {
     
     if (text) {
         showAlert('✅ تم إضافة النص إلى الصورة', 'success');
-        
-        // إظهار عناصر التحكم بالنص
-        if (typeof updateTextControlsPosition === 'function') {
-            setTimeout(() => {
-                updateTextControlsPosition();
-            }, 100);
-        }
     } else {
         showAlert('✅ تم حذف النص من الصورة', 'success');
-        
-        // إخفاء عناصر التحكم بالنص
-        if (typeof hideTextControls === 'function') {
-            hideTextControls();
-        }
     }
     
     console.log('📝 Text applied to image:', text);
@@ -255,11 +232,6 @@ function clearTextFromImage() {
     
     if (typeof renderFullCanvas === 'function') {
         renderFullCanvas();
-    }
-    
-    // إخفاء عناصر التحكم بالنص
-    if (typeof hideTextControls === 'function') {
-        hideTextControls();
     }
     
     console.log('🗑️ Text cleared from image');
@@ -280,39 +252,22 @@ function setupKeyboardListeners() {
         }, 100);
     });
     
-    // مستمعات اختصارات لوحة المفاتيح
     document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + S لحفظ
         if ((e.ctrlKey || e.metaKey) && e.key === 's') {
             e.preventDefault();
             downloadImage();
         }
         
-        // Ctrl/Cmd + P للمشاركة
         if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
             e.preventDefault();
             shareImage();
         }
         
-        // Ctrl/Cmd + R لإعادة التعيين
-        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-            e.preventDefault();
-            if (typeof resetEditor === 'function') {
-                resetEditor();
-            }
-        }
-        
-        // Escape لإغلاق البطاقات
         if (e.key === 'Escape') {
             if (textCardVisible) {
                 closeTextCard();
             }
             closeAllToolPanels();
-            
-            // إخفاء عناصر التحكم بالنص
-            if (typeof hideTextControls === 'function') {
-                hideTextControls();
-            }
         }
     });
 }
@@ -340,7 +295,6 @@ async function loadCategories() {
     try {
         const promises = [];
         
-        // تحميل الفئات من 1 إلى 100
         for (let i = 1; i <= 100; i++) {
             promises.push(
                 fetch(`data/images${i}.json`)
@@ -464,7 +418,6 @@ function displayCategories() {
             </div>
         `;
         
-        // إضافة مستمعات لوحة المفاتيح
         item.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -518,7 +471,6 @@ function displayImages() {
             this.src = 'https://via.placeholder.com/300x400?text=Error+Loading';
         };
         
-        // إضافة عنصر للعنوان
         const titleEl = document.createElement('div');
         titleEl.className = 'image-title';
         titleEl.textContent = img.title || `صورة ${img.id}`;
@@ -539,7 +491,6 @@ function displayImages() {
         item.appendChild(imgEl);
         item.appendChild(titleEl);
         
-        // إظهار العنوان عند التمرير
         item.addEventListener('mouseenter', () => {
             titleEl.style.opacity = '1';
         });
@@ -548,7 +499,6 @@ function displayImages() {
             titleEl.style.opacity = '0';
         });
         
-        // مستمعات لوحة المفاتيح
         item.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -565,16 +515,12 @@ function displayImages() {
 function selectImage(img) {
     console.log(`✅ تم اختيار الصورة: ${img.id}`);
     
-    // حفظ الصورة المختارة في localStorage
     localStorage.setItem('selectedImage', JSON.stringify(img));
     
-    // عرض مؤشر التحميل
     showLoadingIndicator('جاري تحميل الصورة...');
     
-    // الانتقال إلى صفحة المحرر
     showPage('editor');
     
-    // تحميل الصورة إلى المحرر بعد تأخير قصير
     setTimeout(() => {
         if (typeof loadImageToEditor === 'function') {
             loadImageToEditor(img.url);
@@ -589,7 +535,6 @@ function selectImage(img) {
 function showPage(pageName) {
     console.log(`➡️ Navigating to: ${pageName}`);
     
-    // إغلاق لوحة المفاتيح أولاً
     handleKeyboardClose();
     
     const pages = document.querySelectorAll('.page');
@@ -613,7 +558,6 @@ function showPage(pageName) {
         page.classList.add('active');
         page.setAttribute('aria-hidden', 'false');
         
-        // التركيز على عنصر مناسب في الصفحة
         setTimeout(() => {
             if (pageName === 'categories' || pageName === 'images') {
                 const firstItem = page.querySelector('.category-item, .image-item');
@@ -640,18 +584,11 @@ function showPage(pageName) {
         btn.classList.add('active');
     }
     
-    // إغلاق جميع الأدوات عند الانتقال من المحرر
     if (pageName !== 'editor') {
         closeAllToolPanels();
         closeTextCard();
-        
-        // إخفاء عناصر التحكم بالنص
-        if (typeof hideTextControls === 'function') {
-            hideTextControls();
-        }
     }
     
-    // تحديث عنوان الصفحة
     document.title = getPageTitle(pageName);
 }
 
@@ -713,10 +650,8 @@ async function downloadImage() {
             exportCanvas = canvas;
         }
         
-        // تأخير قصير للسماح بعرض مؤشر التحميل
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        // إنشاء اسم ملف مع التاريخ والوقت
         const now = new Date();
         const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}${now.getSeconds().toString().padStart(2,'0')}`;
         const filename = `صورة-معدلة-${timestamp}.png`;
@@ -728,19 +663,16 @@ async function downloadImage() {
                 return;
             }
             
-            // إنشاء رابط التنزيل
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.download = filename;
             link.href = url;
             link.style.display = 'none';
             
-            // إضافة الرابط إلى الصفحة والنقر عليه
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            // تحرير الذاكرة بعد ثانية
             setTimeout(() => URL.revokeObjectURL(url), 1000);
             
             hideLoadingIndicator();
@@ -767,10 +699,8 @@ async function shareImage() {
             return;
         }
         
-        // التحقق من دعم المشاركة
         if (!navigator.share) {
             showAlert('ℹ️ المشاركة غير مدعومة في هذا المتصفح', 'info');
-            // استبدال بالتنزيل
             return downloadImage();
         }
         
@@ -803,14 +733,12 @@ async function shareImage() {
             });
             
             try {
-                // التحقق من إمكانية المشاركة
                 if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
                     hideLoadingIndicator();
                     showAlert('ℹ️ لا يمكن مشاركة الملف في هذا الجهاز', 'info');
                     return downloadImage();
                 }
                 
-                // المشاركة
                 await navigator.share({
                     files: [file],
                     title: 'صورة معدلة',
@@ -832,7 +760,6 @@ async function shareImage() {
                 
                 console.error('❌ خطأ في المشاركة:', shareError);
                 showAlert('❌ فشلت المشاركة', 'error');
-                // استبدال بالتنزيل
                 downloadImage();
             }
             
@@ -846,13 +773,11 @@ async function shareImage() {
 }
 
 function showAlert(message, type = 'info') {
-    // إزالة أي تنبيهات سابقة
     const existingAlert = document.querySelector('.custom-alert');
     if (existingAlert) {
         existingAlert.remove();
     }
     
-    // إنشاء التنبيه الجديد
     const alert = document.createElement('div');
     alert.className = `custom-alert ${type}`;
     alert.setAttribute('role', 'alert');
@@ -867,7 +792,6 @@ function showAlert(message, type = 'info') {
     
     document.body.appendChild(alert);
     
-    // إضافة صوت التنبيه (اختياري)
     if (typeof Audio !== 'undefined') {
         try {
             const alertSound = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ');
@@ -878,14 +802,12 @@ function showAlert(message, type = 'info') {
         }
     }
     
-    // إخفاء التنبيه تلقائياً بعد 4 ثواني
     const timeout = setTimeout(() => {
         if (alert.parentElement) {
             alert.remove();
         }
     }, 4000);
     
-    // إلغاء الإخفاء التلقائي عند التركيز على التنبيه
     alert.addEventListener('mouseenter', () => {
         clearTimeout(timeout);
     });
@@ -898,7 +820,6 @@ function showAlert(message, type = 'info') {
         }, 4000);
     });
     
-    // التركيز على زر الإغلاق
     setTimeout(() => {
         const closeBtn = alert.querySelector('button');
         if (closeBtn) {
@@ -908,13 +829,11 @@ function showAlert(message, type = 'info') {
 }
 
 function showLoadingIndicator(message = '🔄 جاري المعالجة...') {
-    // إزالة أي مؤشرات تحميل سابقة
     const existingLoader = document.querySelector('.custom-loader');
     if (existingLoader) {
         existingLoader.remove();
     }
     
-    // إنشاء مؤشر التحميل
     const loader = document.createElement('div');
     loader.className = 'custom-loader';
     loader.setAttribute('role', 'status');
@@ -929,8 +848,6 @@ function showLoadingIndicator(message = '🔄 جاري المعالجة...') {
     `;
     
     document.body.appendChild(loader);
-    
-    // منع التمرير أثناء التحميل
     document.body.style.overflow = 'hidden';
 }
 
@@ -940,7 +857,6 @@ function hideLoadingIndicator() {
         loader.remove();
     }
     
-    // إعادة تفعيل التمرير
     document.body.style.overflow = '';
 }
 
@@ -961,7 +877,6 @@ window.openTextCard = openTextCard;
 window.clearTextFromImage = clearTextFromImage;
 window.clearTextFromCard = clearTextFromCard;
 window.applyTextToImage = applyTextToImage;
-window.resetEditor = resetEditor;
 
 // تهيئة الإعدادات
 function loadSettings() {
