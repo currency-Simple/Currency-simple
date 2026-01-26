@@ -4,6 +4,7 @@ let currentUser = null;
 let categories = [];
 let currentCategory = null;
 let currentImages = [];
+let isGuestMode = true; // الوضع الافتراضي
 
 // تهيئة التطبيق
 window.addEventListener('DOMContentLoaded', async () => {
@@ -16,34 +17,119 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (typeof initializeFonts === 'function') initializeFonts();
     if (typeof initializeColors === 'function') initializeColors();
     
-    // التحقق من حالة المصادقة
-    await checkAuthStatus();
+    // تحميل الفئات مباشرة (بدون تسجيل دخول)
+    await loadCategories();
     
-    // الاستماع لتغييرات المصادقة
+    // عرض صفحة الفئات مباشرة
+    showPage('categories');
+    
+    // إخفاء صفحة المصادقة وإظهار زر "حسابي" اختياري
+    setupOptionalAuth();
+    
+    // الاستماع لتغييرات المصادقة (اختياري)
     Auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN') {
             currentUser = session.user;
+            isGuestMode = false;
             await onUserSignedIn();
         } else if (event === 'SIGNED_OUT') {
             currentUser = null;
-            showPage('auth');
+            isGuestMode = true;
+            showAlert('تم تسجيل الخروج', 'success');
         }
     });
 });
 
-// التحقق من حالة المصادقة
-async function checkAuthStatus() {
+// إعداد نظام المصادقة الاختياري
+function setupOptionalAuth() {
+    // إخفاء صفحة المصادقة من التنقل
+    const authPage = document.getElementById('authPage');
+    if (authPage) {
+        authPage.classList.remove('active');
+    }
+    
+    // إضافة زر "حسابي" في الهيدر (اختياري)
+    const header = document.querySelector('.header');
+    if (header && !document.getElementById('accountBtn')) {
+        const accountBtn = document.createElement('button');
+        accountBtn.id = 'accountBtn';
+        accountBtn.className = 'icon-btn';
+        accountBtn.onclick = toggleAuthModal;
+        accountBtn.innerHTML = '<span class="material-symbols-outlined">account_circle</span>';
+        accountBtn.title = 'تسجيل الدخول (اختياري)';
+        header.appendChild(accountBtn);
+    }
+}
+
+// نافذة تسجيل الدخول المنبثقة
+function toggleAuthModal() {
+    let modal = document.getElementById('authModal');
+    
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'authModal';
+        modal.className = 'auth-modal';
+        modal.innerHTML = `
+            <div class="auth-modal-content">
+                <button onclick="closeAuthModal()" class="close-btn" style="position: absolute; top: 10px; right: 10px;">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                
+                ${currentUser ? `
+                    <div style="text-align: center; padding: 20px;">
+                        <h2>مرحباً ${currentUser.email}</h2>
+                        <p style="color: var(--text-secondary); margin: 10px 0;">أنت مسجل دخول</p>
+                        <button onclick="handleSignOut()" class="auth-btn primary" style="margin-top: 20px;">
+                            تسجيل الخروج
+                        </button>
+                    </div>
+                ` : `
+                    <h2 style="text-align: center; margin-bottom: 20px;">تسجيل الدخول</h2>
+                    <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
+                        اختياري - لحفظ أعمالك في السحابة
+                    </p>
+                    
+                    <input type="email" id="modalEmail" placeholder="البريد الإلكتروني" class="auth-input">
+                    <input type="password" id="modalPassword" placeholder="كلمة المرور" class="auth-input">
+                    
+                    <button onclick="handleAuth('signin')" class="auth-btn primary">تسجيل الدخول</button>
+                    <button onclick="handleAuth('signup')" class="auth-btn secondary">إنشاء حساب</button>
+                    
+                    <div class="auth-divider">أو</div>
+                    
+                    <button onclick="handleGoogleAuth()" class="auth-btn google">
+                        متابعة مع Google
+                    </button>
+                    
+                    <button onclick="closeAuthModal()" class="auth-btn secondary" style="margin-top: 10px;">
+                        متابعة كضيف
+                    </button>
+                `}
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function handleSignOut() {
     try {
-        currentUser = await Auth.getCurrentUser();
-        
-        if (currentUser) {
-            await onUserSignedIn();
-        } else {
-            showPage('auth');
-        }
+        await Auth.signOut();
+        closeAuthModal();
+        // إعادة إنشاء النافذة
+        const modal = document.getElementById('authModal');
+        if (modal) modal.remove();
     } catch (error) {
-        console.error('خطأ في التحقق من المصادقة:', error);
-        showPage('auth');
+        console.error('خطأ في تسجيل الخروج:', error);
+        showAlert('فشل تسجيل الخروج', 'error');
     }
 }
 
@@ -62,8 +148,10 @@ async function onUserSignedIn() {
 
 // معالجة تسجيل الدخول/التسجيل
 async function handleAuth(type) {
-    const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value;
+    const email = document.getElementById('modalEmail')?.value.trim() || 
+                  document.getElementById('authEmail')?.value.trim();
+    const password = document.getElementById('modalPassword')?.value || 
+                     document.getElementById('authPassword')?.value;
     
     if (!email || !password) {
         showAlert('يرجى ملء جميع الحقول', 'error');
@@ -81,8 +169,10 @@ async function handleAuth(type) {
         if (type === 'signup') {
             await Auth.signUp(email, password);
             showAlert('تم إنشاء الحساب! تحقق من بريدك الإلكتروني', 'success');
+            closeAuthModal();
         } else {
             await Auth.signIn(email, password);
+            closeAuthModal();
         }
         
     } catch (error) {
@@ -98,6 +188,7 @@ async function handleGoogleAuth() {
     try {
         showLoading(true);
         await Auth.signInWithGoogle();
+        closeAuthModal();
     } catch (error) {
         console.error('خطأ في تسجيل الدخول بجوجل:', error);
         showAlert('فشل تسجيل الدخول بجوجل', 'error');
@@ -232,12 +323,6 @@ function showPage(pageName) {
     
     const btn = document.getElementById(navMap[pageName]);
     if (btn) btn.classList.add('active');
-    
-    // إخفاء القائمة السفلية في صفحة المصادقة
-    const nav = document.querySelector('.bottom-nav');
-    if (nav) {
-        nav.style.display = pageName === 'auth' ? 'none' : 'flex';
-    }
 }
 
 // الرجوع للصور
@@ -437,6 +522,9 @@ function showLoading(show) {
 // تصدير الدوال
 window.handleAuth = handleAuth;
 window.handleGoogleAuth = handleGoogleAuth;
+window.handleSignOut = handleSignOut;
+window.toggleAuthModal = toggleAuthModal;
+window.closeAuthModal = closeAuthModal;
 window.showPage = showPage;
 window.goBackToImages = goBackToImages;
 window.togglePanel = togglePanel;
