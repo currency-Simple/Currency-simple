@@ -162,15 +162,59 @@ body {
     color: var(--text);
 }
 
+.auth-btn.secondary:hover {
+    background: var(--border);
+}
+
 .auth-btn.google {
     background: #4285f4;
     color: white;
+}
+
+.auth-btn.google:hover {
+    background: #357ae8;
 }
 
 .auth-divider {
     text-align: center;
     margin: 20px 0;
     color: var(--text-secondary);
+}
+
+/* نافذة المصادقة المنبثقة */
+.auth-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-modal-content {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 30px;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* الفئات */
