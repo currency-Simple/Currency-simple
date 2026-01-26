@@ -2,56 +2,64 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>محرر النصوص على الصور</title>
     
-    <!-- Icons -->
+    <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     
-    <!-- Google Fonts -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=abeezee:400|abhaya-libre:600|abril-fatface:400|acme:400|alex-brush:400|alfa-slab-one:400|aref-ruqaa:400|audiowide:400|bangers:400|cinzel:500|damion:400|great-vibes:400|jomhuria:400|monoton:400|noto-kufi-arabic:400|rock-salt:400" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=abeezee:400,400i|abhaya-libre:600,800|abril-fatface:400|amatic-sc:700|audiowide:400|damion:400|great-vibes:400|ibm-plex-sans-arabic:400,700|noto-kufi-arabic:400,800,900" rel="stylesheet">
     
-    <link rel="stylesheet" href="style.css">
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- صفحة المصادقة -->
+    <div id="authPage" class="page active">
+        <div class="auth-container">
+            <div class="auth-card">
+                <h1>محرر النصوص على الصور</h1>
+                <p class="auth-subtitle">سجل دخولك للبدء</p>
+                
+                <div id="authForm">
+                    <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input">
+                    <input type="password" id="authPassword" placeholder="كلمة المرور" class="auth-input">
+                    
+                    <button onclick="handleAuth('signin')" class="auth-btn primary">تسجيل الدخول</button>
+                    <button onclick="handleAuth('signup')" class="auth-btn secondary">إنشاء حساب</button>
+                    
+                    <div class="auth-divider">أو</div>
+                    
+                    <button onclick="handleGoogleAuth()" class="auth-btn google">
+                        <span>متابعة مع Google</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- صفحة الفئات -->
-    <div id="categoriesPage" class="page active">
+    <div id="categoriesPage" class="page">
         <div class="header">
-            <h1>اختر فئة</h1>
-            <button onclick="showPage('upload')" class="icon-btn">
-                <span class="material-symbols-outlined">add_photo_alternate</span>
+            <h1>الفئات</h1>
+            <button onclick="Auth.signOut()" class="icon-btn">
+                <span class="material-symbols-outlined">logout</span>
             </button>
         </div>
         <div class="categories-grid" id="categoriesGrid"></div>
     </div>
 
-    <!-- صفحة رفع الصورة -->
-    <div id="uploadPage" class="page">
-        <div class="header">
-            <button onclick="showPage('categories')" class="icon-btn back-btn">
-                <span class="material-symbols-outlined">arrow_back</span>
-            </button>
-            <h1>رفع صورة</h1>
-        </div>
-        <div class="upload-container">
-            <div class="upload-area" id="uploadArea">
-                <span class="material-symbols-outlined">cloud_upload</span>
-                <p>اسحب وأفلت الصورة هنا</p>
-                <p class="upload-sub">أو انقر للاختيار</p>
-                <input type="file" id="imageUpload" accept="image/*" hidden>
-            </div>
-            <button onclick="useSampleImage()" class="sample-btn">
-                <span class="material-symbols-outlined">image</span>
-                استخدام صورة تجريبية
-            </button>
-        </div>
-    </div>
-
     <!-- صفحة الصور -->
     <div id="imagesPage" class="page">
         <div class="header">
-            <button onclick="showPage('categories')" class="icon-btn back-btn">
+            <button onclick="showPage('categories')" class="icon-btn">
                 <span class="material-symbols-outlined">arrow_back</span>
             </button>
             <h1 id="categoryTitle">الصور</h1>
@@ -62,7 +70,7 @@
     <!-- صفحة المحرر -->
     <div id="editorPage" class="page">
         <div class="header">
-            <button onclick="goBack()" class="icon-btn back-btn">
+            <button onclick="goBackToImages()" class="icon-btn">
                 <span class="material-symbols-outlined">arrow_back</span>
             </button>
             <div class="header-actions">
@@ -76,78 +84,111 @@
         </div>
         
         <div class="editor-container">
-            <!-- الكانفاس -->
-            <div class="canvas-wrapper">
+            <div class="canvas-wrapper" id="canvasWrapper">
                 <canvas id="canvas"></canvas>
             </div>
             
-            <!-- أدوات النص -->
-            <div class="text-controls">
-                <button onclick="toggleTextPanel()" class="text-btn">
+            <!-- شريط الأدوات -->
+            <div class="editor-toolbar">
+                <button class="tool-btn" onclick="toggleTextCard()">
                     <span class="material-symbols-outlined">text_fields</span>
-                    إضافة نص
+                    <span>نص</span>
                 </button>
-                
-                <div id="textPanel" class="text-panel hidden">
-                    <textarea id="textInput" placeholder="اكتب النص هنا..."></textarea>
-                    <div class="text-buttons">
-                        <button onclick="applyText()" class="btn-primary">تطبيق</button>
-                        <button onclick="clearText()" class="btn-secondary">حذف</button>
-                    </div>
+
+                <button class="tool-btn" onclick="togglePanel('fontPanel')">
+                    <span class="material-symbols-outlined">font_download</span>
+                    <span>خط</span>
+                </button>
+
+                <button class="tool-btn" onclick="togglePanel('colorPanel')">
+                    <span class="material-symbols-outlined">palette</span>
+                    <span>لون</span>
+                </button>
+
+                <button class="tool-btn" onclick="togglePanel('effectsPanel')">
+                    <span class="material-symbols-outlined">auto_fix_high</span>
+                    <span>تأثيرات</span>
+                </button>
+            </div>
+
+            <!-- لوحة الخطوط -->
+            <div id="fontPanel" class="tool-panel">
+                <div class="panel-header">
+                    <h3>اختر الخط</h3>
+                    <button onclick="closePanel('fontPanel')" class="close-btn">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="horizontal-scroll" id="fontGrid"></div>
+            </div>
+
+            <!-- لوحة الألوان -->
+            <div id="colorPanel" class="tool-panel">
+                <div class="panel-header">
+                    <h3>لون النص</h3>
+                    <button onclick="closePanel('colorPanel')" class="close-btn">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="horizontal-scroll" id="colorGrid"></div>
+            </div>
+
+            <!-- لوحة التأثيرات -->
+            <div id="effectsPanel" class="tool-panel">
+                <div class="panel-header">
+                    <h3>التأثيرات</h3>
+                    <button onclick="closePanel('effectsPanel')" class="close-btn">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="panel-content">
+                    <label class="effect-option">
+                        <input type="checkbox" id="shadowEnabled" checked>
+                        <span>ظل النص</span>
+                    </label>
+                    <label class="effect-option">
+                        <input type="checkbox" id="bgEnabled">
+                        <span>خلفية النص</span>
+                    </label>
                 </div>
             </div>
-            
-            <!-- أدوات التحكم -->
-            <div class="editor-toolbar">
-                <button onclick="openToolPanel('fonts')" class="tool-btn">
-                    <span class="material-symbols-outlined">font_download</span>
-                    خط
-                </button>
-                <button onclick="openToolPanel('colors')" class="tool-btn">
-                    <span class="material-symbols-outlined">palette</span>
-                    لون
-                </button>
-                <button onclick="openToolPanel('effects')" class="tool-btn">
-                    <span class="material-symbols-outlined">tune</span>
-                    تأثيرات
-                </button>
-                <button onclick="openToolPanel('adjust')" class="tool-btn">
-                    <span class="material-symbols-outlined">adjust</span>
-                    ضبط
-                </button>
-            </div>
-            
-            <!-- اللوحات المنبثقة -->
-            <div id="fontsPanel" class="tool-panel hidden">
-                <div class="fonts-grid" id="fontsGrid"></div>
-            </div>
-            
-            <div id="colorsPanel" class="tool-panel hidden">
-                <div class="colors-grid" id="colorsGrid"></div>
+        </div>
+    </div>
+
+    <!-- بطاقة النص -->
+    <div id="textCard" class="text-card" style="display: none;">
+        <div class="text-card-header">
+            <span>إضافة نص</span>
+            <button onclick="closeTextCard()" class="close-btn">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="text-card-content">
+            <textarea id="textInput" placeholder="اكتب النص هنا..." rows="4"></textarea>
+            <div class="text-card-buttons">
+                <button onclick="closeTextCard()" class="btn secondary">إلغاء</button>
+                <button onclick="applyText()" class="btn primary">موافق</button>
             </div>
         </div>
     </div>
 
     <!-- القائمة السفلية -->
-    <nav class="bottom-nav">
-        <button onclick="showPage('categories')" class="nav-btn active">
+    <div class="bottom-nav">
+        <button onclick="showPage('categories')" class="nav-btn" id="navCategories">
             <span class="material-symbols-outlined">dashboard</span>
-            الفئات
+            <span>الفئات</span>
         </button>
-        <button onclick="showPage('upload')" class="nav-btn">
-            <span class="material-symbols-outlined">add</span>
-            رفع
-        </button>
-        <button onclick="showPage('editor')" class="nav-btn">
+        <button onclick="showPage('editor')" class="nav-btn" id="navEditor">
             <span class="material-symbols-outlined">edit</span>
-            تعديل
+            <span>التحرير</span>
         </button>
-    </nav>
+    </div>
 
     <!-- Scripts -->
-    <script src="js/supabase.js"></script>
+    <script src="js/config.js"></script>
     <script src="js/fonts.js"></script>
     <script src="js/colors.js"></script>
+    <script src="js/settings.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/app.js"></script>
 </body>
