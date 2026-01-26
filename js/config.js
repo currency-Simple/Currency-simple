@@ -1,8 +1,8 @@
 // config.js - إعدادات Supabase
 
 const SUPABASE_CONFIG = {
-    url: 'YOUR_SUPABASE_URL', // ضع رابط مشروعك هنا
-    anonKey: 'YOUR_SUPABASE_ANON_KEY' // ضع المفتاح هنا
+    url: 'https://byxbwljcwevywrgjuvkn.supabase.co', // ضع رابط مشروعك هنا
+    anonKey: 'sb_publishable_zWY6EAOczT_nhiscFxqHQA_hboO8gpf' // ضع المفتاح هنا
 };
 
 // التطبيق يعمل بوضعين:
