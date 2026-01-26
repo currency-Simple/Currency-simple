@@ -1,31 +1,127 @@
-// js/app.js
+// app.js - التطبيق الرئيسي
+
+let currentUser = null;
 let categories = [];
 let currentCategory = null;
 let currentImages = [];
 
-// التهيئة
+// تهيئة التطبيق
 window.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 App starting...');
+    console.log('🚀 بدء تشغيل التطبيق...');
+    
+    // تهيئة الإعدادات
+    loadSettings();
+    
+    // تهيئة الخطوط والألوان
+    if (typeof initializeFonts === 'function') initializeFonts();
+    if (typeof initializeColors === 'function') initializeColors();
+    
+    // التحقق من حالة المصادقة
+    await checkAuthStatus();
+    
+    // الاستماع لتغييرات المصادقة
+    Auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN') {
+            currentUser = session.user;
+            await onUserSignedIn();
+        } else if (event === 'SIGNED_OUT') {
+            currentUser = null;
+            showPage('auth');
+        }
+    });
+});
+
+// التحقق من حالة المصادقة
+async function checkAuthStatus() {
+    try {
+        currentUser = await Auth.getCurrentUser();
+        
+        if (currentUser) {
+            await onUserSignedIn();
+        } else {
+            showPage('auth');
+        }
+    } catch (error) {
+        console.error('خطأ في التحقق من المصادقة:', error);
+        showPage('auth');
+    }
+}
+
+// عند تسجيل الدخول بنجاح
+async function onUserSignedIn() {
+    console.log('✅ مستخدم مسجل:', currentUser.email);
+    
+    showAlert(`مرحباً ${currentUser.email}`, 'success');
     
     // تحميل الفئات من Supabase
     await loadCategories();
     
-    // إعداد عناصر التحكم
-    setupUpload();
-    setupEventListeners();
-    
-    // عرض الصفحة الأولى
+    // عرض صفحة الفئات
     showPage('categories');
-});
+}
 
-// تحميل الفئات
+// معالجة تسجيل الدخول/التسجيل
+async function handleAuth(type) {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    
+    if (!email || !password) {
+        showAlert('يرجى ملء جميع الحقول', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showAlert('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
+        return;
+    }
+    
+    try {
+        showLoading(true);
+        
+        if (type === 'signup') {
+            await Auth.signUp(email, password);
+            showAlert('تم إنشاء الحساب! تحقق من بريدك الإلكتروني', 'success');
+        } else {
+            await Auth.signIn(email, password);
+        }
+        
+    } catch (error) {
+        console.error('خطأ في المصادقة:', error);
+        showAlert(error.message || 'حدث خطأ في المصادقة', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// تسجيل دخول بجوجل
+async function handleGoogleAuth() {
+    try {
+        showLoading(true);
+        await Auth.signInWithGoogle();
+    } catch (error) {
+        console.error('خطأ في تسجيل الدخول بجوجل:', error);
+        showAlert('فشل تسجيل الدخول بجوجل', 'error');
+        showLoading(false);
+    }
+}
+
+// تحميل الفئات من Supabase
 async function loadCategories() {
     try {
-        categories = await window.imageDB.getCategories();
+        console.log('📂 جاري تحميل الفئات...');
+        showLoading(true);
+        
+        const data = await Database.getCategories();
+        categories = data;
+        
         displayCategories();
-        console.log(`✅ Loaded ${categories.length} categories`);
+        console.log(`✅ تم تحميل ${categories.length} فئة`);
+        
     } catch (error) {
-        console.error('Error loading categories:', error);
+        console.error('❌ خطأ في تحميل الفئات:', error);
+        showAlert('فشل تحميل الفئات', 'error');
+    } finally {
+        showLoading(false);
     }
 }
 
@@ -36,15 +132,15 @@ function displayCategories() {
     
     grid.innerHTML = '';
     
-    categories.forEach(category => {
+    categories.forEach(cat => {
         const item = document.createElement('div');
         item.className = 'category-item';
-        item.onclick = () => openCategory(category);
+        item.onclick = () => openCategory(cat);
         
         item.innerHTML = `
-            <img src="${category.cover_image}" alt="${category.name}" loading="lazy">
+            <img src="${cat.cover_image}" alt="${cat.name}" loading="lazy">
             <div class="category-overlay">
-                <div class="category-title">${category.name}</div>
+                <div class="category-title">${cat.name}</div>
             </div>
         `;
         
@@ -53,19 +149,28 @@ function displayCategories() {
 }
 
 // فتح فئة
-async function openCategory(category) {
-    currentCategory = category;
-    
-    // تحديث العنوان
-    const title = document.getElementById('categoryTitle');
-    if (title) title.textContent = category.name;
-    
-    // جلب صور الفئة
-    currentImages = await window.imageDB.getCategoryImages(category.id);
-    displayImages();
-    
-    // الانتقال لصفحة الصور
-    showPage('images');
+async function openCategory(cat) {
+    try {
+        currentCategory = cat;
+        showLoading(true);
+        
+        console.log(`📂 فتح فئة: ${cat.name}`);
+        
+        const images = await Database.getCategoryImages(cat.id);
+        currentImages = images;
+        
+        const title = document.getElementById('categoryTitle');
+        if (title) title.textContent = cat.name;
+        
+        displayImages();
+        showPage('images');
+        
+    } catch (error) {
+        console.error('❌ خطأ في فتح الفئة:', error);
+        showAlert('فشل تحميل الصور', 'error');
+    } finally {
+        showLoading(false);
+    }
 }
 
 // عرض الصور
@@ -75,145 +180,68 @@ function displayImages() {
     
     grid.innerHTML = '';
     
-    currentImages.forEach(image => {
+    currentImages.forEach(img => {
         const item = document.createElement('div');
         item.className = 'image-item';
-        item.onclick = () => selectImage(image);
+        item.onclick = () => selectImage(img);
         
-        item.innerHTML = `
-            <img src="${image.url}" alt="${image.title}" loading="lazy">
-            <div class="image-title">${image.title}</div>
-        `;
+        const imgEl = document.createElement('img');
+        imgEl.src = img.url;
+        imgEl.alt = img.title || 'صورة';
+        imgEl.loading = 'lazy';
         
+        item.appendChild(imgEl);
         grid.appendChild(item);
     });
 }
 
 // اختيار صورة
-function selectImage(image) {
-    console.log('Selected image:', image);
-    
-    // تحميل الصورة في المحرر
-    if (window.loadImageToEditor) {
-        window.loadImageToEditor(image.url);
-    }
-    
-    // الانتقال للمحرر
-    showPage('editor');
-}
-
-// إعداد رفع الصورة
-function setupUpload() {
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('imageUpload');
-    
-    if (!uploadArea || !fileInput) return;
-    
-    // عند النقر على منطقة الرفع
-    uploadArea.addEventListener('click', () => fileInput.click());
-    
-    // عند اختيار ملف
-    fileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        if (!file.type.startsWith('image/')) {
-            alert('يرجى اختيار ملف صورة فقط');
-            return;
-        }
-        
-        // عرض مؤشر تحميل
-        uploadArea.innerHTML = `
-            <div class="loader"></div>
-            <p>جاري رفع الصورة...</p>
-        `;
-        
-        try {
-            // رفع الصورة إلى Supabase
-            const imageUrl = await window.imageDB.uploadImage(file);
-            
-            // تحميل الصورة في المحرر
-            if (window.loadImageToEditor) {
-                window.loadImageToEditor(imageUrl);
-            }
-            
-            // الانتقال للمحرر
-            showPage('editor');
-            
-            // إظهار رسالة نجاح
-            showAlert('✅ تم رفع الصورة بنجاح', 'success');
-            
-        } catch (error) {
-            console.error('Upload error:', error);
-            showAlert('❌ فشل رفع الصورة', 'error');
-        }
-    });
-    
-    // سحب وإفلات
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
-    });
-    
-    uploadArea.addEventListener('drop', async (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-        
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            fileInput.files = e.dataTransfer.files;
-            fileInput.dispatchEvent(new Event('change'));
-        }
-    });
-}
-
-// استخدام صورة تجريبية
-function useSampleImage() {
-    const sampleImages = [
-        'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-        'https://images.unsplash.com/photo-1519681393784-d120267933ba',
-        'https://images.unsplash.com/photo-1501785888041-af3ef285b470'
-    ];
-    
-    const randomImage = sampleImages[Math.floor(Math.random() * sampleImages.length)];
-    
-    if (window.loadImageToEditor) {
-        window.loadImageToEditor(`${randomImage}?w=1200&h=800&fit=crop`);
-    }
+function selectImage(img) {
+    console.log(`✅ تم اختيار الصورة: ${img.id}`);
     
     showPage('editor');
+    
+    setTimeout(() => {
+        if (typeof loadImageToEditor === 'function') {
+            loadImageToEditor(img.url);
+        }
+    }, 100);
 }
 
 // التنقل بين الصفحات
 function showPage(pageName) {
-    // إخفاء جميع الصفحات
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
+    console.log(`➡️ الانتقال إلى: ${pageName}`);
     
-    // إظهار الصفحة المطلوبة
-    const page = document.getElementById(`${pageName}Page`);
-    if (page) {
-        page.classList.add('active');
-    }
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     
-    // تحديث القائمة السفلية
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+    const pageMap = {
+        'auth': 'authPage',
+        'categories': 'categoriesPage',
+        'images': 'imagesPage',
+        'editor': 'editorPage'
+    };
     
-    const navBtn = document.querySelector(`.nav-btn[onclick*="${pageName}"]`);
-    if (navBtn) {
-        navBtn.classList.add('active');
+    const page = document.getElementById(pageMap[pageName]);
+    if (page) page.classList.add('active');
+    
+    const navMap = {
+        'categories': 'navCategories',
+        'editor': 'navEditor'
+    };
+    
+    const btn = document.getElementById(navMap[pageName]);
+    if (btn) btn.classList.add('active');
+    
+    // إخفاء القائمة السفلية في صفحة المصادقة
+    const nav = document.querySelector('.bottom-nav');
+    if (nav) {
+        nav.style.display = pageName === 'auth' ? 'none' : 'flex';
     }
 }
 
-// الرجوع للخلف
-function goBack() {
+// الرجوع للصور
+function goBackToImages() {
     if (currentCategory) {
         showPage('images');
     } else {
@@ -221,90 +249,201 @@ function goBack() {
     }
 }
 
-// الإعدادات العامة
-function setupEventListeners() {
-    // اختصارات لوحة المفاتيح
-    document.addEventListener('keydown', (e) => {
-        // Ctrl+S لحفظ
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-            e.preventDefault();
-            downloadImage();
-        }
-        
-        // Escape للخروج
-        if (e.key === 'Escape') {
-            goBack();
-        }
-    });
+// فتح/إغلاق اللوحات
+function togglePanel(panelId) {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
     
-    // عند فقدان الاتصال
-    window.addEventListener('offline', () => {
-        showAlert('⚠️ أنت غير متصل بالإنترنت', 'warning');
-    });
+    const isActive = panel.classList.contains('active');
     
-    window.addEventListener('online', () => {
-        showAlert('✅ تم استعادة الاتصال', 'success');
-    });
-}
-
-// تنزيل الصورة
-function downloadImage() {
-    const canvas = document.getElementById('canvas');
-    if (!canvas) return;
+    // إغلاق جميع اللوحات
+    document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
     
-    const link = document.createElement('a');
-    link.download = `صورة-${Date.now()}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    
-    showAlert('✅ تم تنزيل الصورة', 'success');
-}
-
-// مشاركة الصورة
-async function shareImage() {
-    const canvas = document.getElementById('canvas');
-    if (!canvas) return;
-    
-    if (navigator.share) {
-        try {
-            canvas.toBlob(async (blob) => {
-                const file = new File([blob], 'صورة.png', { type: 'image/png' });
-                
-                await navigator.share({
-                    files: [file],
-                    title: 'صورة من محرر النصوص',
-                    text: 'شاهد هذه الصورة المعدلة!'
-                });
-                
-                showAlert('✅ تم المشاركة بنجاح', 'success');
-            });
-        } catch (error) {
-            console.error('Share error:', error);
-            downloadImage();
-        }
-    } else {
-        downloadImage();
+    // فتح اللوحة المطلوبة
+    if (!isActive) {
+        panel.classList.add('active');
     }
 }
 
-// إظهار رسالة
-function showAlert(message, type = 'info') {
-    // إنشاء عنصر الرسالة
+function closePanel(panelId) {
+    const panel = document.getElementById(panelId);
+    if (panel) {
+        panel.classList.remove('active');
+    }
+}
+
+// بطاقة النص
+function toggleTextCard() {
+    const card = document.getElementById('textCard');
+    if (!card) return;
+    
+    if (card.style.display === 'none') {
+        card.style.display = 'block';
+        const input = document.getElementById('textInput');
+        if (input) {
+            input.value = window.currentText || '';
+            input.focus();
+        }
+    } else {
+        card.style.display = 'none';
+    }
+}
+
+function closeTextCard() {
+    const card = document.getElementById('textCard');
+    if (card) card.style.display = 'none';
+}
+
+function applyText() {
+    const input = document.getElementById('textInput');
+    if (!input) return;
+    
+    window.currentText = input.value.trim();
+    
+    if (typeof renderFullCanvas === 'function') {
+        renderFullCanvas();
+    }
+    
+    closeTextCard();
+    showAlert('تم تطبيق النص', 'success');
+}
+
+// التنزيل
+async function downloadImage() {
+    try {
+        const canvas = document.getElementById('canvas');
+        if (!canvas) {
+            showAlert('لا توجد صورة للتنزيل', 'error');
+            return;
+        }
+        
+        showLoading(true);
+        
+        let exportCanvas;
+        if (typeof prepareImageForExport === 'function') {
+            exportCanvas = prepareImageForExport();
+        } else {
+            exportCanvas = canvas;
+        }
+        
+        exportCanvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `صورة-${Date.now()}.png`;
+            link.href = url;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showAlert('تم التنزيل بنجاح', 'success');
+            showLoading(false);
+        }, 'image/png');
+        
+    } catch (error) {
+        console.error('خطأ في التنزيل:', error);
+        showAlert('فشل التنزيل', 'error');
+        showLoading(false);
+    }
+}
+
+// المشاركة
+async function shareImage() {
+    try {
+        const canvas = document.getElementById('canvas');
+        if (!canvas) {
+            showAlert('لا توجد صورة للمشاركة', 'error');
+            return;
+        }
+        
+        if (!navigator.share) {
+            return downloadImage();
+        }
+        
+        showLoading(true);
+        
+        let exportCanvas;
+        if (typeof prepareImageForExport === 'function') {
+            exportCanvas = prepareImageForExport();
+        } else {
+            exportCanvas = canvas;
+        }
+        
+        exportCanvas.toBlob(async (blob) => {
+            const file = new File([blob], 'صورة.png', { type: 'image/png' });
+            
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'صورة معدلة'
+                });
+                showAlert('تم المشاركة', 'success');
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    downloadImage();
+                }
+            } finally {
+                showLoading(false);
+            }
+        }, 'image/png');
+        
+    } catch (error) {
+        console.error('خطأ في المشاركة:', error);
+        showAlert('فشلت المشاركة', 'error');
+        showLoading(false);
+    }
+}
+
+// الرسائل
+function showAlert(message, type = 'success') {
+    const existingAlert = document.querySelector('.alert');
+    if (existingAlert) existingAlert.remove();
+    
     const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
+    alert.className = `alert ${type}`;
     alert.textContent = message;
     
     document.body.appendChild(alert);
     
-    // إخفاء تلقائي بعد 3 ثوان
-    setTimeout(() => {
-        alert.remove();
-    }, 3000);
+    setTimeout(() => alert.remove(), 3000);
+}
+
+// مؤشر التحميل
+function showLoading(show) {
+    let loader = document.getElementById('loader');
+    
+    if (show) {
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'loader';
+            loader.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            loader.innerHTML = '<div style="color: white; font-size: 18px;">جاري التحميل...</div>';
+            document.body.appendChild(loader);
+        }
+    } else {
+        if (loader) loader.remove();
+    }
 }
 
 // تصدير الدوال
+window.handleAuth = handleAuth;
+window.handleGoogleAuth = handleGoogleAuth;
 window.showPage = showPage;
-window.goBack = goBack;
+window.goBackToImages = goBackToImages;
+window.togglePanel = togglePanel;
+window.closePanel = closePanel;
+window.toggleTextCard = toggleTextCard;
+window.closeTextCard = closeTextCard;
+window.applyText = applyText;
 window.downloadImage = downloadImage;
 window.shareImage = shareImage;
-window.useSampleImage = useSampleImage;
+window.showAlert = showAlert;
