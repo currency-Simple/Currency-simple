@@ -19,39 +19,39 @@
     
     <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        /* نافذة تسجيل الدخول المنبثقة */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .auth-modal-content {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+    </style>
 </head>
 <body>
-    <!-- صفحة المصادقة -->
-    <div id="authPage" class="page active">
-        <div class="auth-container">
-            <div class="auth-card">
-                <h1>محرر النصوص على الصور</h1>
-                <p class="auth-subtitle">سجل دخولك للبدء</p>
-                
-                <div id="authForm">
-                    <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input">
-                    <input type="password" id="authPassword" placeholder="كلمة المرور" class="auth-input">
-                    
-                    <button onclick="handleAuth('signin')" class="auth-btn primary">تسجيل الدخول</button>
-                    <button onclick="handleAuth('signup')" class="auth-btn secondary">إنشاء حساب</button>
-                    
-                    <div class="auth-divider">أو</div>
-                    
-                    <button onclick="handleGoogleAuth()" class="auth-btn google">
-                        <span>متابعة مع Google</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- صفحة الفئات -->
-    <div id="categoriesPage" class="page">
+    <div id="categoriesPage" class="page active">
         <div class="header">
             <h1>الفئات</h1>
-            <button onclick="Auth.signOut()" class="icon-btn">
-                <span class="material-symbols-outlined">logout</span>
-            </button>
+            <!-- سيتم إضافة زر الحساب تلقائياً من JavaScript -->
         </div>
         <div class="categories-grid" id="categoriesGrid"></div>
     </div>
