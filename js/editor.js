@@ -1,261 +1,354 @@
-// js/editor.js
+// editor.js - محرر الصور المحسّن
+
 let canvas, ctx;
 let currentImage = null;
-let currentText = '';
-let textX = 0.5, textY = 0.5;
-let textScale = 1;
-let isDragging = false;
+let imageLoaded = false;
 
-// التهيئة
+// متغيرات التحكم بالنص
+let textX = 0.5;
+let textY = 0.5;
+let textScale = 1;
+let textRotation = 0;
+
+// متغيرات اللمس
+let isDragging = false;
+let isResizing = false;
+let startX = 0;
+let startY = 0;
+let initialDistance = 0;
+let initialScale = 1;
+let initialAngle = 0;
+let initialRotation = 0;
+
+// تهيئة المحرر
 window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('canvas');
     if (!canvas) return;
     
-    ctx = canvas.getContext('2d');
-    setupCanvas();
-    setupTextControls();
+    ctx = canvas.getContext('2d', { 
+        willReadFrequently: false,
+        alpha: true 
+    });
+    
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
     setupTouchControls();
+    setupEffectsControls();
+    
+    console.log('✅ المحرر جاهز');
 });
 
-// إعداد الكانفاس
-function setupCanvas() {
-    canvas.width = 800;
-    canvas.height = 600;
-    canvas.style.width = '100%';
-    canvas.style.height = 'auto';
-    canvas.style.maxHeight = '70vh';
-}
-
-// تحميل صورة للمحرر
-function loadImageToEditor(imageUrl) {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = function() {
-        currentImage = img;
-        
-        // ضبط أبعاد الكانفاس حسب الصورة
-        const maxWidth = window.innerWidth * 0.9;
-        const maxHeight = window.innerHeight * 0.7;
-        
-        let width = img.width;
-        let height = img.height;
-        
-        if (width > maxWidth) {
-            height = (maxWidth / width) * height;
-            width = maxWidth;
-        }
-        
-        if (height > maxHeight) {
-            width = (maxHeight / height) * width;
-            height = maxHeight;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        renderCanvas();
-    };
-    img.src = imageUrl;
-}
-
-// رسم الكانفاس
-function renderCanvas() {
-    if (!currentImage) return;
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // رسم الصورة
-    ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
-    
-    // رسم النص إذا كان موجودًا
-    if (currentText.trim()) {
-        drawText();
-    }
-}
-
-// رسم النص
-function drawText() {
-    const fontSize = 40 * textScale;
-    const fontFamily = window.currentFontFamily || "'ABeeZee', sans-serif";
-    const textColor = window.currentTextColor || '#FFFFFF';
-    const strokeColor = window.currentStrokeColor || '#000000';
-    
-    ctx.save();
-    
-    // إعداد النص
-    ctx.font = `bold ${fontSize}px ${fontFamily}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.direction = 'rtl';
-    
-    // رسم ظل النص
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
-    
-    // رسم حدود النص
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 3;
-    ctx.strokeText(currentText, textX * canvas.width, textY * canvas.height);
-    
-    // رسم النص
-    ctx.fillStyle = textColor;
-    ctx.fillText(currentText, textX * canvas.width, textY * canvas.height);
-    
-    ctx.restore();
-}
-
-// إعداد تحكم اللمس
+// إعداد التحكم باللمس
 function setupTouchControls() {
-    canvas.addEventListener('touchstart', handleTouchStart);
-    canvas.addEventListener('touchmove', handleTouchMove);
-    canvas.addEventListener('touchend', handleTouchEnd);
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
     
+    // دعم الماوس
     canvas.addEventListener('mousedown', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / canvas.width;
-        const y = (e.clientY - rect.top) / canvas.height;
-        
-        if (currentText) {
-            isDragging = true;
-            textX = x;
-            textY = y;
-            renderCanvas();
-        }
+        handleTouchStart({ 
+            touches: [{ clientX: e.clientX, clientY: e.clientY }], 
+            preventDefault: () => e.preventDefault() 
+        });
     });
     
     canvas.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            const rect = canvas.getBoundingClientRect();
-            textX = (e.clientX - rect.left) / canvas.width;
-            textY = (e.clientY - rect.top) / canvas.height;
-            renderCanvas();
+        if (isDragging || isResizing) {
+            handleTouchMove({ 
+                touches: [{ clientX: e.clientX, clientY: e.clientY }], 
+                preventDefault: () => e.preventDefault() 
+            });
         }
     });
     
-    canvas.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
+    canvas.addEventListener('mouseup', handleTouchEnd);
 }
 
 function handleTouchStart(e) {
-    if (e.touches.length === 1 && currentText) {
+    e.preventDefault();
+    
+    if (e.touches.length === 1) {
+        // لمسة واحدة - التحريك
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
+        
+        isDragging = true;
+        startX = touch.clientX;
+        startY = touch.clientY;
+        
         textX = (touch.clientX - rect.left) / canvas.width;
         textY = (touch.clientY - rect.top) / canvas.height;
-        isDragging = true;
-        renderCanvas();
+        
+        renderFullCanvas();
+        
     } else if (e.touches.length === 2) {
-        // تكبير/تصغير النص
+        // لمستان - التكبير والتدوير
+        isDragging = false;
+        isResizing = true;
+        
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         
         const dx = touch2.clientX - touch1.clientX;
         const dy = touch2.clientY - touch1.clientY;
-        const initialDistance = Math.sqrt(dx * dx + dy * dy);
         
-        canvas.dataset.initialDistance = initialDistance;
-        canvas.dataset.initialScale = textScale;
+        initialDistance = Math.sqrt(dx * dx + dy * dy);
+        initialScale = textScale;
+        initialAngle = Math.atan2(dy, dx);
+        initialRotation = textRotation;
     }
 }
 
 function handleTouchMove(e) {
     e.preventDefault();
     
-    if (isDragging && e.touches.length === 1) {
+    if (e.touches.length === 1 && isDragging) {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        textX = (touch.clientX - rect.left) / canvas.width;
-        textY = (touch.clientY - rect.top) / canvas.height;
-        renderCanvas();
-    } else if (e.touches.length === 2) {
+        
+        textX = Math.max(0.1, Math.min(0.9, (touch.clientX - rect.left) / canvas.width));
+        textY = Math.max(0.1, Math.min(0.9, (touch.clientY - rect.top) / canvas.height));
+        
+        renderFullCanvas();
+        
+    } else if (e.touches.length === 2 && isResizing) {
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         
         const dx = touch2.clientX - touch1.clientX;
         const dy = touch2.clientY - touch1.clientY;
+        
+        // التكبير
         const currentDistance = Math.sqrt(dx * dx + dy * dy);
-        const initialDistance = parseFloat(canvas.dataset.initialDistance);
-        const initialScale = parseFloat(canvas.dataset.initialScale);
+        textScale = Math.max(0.3, Math.min(3, initialScale * (currentDistance / initialDistance)));
         
-        if (initialDistance > 0) {
-            const scaleMultiplier = currentDistance / initialDistance;
-            textScale = Math.max(0.5, Math.min(3, initialScale * scaleMultiplier));
-            renderCanvas();
-        }
+        // التدوير
+        const currentAngle = Math.atan2(dy, dx);
+        textRotation = (initialRotation + (currentAngle - initialAngle) * (180 / Math.PI)) % 360;
+        
+        renderFullCanvas();
     }
 }
 
-function handleTouchEnd() {
+function handleTouchEnd(e) {
+    e.preventDefault();
     isDragging = false;
+    isResizing = false;
 }
 
-// إعداد عناصر التحكم بالنص
-function setupTextControls() {
-    const textInput = document.getElementById('textInput');
-    if (!textInput) return;
+// إعداد عناصر التحكم بالتأثيرات
+function setupEffectsControls() {
+    const shadowEnabled = document.getElementById('shadowEnabled');
+    const bgEnabled = document.getElementById('bgEnabled');
     
-    // عند تغيير النص
-    textInput.addEventListener('input', () => {
-        currentText = textInput.value;
-        renderCanvas();
-    });
+    if (shadowEnabled) {
+        shadowEnabled.addEventListener('change', renderFullCanvas);
+    }
+    
+    if (bgEnabled) {
+        bgEnabled.addEventListener('change', renderFullCanvas);
+    }
 }
 
-// فتح/إغلاق لوحة النص
-function toggleTextPanel() {
-    const panel = document.getElementById('textPanel');
-    if (panel) {
-        panel.classList.toggle('hidden');
+// تحميل صورة للمحرر
+function loadImageToEditor(imageUrl) {
+    console.log('⏳ جاري تحميل الصورة...');
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = function() {
+        currentImage = img;
+        imageLoaded = true;
         
-        if (!panel.classList.contains('hidden')) {
-            const textInput = document.getElementById('textInput');
-            if (textInput) {
-                textInput.focus();
-                textInput.value = currentText;
-            }
+        // ضبط حجم الكانفاس
+        const container = document.querySelector('.canvas-wrapper');
+        const maxWidth = container.clientWidth - 30;
+        const maxHeight = container.clientHeight - 30;
+        
+        const imgAspect = img.width / img.height;
+        
+        let canvasWidth, canvasHeight;
+        
+        if (maxWidth / maxHeight > imgAspect) {
+            canvasHeight = maxHeight;
+            canvasWidth = canvasHeight * imgAspect;
+        } else {
+            canvasWidth = maxWidth;
+            canvasHeight = canvasWidth / imgAspect;
         }
+        
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        // إعادة تعيين الإعدادات
+        textX = 0.5;
+        textY = 0.5;
+        textScale = 1;
+        textRotation = 0;
+        
+        renderFullCanvas();
+        
+        console.log('✅ تم تحميل الصورة');
+    };
+    
+    img.onerror = function() {
+        console.error('❌ فشل تحميل الصورة');
+        showAlert('فشل تحميل الصورة', 'error');
+    };
+    
+    img.src = imageUrl;
+}
+
+// رسم الكانفاس الكامل
+function renderFullCanvas() {
+    if (!imageLoaded || !currentImage) return;
+    
+    // تنظيف الكانفاس
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // رسم الخلفية البيضاء
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // رسم الصورة
+    ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+    
+    // رسم النص إذا كان موجوداً
+    if (window.currentText && window.currentText.trim() !== '') {
+        renderText();
     }
 }
 
-// تطبيق النص
-function applyText() {
-    const textInput = document.getElementById('textInput');
-    if (textInput) {
-        currentText = textInput.value;
-        renderCanvas();
-        toggleTextPanel();
+// رسم النص
+function renderText() {
+    const text = window.currentText || '';
+    const fontFamily = window.currentFontFamily || "'IBeeZee', sans-serif";
+    const textColor = window.currentTextColor || '#FFFFFF';
+    
+    const shadowEnabled = document.getElementById('shadowEnabled')?.checked !== false;
+    const bgEnabled = document.getElementById('bgEnabled')?.checked || false;
+    
+    // حجم الخط
+    const baseFontSize = Math.min(canvas.width, canvas.height) * 0.08;
+    const fontSize = baseFontSize * textScale;
+    
+    ctx.save();
+    
+    ctx.font = `bold ${fontSize}px ${fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.direction = 'rtl';
+    
+    const centerX = textX * canvas.width;
+    const centerY = textY * canvas.height;
+    
+    ctx.translate(centerX, centerY);
+    ctx.rotate(textRotation * Math.PI / 180);
+    
+    // الظل
+    if (shadowEnabled) {
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetX = 4;
+        ctx.shadowOffsetY = 4;
     }
+    
+    // الخلفية
+    if (bgEnabled) {
+        const metrics = ctx.measureText(text);
+        const padding = fontSize * 0.3;
+        const bgWidth = metrics.width + padding * 2;
+        const bgHeight = fontSize + padding;
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(-bgWidth / 2, -bgHeight / 2, bgWidth, bgHeight);
+    }
+    
+    // النص
+    ctx.fillStyle = textColor;
+    ctx.fillText(text, 0, 0);
+    
+    ctx.restore();
 }
 
-// حذف النص
-function clearText() {
-    currentText = '';
-    const textInput = document.getElementById('textInput');
-    if (textInput) textInput.value = '';
-    renderCanvas();
-    toggleTextPanel();
-}
-
-// فتح لوحة الأدوات
-function openToolPanel(panelName) {
-    // إغلاق جميع اللوحات
-    document.querySelectorAll('.tool-panel').forEach(panel => {
-        panel.classList.add('hidden');
+// تحضير الصورة للتصدير
+function prepareImageForExport() {
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = currentImage.width;
+    exportCanvas.height = currentImage.height;
+    
+    const exportCtx = exportCanvas.getContext('2d', { 
+        willReadFrequently: false,
+        alpha: true 
     });
     
-    // فتح اللوحة المطلوبة
-    const panel = document.getElementById(`${panelName}Panel`);
-    if (panel) {
-        panel.classList.remove('hidden');
+    exportCtx.imageSmoothingEnabled = true;
+    exportCtx.imageSmoothingQuality = 'high';
+    
+    // رسم الخلفية
+    exportCtx.fillStyle = '#FFFFFF';
+    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    
+    // رسم الصورة
+    exportCtx.drawImage(currentImage, 0, 0);
+    
+    // رسم النص
+    if (window.currentText && window.currentText.trim() !== '') {
+        const text = window.currentText;
+        const fontFamily = window.currentFontFamily || "'ABeeZee', sans-serif";
+        const textColor = window.currentTextColor || '#FFFFFF';
+        
+        const shadowEnabled = document.getElementById('shadowEnabled')?.checked !== false;
+        const bgEnabled = document.getElementById('bgEnabled')?.checked || false;
+        
+        const baseFontSize = Math.min(exportCanvas.width, exportCanvas.height) * 0.08;
+        const fontSize = baseFontSize * textScale;
+        
+        exportCtx.save();
+        
+        exportCtx.font = `bold ${fontSize}px ${fontFamily}`;
+        exportCtx.textAlign = 'center';
+        exportCtx.textBaseline = 'middle';
+        exportCtx.direction = 'rtl';
+        
+        const centerX = textX * exportCanvas.width;
+        const centerY = textY * exportCanvas.height;
+        
+        exportCtx.translate(centerX, centerY);
+        exportCtx.rotate(textRotation * Math.PI / 180);
+        
+        if (shadowEnabled) {
+            exportCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            exportCtx.shadowBlur = 10;
+            exportCtx.shadowOffsetX = 5;
+            exportCtx.shadowOffsetY = 5;
+        }
+        
+        if (bgEnabled) {
+            const metrics = exportCtx.measureText(text);
+            const padding = fontSize * 0.3;
+            const bgWidth = metrics.width + padding * 2;
+            const bgHeight = fontSize + padding;
+            
+            exportCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            exportCtx.fillRect(-bgWidth / 2, -bgHeight / 2, bgWidth, bgHeight);
+        }
+        
+        exportCtx.fillStyle = textColor;
+        exportCtx.fillText(text, 0, 0);
+        
+        exportCtx.restore();
     }
+    
+    return exportCanvas;
 }
 
 // تصدير الدوال
 window.loadImageToEditor = loadImageToEditor;
-window.toggleTextPanel = toggleTextPanel;
-window.applyText = applyText;
-window.clearText = clearText;
-window.openToolPanel = openToolPanel;
+window.renderFullCanvas = renderFullCanvas;
+window.prepareImageForExport = prepareImageForExport;
+window.currentText = '';
+window.textScale = textScale;
+window.textRotation = textRotation;
