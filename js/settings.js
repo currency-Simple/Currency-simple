@@ -20,9 +20,7 @@ const translations = {
         contact: "اتصل بنا",
         version: "الإصدار",
         categories: "الفئات",
-        editor: "التحرير",
-        reset: "إعادة تعيين",
-        filters: "فلاتر"
+        editor: "التحرير"
     },
     en: {
         edit: "Edit",
@@ -44,9 +42,7 @@ const translations = {
         contact: "Contact Us",
         version: "Version",
         categories: "Categories",
-        editor: "Editor",
-        reset: "Reset",
-        filters: "Filters"
+        editor: "Editor"
     },
     fr: {
         edit: "Éditer",
@@ -68,9 +64,7 @@ const translations = {
         contact: "Contactez-nous",
         version: "Version",
         categories: "Catégories",
-        editor: "Éditeur",
-        reset: "Réinitialiser",
-        filters: "Filtres"
+        editor: "Éditeur"
     }
 };
 
@@ -207,22 +201,20 @@ function showAbout() {
         <div style="padding: 20px; max-width: 600px; margin: 0 auto; text-align: center;">
             <h2 style="color: var(--primary-color); margin-bottom: 20px;">محرر النصوص على الصور</h2>
             <p style="line-height: 1.8; margin-bottom: 15px;">
-                الإصدار 11.0 Final
+                الإصدار 9.0 Final
             </p>
             <p style="line-height: 1.8; margin-bottom: 15px;">
-                تطبيق متقدم لإضافة النصوص على الصور مع خيارات تحرير متعددة وأكثر من 70 خط عربي وإنجليزي.
+                تطبيق متقدم لإضافة النصوص على الصور مع خيارات تحرير متعددة وأكثر من 40 خط عربي وإنجليزي.
             </p>
-            <h3 style="color: var(--text-color); margin: 20px 0 10px;">المميزات الجديدة</h3>
+            <h3 style="color: var(--text-color); margin: 20px 0 10px;">المميزات</h3>
             <ul style="text-align: right; line-height: 2; margin-bottom: 20px;">
-                <li>أكثر من 70 خط عربي وإنجليزي متقدم</li>
-                <li>تحكم مباشر في النص من الشاشة</li>
-                <li>زر إعادة تعيين المحرر</li>
-                <li>لوحة تأثيرات مصغرة وسهلة الاستخدام</li>
-                <li>أحجام خلفية تعمل بنسبة 100%</li>
-                <li>15 فلتر مختلف للصور</li>
-                <li>تحكم باللمس المتقدم (تحريك، تكبير، تدوير)</li>
+                <li>أكثر من 40 خط عربي وإنجليزي</li>
+                <li>مجموعة واسعة من الألوان</li>
+                <li>تأثيرات متقدمة للنص والصورة</li>
+                <li>تحكم بالحجم عبر اللمس (قرص وتكبير)</li>
+                <li>تدوير وقلب الصور</li>
                 <li>حواف ملونة للصور والنصوص</li>
-                <li>تصدير بجودة عالية 4K</li>
+                <li>تصدير بجودة عالية</li>
             </ul>
             <p style="line-height: 1.8; margin-bottom: 15px; color: var(--text-secondary);">
                 © 2025 جميع الحقوق محفوظة
@@ -247,40 +239,31 @@ function showHelp() {
         <div style="padding: 20px; max-width: 600px; margin: 0 auto;">
             <h2 style="color: var(--primary-color); margin-bottom: 20px;">مركز المساعدة</h2>
             
-            <h3 style="color: var(--text-color); margin: 20px 0 10px;">التحكم المباشر في النص</h3>
+            <h3 style="color: var(--text-color); margin: 20px 0 10px;">كيفية إضافة نص</h3>
             <p style="line-height: 1.8; margin-bottom: 15px;">
-                • انقر على النص لعرض عناصر التحكم<br>
-                • اسحب الدائرة العلوية لتحريك النص<br>
-                • اسحب الدائرة السفلية اليمنى لتغيير الحجم<br>
-                • اسحب الدائرة السفلية اليسرى للتدوير
+                1. اختر صورة من الفئات أو قم برفع صورة من جهازك<br>
+                2. اضغط على زر "نص" في شريط الأدوات<br>
+                3. اكتب النص المطلوب واضغط "موافق"
             </p>
             
-            <h3 style="color: var(--text-color); margin: 20px 0 10px;">زر إعادة التعيين</h3>
+            <h3 style="color: var(--text-color); margin: 20px 0 10px;">تحريك وتغيير حجم النص</h3>
             <p style="line-height: 1.8; margin-bottom: 15px;">
-                • زر "إعادة" في شريط العنوان<br>
-                • يحذف كل التعديلات ويعيد المحرر لحالته الأصلية<br>
-                • مفيد لبدء مشروع جديد
+                • لتحريك النص: المس النص واسحبه بإصبع واحد<br>
+                • لتغيير الحجم: استخدم إصبعين (قرص وتكبير) على النص<br>
+                • للتدوير: استخدم إصبعين ولف النص
             </p>
             
-            <h3 style="color: var(--text-color); margin: 20px 0 10px;">لوحة التأثيرات المصغرة</h3>
+            <h3 style="color: var(--text-color); margin: 20px 0 10px;">تغيير الخط واللون</h3>
             <p style="line-height: 1.8; margin-bottom: 15px;">
-                • تم تصغير اللوحة لتكون أكثر كفاءة<br>
-                • كل الخيارات في مكان واحد<br>
-                • سهلة الاستخدام على الشاشات الصغيرة
+                • استخدم أداة "خط" لاختيار من بين 40 خط<br>
+                • استخدم أداة "لون" لتغيير لون النص<br>
+                • استخدم "حواف نص" لإضافة إطار حول النص
             </p>
             
-            <h3 style="color: var(--text-color); margin: 20px 0 10px;">أحجام الخلفية</h3>
+            <h3 style="color: var(--text-color); margin: 20px 0 10px;">حفظ ومشاركة</h3>
             <p style="line-height: 1.8; margin-bottom: 15px;">
-                • 9 أحجام مختلفة تعمل بنسبة 100%<br>
-                • من الأصلية إلى القصص (9:16)<br>
-                • كل حجم مع وصف واضح
-            </p>
-            
-            <h3 style="color: var(--text-color); margin: 20px 0 10px;">الفلاتر الجديدة</h3>
-            <p style="line-height: 1.8; margin-bottom: 15px;">
-                • 15 فلتر مختلف للصور<br>
-                • من الأبيض والأسود إلى الفلاتر الإبداعية<br>
-                • تطبيق فوري مع معاينة
+                • زر "تنزيل": لحفظ الصورة على جهازك<br>
+                • زر "مشاركة": لمشاركة الصورة مباشرة
             </p>
             
             <button onclick="closeInfoDialog()" style="
@@ -404,6 +387,3 @@ window.showAbout = showAbout;
 window.showHelp = showHelp;
 window.showContact = showContact;
 window.closeInfoDialog = closeInfoDialog;
-window.toggleToolPanel = toggleToolPanel;
-window.changeTheme = changeTheme;
-window.changeLanguage = changeLanguage;
