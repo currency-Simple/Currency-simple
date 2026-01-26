@@ -4,7 +4,8 @@ let currentCategory = null;
 let currentImages = [];
 let keyboardOpen = false;
 let textCardVisible = false;
-let effectsPanelExpanded = true;
+let editHistory = [];
+let historyIndex = -1;
 
 // تحميل التطبيق
 window.addEventListener('DOMContentLoaded', () => {
@@ -25,81 +26,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // إعداد بطاقة النص بعد تحميل الصفحة
     setTimeout(() => {
         setupTextCard();
-        setupBackgroundControls();
-        setupEffectsPanel();
     }, 500);
 });
-
-// إعداد عناصر التحكم في الخلفية
-function setupBackgroundControls() {
-    console.log('🎨 Setting up background controls...');
-    
-    // تحديث الخلفية عند تغيير الألوان
-    const backgroundColorGrid = document.getElementById('backgroundColorGrid');
-    if (backgroundColorGrid) {
-        backgroundColorGrid.addEventListener('click', () => {
-            setTimeout(() => {
-                if (typeof updateBackground === 'function') {
-                    updateBackground();
-                }
-            }, 100);
-        });
-    }
-    
-    // تحديث الخلفية عند تغيير الحجم
-    const backgroundSizeGrid = document.getElementById('backgroundSizeGrid');
-    if (backgroundSizeGrid) {
-        backgroundSizeGrid.addEventListener('click', () => {
-            setTimeout(() => {
-                if (typeof updateBackground === 'function') {
-                    updateBackground();
-                }
-            }, 100);
-        });
-    }
-}
-
-// إعداد لوحة التأثيرات
-function setupEffectsPanel() {
-    const effectsPanel = document.getElementById('effectsPanel');
-    const toggleBtn = document.querySelector('.toggle-expand .material-symbols-outlined');
-    
-    if (!effectsPanel || !toggleBtn) return;
-    
-    // ضبط الارتفاع بناءً على حجم الشاشة
-    if (window.innerWidth < 768) {
-        effectsPanel.style.maxHeight = '55vh';
-    } else {
-        effectsPanel.style.maxHeight = '65vh';
-    }
-    
-    effectsPanelExpanded = true;
-    toggleBtn.textContent = 'expand_less';
-}
-
-// تبديل حجم لوحة التأثيرات
-function toggleEffectsSize() {
-    const effectsPanel = document.getElementById('effectsPanel');
-    const toggleBtn = document.querySelector('.toggle-expand .material-symbols-outlined');
-    
-    if (!effectsPanel || !toggleBtn) return;
-    
-    effectsPanelExpanded = !effectsPanelExpanded;
-    
-    if (effectsPanelExpanded) {
-        // حالة مفتوحة بالكامل
-        if (window.innerWidth < 768) {
-            effectsPanel.style.maxHeight = '55vh';
-        } else {
-            effectsPanel.style.maxHeight = '65vh';
-        }
-        toggleBtn.textContent = 'expand_less';
-    } else {
-        // حالة مصغرة
-        effectsPanel.style.maxHeight = '40vh';
-        toggleBtn.textContent = 'expand_more';
-    }
-}
 
 // إعداد بطاقة النص الجديدة
 function setupTextCard() {
@@ -255,6 +183,10 @@ function applyTextToImage() {
     if (!textInput) return;
     
     const text = textInput.value.trim();
+    
+    // حفظ حالة قبل التعديل
+    saveToHistory();
+    
     window.currentText = text;
     
     if (typeof renderFullCanvas === 'function') {
@@ -274,6 +206,9 @@ function applyTextToImage() {
 }
 
 function clearTextFromImage() {
+    // حفظ حالة قبل التعديل
+    saveToHistory();
+    
     window.currentText = '';
     
     if (typeof renderFullCanvas === 'function') {
@@ -310,6 +245,12 @@ function setupKeyboardListeners() {
         if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
             e.preventDefault();
             shareImage();
+        }
+        
+        // Ctrl/Cmd + Z للإعادة
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+            e.preventDefault();
+            undoEdit();
         }
         
         // Escape لإغلاق البطاقات
@@ -689,6 +630,147 @@ function goBackToImages() {
     }
 }
 
+// حفظ الحالة الحالية في التاريخ
+function saveToHistory() {
+    if (!window.currentText && editHistory.length === 0) return;
+    
+    const state = {
+        text: window.currentText || '',
+        textX: window.textX || 0.5,
+        textY: window.textY || 0.5,
+        textScale: window.textScale || 1,
+        textRotation: window.textRotation || 0,
+        textColor: window.currentTextColor || '#FFFFFF',
+        strokeColor: window.currentStrokeColor || '#000000',
+        backgroundColor: window.currentCardColor || '#000000',
+        shadowEnabled: document.getElementById('shadowEnabled')?.checked || false,
+        backgroundEnabled: document.getElementById('backgroundEnabled')?.checked || false,
+        shadowIntensity: window.shadowIntensity || 5,
+        backgroundOpacity: window.bgOpacity || 70,
+        timestamp: Date.now()
+    };
+    
+    // إزالة أي حالات بعد المؤشر الحالي
+    if (historyIndex < editHistory.length - 1) {
+        editHistory = editHistory.slice(0, historyIndex + 1);
+    }
+    
+    editHistory.push(state);
+    historyIndex = editHistory.length - 1;
+    
+    // تحديث حالة زر الإعادة
+    updateUndoButton();
+    
+    // حفظ فقط آخر 20 حالة
+    if (editHistory.length > 20) {
+        editHistory.shift();
+        historyIndex = editHistory.length - 1;
+    }
+    
+    console.log('💾 Saved to history, total states:', editHistory.length);
+}
+
+// استعادة الحالة السابقة
+function undoEdit() {
+    if (historyIndex <= 0) {
+        showAlert('⚠️ لا توجد تعديلات سابقة للإعادة', 'info');
+        return;
+    }
+    
+    historyIndex--;
+    const previousState = editHistory[historyIndex];
+    
+    if (previousState) {
+        // استعادة جميع القيم
+        window.currentText = previousState.text;
+        window.textX = previousState.textX;
+        window.textY = previousState.textY;
+        window.textScale = previousState.textScale;
+        window.textRotation = previousState.textRotation;
+        window.currentTextColor = previousState.textColor;
+        window.currentStrokeColor = previousState.strokeColor;
+        window.currentCardColor = previousState.backgroundColor;
+        window.shadowIntensity = previousState.shadowIntensity;
+        window.bgOpacity = previousState.backgroundOpacity;
+        
+        // تحديث عناصر التحكم
+        const shadowEnabled = document.getElementById('shadowEnabled');
+        const backgroundEnabled = document.getElementById('backgroundEnabled');
+        const shadowIntensitySlider = document.getElementById('shadowIntensitySlider');
+        const backgroundOpacitySlider = document.getElementById('backgroundOpacitySlider');
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        
+        if (shadowEnabled) shadowEnabled.checked = previousState.shadowEnabled;
+        if (backgroundEnabled) backgroundEnabled.checked = previousState.backgroundEnabled;
+        if (shadowIntensitySlider) {
+            shadowIntensitySlider.value = previousState.shadowIntensity;
+            document.getElementById('shadowIntensityDisplay').textContent = previousState.shadowIntensity;
+        }
+        if (backgroundOpacitySlider) {
+            backgroundOpacitySlider.value = previousState.backgroundOpacity;
+            document.getElementById('backgroundOpacityDisplay').textContent = previousState.backgroundOpacity;
+        }
+        if (fontSizeSlider) {
+            fontSizeSlider.value = Math.round(previousState.textScale * 50);
+            document.getElementById('fontSizeDisplay').textContent = fontSizeSlider.value;
+        }
+        
+        // تحديث الألوان المحددة
+        setTimeout(() => {
+            updateColorSelections();
+        }, 100);
+        
+        // إعادة رسم الكانفاس
+        if (typeof renderFullCanvas === 'function') {
+            renderFullCanvas();
+        }
+        
+        // تحديث حالة زر الإعادة
+        updateUndoButton();
+        
+        showAlert('↩️ تم استعادة التعديل السابق', 'success');
+        console.log('↩️ Undo to state:', historyIndex);
+    }
+}
+
+// تحديث حالة زر الإعادة
+function updateUndoButton() {
+    const undoBtn = document.getElementById('undoBtn');
+    if (undoBtn) {
+        undoBtn.disabled = historyIndex <= 0;
+    }
+}
+
+// تحديث تحديد الألوان
+function updateColorSelections() {
+    // تحديث لون النص
+    const colorItems = document.querySelectorAll('#colorGrid .color-item');
+    colorItems.forEach(item => {
+        item.classList.remove('selected');
+        if (item.style.backgroundColor === window.currentTextColor) {
+            item.classList.add('selected');
+        }
+    });
+    
+    // تحديث لون الحواف
+    const strokeItems = document.querySelectorAll('#strokeColorGrid .color-item');
+    strokeItems.forEach(item => {
+        item.classList.remove('selected');
+        if (item.style.backgroundColor === window.currentStrokeColor) {
+            item.classList.add('selected');
+        }
+    });
+    
+    // تحديث لون الخلفية
+    const bgItems = document.querySelectorAll('#backgroundColorGrid .color-item');
+    bgItems.forEach(item => {
+        item.classList.remove('selected');
+        if (item.style.backgroundColor === window.currentCardColor) {
+            item.classList.add('selected');
+        }
+    });
+}
+
 async function downloadImage() {
     try {
         console.log('⬇️ بدء عملية التنزيل...');
@@ -948,6 +1030,10 @@ function hideLoadingIndicator() {
 window.currentText = '';
 window.textScale = 1;
 window.textRotation = 0;
+window.textX = 0.5;
+window.textY = 0.5;
+window.shadowIntensity = 5;
+window.bgOpacity = 70;
 
 // تصدير الوظائف العامة
 window.showPage = showPage;
@@ -961,8 +1047,8 @@ window.openTextCard = openTextCard;
 window.clearTextFromImage = clearTextFromImage;
 window.clearTextFromCard = clearTextFromCard;
 window.applyTextToImage = applyTextToImage;
-window.toggleEffectsSize = toggleEffectsSize;
-window.setupEffectsPanel = setupEffectsPanel;
+window.undoEdit = undoEdit;
+window.saveToHistory = saveToHistory;
 
 // تهيئة الإعدادات
 function loadSettings() {
@@ -1040,3 +1126,4 @@ document.addEventListener('DOMContentLoaded', () => {
         images.forEach(img => imageObserver.observe(img));
     }
 });
+[file content end]
