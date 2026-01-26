@@ -1,4 +1,4 @@
-// ألوان ColorHunt مع الألوان الإضافية
+// ألوان ColorHunt
 const COLORS = [
   "#F7A8C4", "#F37199", "#E53888", "#AC1754", "#FFDFEF", "#EABDE6", "#D69ADE", "#AA60C8",
   "#F6CE71", "#CC561E", "#FF6500", "#C40C0C", "#F0F0DB", "#E1D9BC", "#ACBAC4", "#30364F",
@@ -17,161 +17,171 @@ const COLORS = [
   "#00FFDE", "#FF2DD1", "#FDFFB8", "#63C8FF", "#4DFFBE", "#FFFFFF"
 ];
 
-// أحجام الخلفية المتاحة - محدثة للعمل 100%
-const BACKGROUND_SIZES = [
-    { name: "أصلي", value: "original", icon: "crop_original", description: "حجم الصورة الأصلي" },
-    { name: "تغطية", value: "cover", icon: "fit_screen", description: "تغطية كاملة" },
-    { name: "مربع", value: "1:1", icon: "crop_square", description: "نسبة 1:1" },
-    { name: "عمودي", value: "4:5", icon: "crop_portrait", description: "نسبة 4:5" },
-    { name: "قصة", value: "9:16", icon: "smartphone", description: "نسبة 9:16" },
-    { name: "أفقي", value: "16:9", icon: "desktop_windows", description: "نسبة 16:9" },
-    { name: "ملصق", value: "3:4", icon: "photo_size_select_large", description: "نسبة 3:4" },
-    { name: "نشر", value: "3:2", icon: "photo_library", description: "نسبة 3:2" },
-    { name: "واسع", value: "16:10", icon: "monitor", description: "نسبة 16:10" }
-];
-
-// متغيرات لتخزين الألوان المختارة
 let currentTextColor = "#FFFFFF";
 let currentStrokeColor = "#000000";
 let currentCardColor = "#000000";
 let currentBorderColor = "#000000";
 let currentBackgroundColor = "#FFFFFF";
+let currentSquareColor = "#FFFFFF";
+let squareRatio = 80;
 let currentBackgroundSize = "original";
 
-// تخزين الألوان في window لاستخدامها في editor.js
 window.currentTextColor = currentTextColor;
 window.currentStrokeColor = currentStrokeColor;
 window.currentCardColor = currentCardColor;
 window.currentBorderColor = currentBorderColor;
 window.currentBackgroundColor = currentBackgroundColor;
+window.currentSquareColor = currentSquareColor;
+window.squareRatio = squareRatio;
 window.currentBackgroundSize = currentBackgroundSize;
 
-// تهيئة شبكات الألوان والخلفية
+const BACKGROUND_SIZES = [
+    { name: "أصلي", value: "original", icon: "crop_original" },
+    { name: "تغطية", value: "cover", icon: "fit_screen" },
+    { name: "مربع 1:1", value: "1:1", icon: "crop_square" },
+    { name: "عمودي 4:5", value: "4:5", icon: "crop_portrait" },
+    { name: "قصة 9:16", value: "9:16", icon: "crop_portrait" },
+    { name: "أفقي 16:9", value: "16:9", icon: "crop_landscape" },
+    { name: "عمودي 3:4", value: "3:4", icon: "crop_portrait" },
+    { name: "نشر 3:2", value: "3:2", icon: "crop_landscape" },
+    { name: "شاشة 16:10", value: "16:10", icon: "desktop_windows" }
+];
+
 function initializeColors() {
-    console.log('🎨 جاري تهيئة الألوان والخلفية...');
+    console.log('⏳ جاري تهيئة الألوان والخلفية...');
     
-    // شبكة ألوان النص
-    initializeColorGrid('colorGrid', COLORS, setTextColor, "#FFFFFF");
-    
-    // شبكة ألوان الحواف
-    initializeColorGrid('strokeColorGrid', COLORS, setStrokeColor, "#000000");
-    
-    // شبكة ألوان حواف الصورة
-    initializeColorGrid('borderColorGrid', COLORS, setBorderColor, "#000000");
-    
-    // شبكة ألوان خلفية النص
-    initializeColorGrid('cardColorGrid', COLORS, setCardColor, "#000000");
-    
-    // شبكة ألوان خلفية الصورة مع شفافية
-    initializeBackgroundColorGrid();
-    
-    // شبكة أحجام الخلفية
-    initializeBackgroundSizeGrid();
-    
-    console.log('✅ تم تهيئة جميع الألوان والخلفيات');
-}
-
-// إنشاء شبكة ألوان
-function initializeColorGrid(gridId, colors, onClick, defaultColor) {
-    const grid = document.getElementById(gridId);
-    if (!grid) {
-        console.error(`❌ شبكة الألوان ${gridId} غير موجودة`);
-        return;
+    const colorGrid = document.getElementById('colorGrid');
+    if (colorGrid) {
+        colorGrid.innerHTML = '';
+        colorGrid.className = 'horizontal-controls color-scroll';
+        COLORS.forEach((color, index) => {
+            const item = createColorItem(color, () => setTextColor(color));
+            if (index === 0) item.classList.add('selected');
+            colorGrid.appendChild(item);
+        });
+        console.log(`✓ تم تحميل ${COLORS.length} لون للنص`);
     }
-    
-    grid.innerHTML = '';
-    grid.className = 'horizontal-controls color-scroll';
-    
-    colors.forEach((color) => {
-        const item = createColorItem(color, () => onClick(color));
-        if (color === defaultColor) item.classList.add('selected');
-        grid.appendChild(item);
-    });
-    
-    console.log(`✓ تم تحميل ${colors.length} لون في ${gridId}`);
-}
 
-// إنشاء شبكة ألوان الخلفية مع شفافية
-function initializeBackgroundColorGrid() {
-    const grid = document.getElementById('backgroundColorGrid');
-    if (!grid) return;
-    
-    grid.innerHTML = '';
-    grid.className = 'horizontal-controls color-scroll';
-    
-    // إضافة عنصر الشفافية أولاً
-    const transparentItem = document.createElement('div');
-    transparentItem.className = 'color-item';
-    transparentItem.innerHTML = '<span style="font-size: 20px;">☐</span>';
-    transparentItem.style.backgroundColor = 'transparent';
-    transparentItem.style.backgroundImage = `
-        linear-gradient(45deg, #ccc 25%, transparent 25%),
-        linear-gradient(-45deg, #ccc 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #ccc 75%),
-        linear-gradient(-45deg, transparent 75%, #ccc 75%)
-    `;
-    transparentItem.style.backgroundSize = '20px 20px';
-    transparentItem.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0px';
-    transparentItem.title = 'شفاف';
-    transparentItem.onclick = () => {
-        grid.querySelectorAll('.color-item').forEach(c => c.classList.remove('selected'));
-        transparentItem.classList.add('selected');
-        setBackgroundColor('transparent');
-    };
-    
-    if (currentBackgroundColor === 'transparent') {
-        transparentItem.classList.add('selected');
+    const strokeGrid = document.getElementById('strokeColorGrid');
+    if (strokeGrid) {
+        strokeGrid.innerHTML = '';
+        strokeGrid.className = 'horizontal-controls color-scroll';
+        COLORS.forEach((color, index) => {
+            const item = createColorItem(color, () => setStrokeColor(color));
+            if (color === "#000000") item.classList.add('selected');
+            strokeGrid.appendChild(item);
+        });
+        console.log(`✓ تم تحميل ${COLORS.length} لون للحواف`);
     }
-    
-    grid.appendChild(transparentItem);
-    
-    // إضافة الألوان
-    COLORS.forEach((color) => {
-        const item = createColorItem(color, () => setBackgroundColor(color));
-        if (color === "#FFFFFF" && currentBackgroundColor !== 'transparent') {
-            item.classList.add('selected');
-        }
-        grid.appendChild(item);
-    });
-    
-    console.log(`✓ تم تحميل ${COLORS.length + 1} لون للخلفية`);
+
+    const borderGrid = document.getElementById('borderColorGrid');
+    if (borderGrid) {
+        borderGrid.innerHTML = '';
+        borderGrid.className = 'horizontal-controls color-scroll';
+        COLORS.forEach((color, index) => {
+            const item = createColorItem(color, () => setBorderColor(color));
+            if (color === "#000000") item.classList.add('selected');
+            borderGrid.appendChild(item);
+        });
+        console.log(`✓ تم تحميل ${COLORS.length} لون لحواف الصورة`);
+    }
+
+    const cardGrid = document.getElementById('cardColorGrid');
+    if (cardGrid) {
+        cardGrid.innerHTML = '';
+        cardGrid.className = 'horizontal-controls color-scroll';
+        COLORS.forEach((color, index) => {
+            const item = createColorItem(color, () => setCardColor(color));
+            if (color === "#000000") item.classList.add('selected');
+            cardGrid.appendChild(item);
+        });
+        console.log(`✓ تم تحميل ${COLORS.length} لون لخلفية النص`);
+    }
+
+    const backgroundGrid = document.getElementById('backgroundColorGrid');
+    if (backgroundGrid) {
+        backgroundGrid.innerHTML = '';
+        backgroundGrid.className = 'horizontal-controls color-scroll';
+        
+        const transparentItem = document.createElement('div');
+        transparentItem.className = 'color-item';
+        transparentItem.style.backgroundColor = 'transparent';
+        transparentItem.style.backgroundImage = 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)';
+        transparentItem.style.backgroundSize = '20px 20px';
+        transparentItem.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0px';
+        transparentItem.title = 'شفاف';
+        transparentItem.onclick = () => {
+            backgroundGrid.querySelectorAll('.color-item').forEach(c => c.classList.remove('selected'));
+            transparentItem.classList.add('selected');
+            setBackgroundColor('transparent');
+        };
+        backgroundGrid.appendChild(transparentItem);
+        
+        COLORS.forEach((color, index) => {
+            const item = createColorItem(color, () => setBackgroundColor(color));
+            if (color === "#FFFFFF") item.classList.add('selected');
+            backgroundGrid.appendChild(item);
+        });
+        console.log(`✓ تم تحميل ${COLORS.length + 1} لون للخلفية`);
+    }
+
+    const squareGrid = document.getElementById('squareColorGrid');
+    if (squareGrid) {
+        squareGrid.innerHTML = '';
+        squareGrid.className = 'horizontal-controls color-scroll';
+        
+        COLORS.forEach((color, index) => {
+            const item = createColorItem(color, () => setSquareColor(color));
+            if (color === "#FFFFFF") item.classList.add('selected');
+            squareGrid.appendChild(item);
+        });
+        console.log(`✓ تم تحميل ${COLORS.length} لون للمربع`);
+    }
+
+    const squareRatioSlider = document.getElementById('squareRatioSlider');
+    if (squareRatioSlider) {
+        squareRatioSlider.addEventListener('input', (e) => {
+            squareRatio = parseInt(e.target.value);
+            window.squareRatio = squareRatio;
+            const display = document.getElementById('squareRatioDisplay');
+            if (display) display.textContent = squareRatio + '%';
+            
+            if (typeof updateBackground === 'function') {
+                updateBackground();
+            }
+        });
+    }
+
+    const backgroundSizeGrid = document.getElementById('backgroundSizeGrid');
+    if (backgroundSizeGrid) {
+        backgroundSizeGrid.innerHTML = '';
+        backgroundSizeGrid.className = 'background-buttons-grid';
+        
+        BACKGROUND_SIZES.forEach((size, index) => {
+            const button = document.createElement('button');
+            button.className = 'background-size-btn';
+            button.innerHTML = `
+                <span class="material-symbols-outlined">${size.icon}</span>
+                <span>${size.name}</span>
+            `;
+            button.title = size.name;
+            button.onclick = () => setBackgroundSize(size.value, button);
+            
+            if (size.value === "original") {
+                button.classList.add('selected');
+            }
+            
+            backgroundSizeGrid.appendChild(button);
+        });
+        console.log(`✓ تم تحميل ${BACKGROUND_SIZES.length} حجم للخلفية`);
+    }
 }
 
-// إنشاء شبكة أحجام الخلفية
-function initializeBackgroundSizeGrid() {
-    const grid = document.getElementById('backgroundSizeGrid');
-    if (!grid) return;
-    
-    grid.innerHTML = '';
-    
-    BACKGROUND_SIZES.forEach((size) => {
-        const button = document.createElement('button');
-        button.className = 'background-size-btn';
-        button.innerHTML = `
-            <span class="material-symbols-outlined">${size.icon}</span>
-            <span>${size.name}</span>
-            <small style="font-size: 9px; opacity: 0.7; margin-top: 2px;">${size.description}</small>
-        `;
-        button.title = size.description;
-        button.onclick = () => setBackgroundSize(size.value, button);
-        
-        if (size.value === currentBackgroundSize) {
-            button.classList.add('selected');
-        }
-        
-        grid.appendChild(button);
-    });
-    
-    console.log(`✓ تم تحميل ${BACKGROUND_SIZES.length} حجم للخلفية`);
-}
-
-// إنشاء عنصر لون
 function createColorItem(color, onClick) {
     const item = document.createElement('div');
     item.className = 'color-item';
     item.style.backgroundColor = color;
     item.onclick = () => {
-        // إزالة التحديد من جميع العناصر في نفس المجموعة
         const parent = item.parentElement;
         if (parent) {
             parent.querySelectorAll('.color-item').forEach(c => c.classList.remove('selected'));
@@ -181,7 +191,6 @@ function createColorItem(color, onClick) {
     };
     item.title = color;
     
-    // إضافة حدود للألوان الفاتحة جداً
     const lightColors = ["#FFFFFF", "#FFFBB1", "#FFFDCE", "#F4F4F4", "#F2F2F2", 
                        "#FCF9EA", "#F9F8F6", "#F3F2EC", "#EFE9E3", "#DCDCDC", 
                        "#ECF4E8", "#FFE6D4", "#ECECEC", "#F0F0DB", "#EDEDCE", 
@@ -195,13 +204,11 @@ function createColorItem(color, onClick) {
     return item;
 }
 
-// تعيين لون النص
 function setTextColor(color) {
     currentTextColor = color;
     window.currentTextColor = color;
-    console.log('🎨 لون النص:', color);
+    console.log('✓ لون النص:', color);
     
-    // تحديث النمط فوراً
     if (window.currentText && window.currentText.trim() !== '') {
         if (typeof renderFullCanvas === 'function') {
             renderFullCanvas();
@@ -209,13 +216,11 @@ function setTextColor(color) {
     }
 }
 
-// تعيين لون الحواف
 function setStrokeColor(color) {
     currentStrokeColor = color;
     window.currentStrokeColor = color;
-    console.log('🎨 لون حواف النص:', color);
+    console.log('✓ لون حواف النص:', color);
     
-    // تحديث النمط فوراً
     if (window.currentText && window.currentText.trim() !== '') {
         if (typeof renderFullCanvas === 'function') {
             renderFullCanvas();
@@ -223,31 +228,26 @@ function setStrokeColor(color) {
     }
 }
 
-// تعيين لون حواف الصورة
 function setBorderColor(color) {
     currentBorderColor = color;
     window.currentBorderColor = color;
     
-    // تحديث متغير imageBorderColor في editor.js
     if (typeof window.imageBorderColor !== 'undefined') {
         window.imageBorderColor = color;
     }
     
-    console.log('🎨 لون حواف الصورة:', color);
+    console.log('✓ لون حواف الصورة:', color);
     
-    // تحديث الصورة فوراً
     if (typeof renderFullCanvas === 'function') {
         renderFullCanvas();
     }
 }
 
-// تعيين لون خلفية النص
 function setCardColor(color) {
     currentCardColor = color;
     window.currentCardColor = color;
-    console.log('🎨 لون خلفية النص:', color);
+    console.log('✓ لون خلفية النص:', color);
     
-    // تحديث النمط فوراً
     if (window.currentText && window.currentText.trim() !== '') {
         if (typeof renderFullCanvas === 'function') {
             renderFullCanvas();
@@ -255,13 +255,11 @@ function setCardColor(color) {
     }
 }
 
-// تعيين لون خلفية الصورة
 function setBackgroundColor(color) {
     currentBackgroundColor = color;
     window.currentBackgroundColor = color;
-    console.log('🎨 لون خلفية الصورة:', color);
+    console.log('✓ لون خلفية الصورة:', color);
     
-    // تحديث الصورة فوراً
     if (typeof updateBackground === 'function') {
         updateBackground();
     } else if (typeof renderFullCanvas === 'function') {
@@ -269,20 +267,29 @@ function setBackgroundColor(color) {
     }
 }
 
-// تعيين حجم الخلفية
+function setSquareColor(color) {
+    currentSquareColor = color;
+    window.currentSquareColor = color;
+    console.log('✓ لون المربع:', color);
+    
+    if (typeof updateBackground === 'function') {
+        updateBackground();
+    } else if (typeof renderFullCanvas === 'function') {
+        renderFullCanvas();
+    }
+}
+
 function setBackgroundSize(size, button) {
     currentBackgroundSize = size;
     window.currentBackgroundSize = size;
-    console.log('📐 حجم الخلفية:', size);
+    console.log('✓ حجم الخلفية:', size);
     
-    // تحديث واجهة المستخدم
     const buttons = document.querySelectorAll('.background-size-btn');
     buttons.forEach(btn => btn.classList.remove('selected'));
     if (button) {
         button.classList.add('selected');
     }
     
-    // تحديث الصورة فوراً
     if (typeof updateBackground === 'function') {
         updateBackground();
     } else if (typeof renderFullCanvas === 'function') {
@@ -290,13 +297,13 @@ function setBackgroundSize(size, button) {
     }
 }
 
-// تصدير الدوال
 window.initializeColors = initializeColors;
 window.setTextColor = setTextColor;
 window.setStrokeColor = setStrokeColor;
 window.setBorderColor = setBorderColor;
 window.setCardColor = setCardColor;
 window.setBackgroundColor = setBackgroundColor;
+window.setSquareColor = setSquareColor;
 window.setBackgroundSize = setBackgroundSize;
 window.COLORS = COLORS;
 window.BACKGROUND_SIZES = BACKGROUND_SIZES;
