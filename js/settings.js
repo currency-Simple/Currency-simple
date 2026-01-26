@@ -201,7 +201,7 @@ function showAbout() {
         <div style="padding: 20px; max-width: 600px; margin: 0 auto; text-align: center;">
             <h2 style="color: var(--primary-color); margin-bottom: 20px;">محرر النصوص على الصور</h2>
             <p style="line-height: 1.8; margin-bottom: 15px;">
-                الإصدار 9.0 Final
+                الإصدار 10.1 Final
             </p>
             <p style="line-height: 1.8; margin-bottom: 15px;">
                 تطبيق متقدم لإضافة النصوص على الصور مع خيارات تحرير متعددة وأكثر من 40 خط عربي وإنجليزي.
@@ -387,3 +387,6 @@ window.showAbout = showAbout;
 window.showHelp = showHelp;
 window.showContact = showContact;
 window.closeInfoDialog = closeInfoDialog;
+window.changeTheme = changeTheme;
+window.changeLanguage = changeLanguage;
+window.toggleToolPanel = toggleToolPanel;
