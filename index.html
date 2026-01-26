@@ -197,7 +197,15 @@
 
             <!-- لوحة التأثيرات -->
             <div id="effectsPanel" class="tool-panel horizontal-scroll-panel">
+                <div class="effects-header">
+                    <span>تأثيرات النص</span>
+                    <button class="toggle-expand" onclick="toggleEffectsSize()" aria-label="تصغير/تكبير لوحة التأثيرات">
+                        <span class="material-symbols-outlined">expand_less</span>
+                    </button>
+                </div>
+                
                 <div class="horizontal-controls color-scroll" id="cardColorGrid"></div>
+                
                 <div class="tool-section">
                     <label class="effect-option">
                         <input type="checkbox" id="shadowEnabled" checked>
@@ -211,14 +219,20 @@
                 
                 <div class="tool-section">
                     <h4>قوة الظل</h4>
-                    <input type="range" id="shadowSlider" min="0" max="20" value="5" class="shadow-slider">
-                    <span id="shadowDisplay">5</span>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="material-symbols-outlined" style="color: var(--text-secondary);">dark_mode</span>
+                        <input type="range" id="shadowSlider" min="0" max="20" value="5" class="shadow-slider">
+                        <span id="shadowDisplay" style="min-width: 35px;">5</span>
+                    </div>
                 </div>
                 
                 <div class="tool-section">
-                    <h4>شفافية خلفية النص</h4>
-                    <input type="range" id="bgOpacitySlider" min="10" max="100" value="70" class="bg-opacity-slider">
-                    <span id="bgOpacityDisplay">70</span>
+                    <h4>شفافية الخلفية</h4>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="material-symbols-outlined" style="color: var(--text-secondary);">opacity</span>
+                        <input type="range" id="bgOpacitySlider" min="10" max="100" value="70" class="bg-opacity-slider">
+                        <span id="bgOpacityDisplay" style="min-width: 35px;">70</span>
+                    </div>
                 </div>
             </div>
         </div>
