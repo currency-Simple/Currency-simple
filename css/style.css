@@ -710,6 +710,70 @@ body[dir="ltr"] {
     display: block;
 }
 
+/* تحديد لوحة التأثيرات بمظهر خاص */
+#effectsPanel {
+    max-height: 65vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 20px;
+}
+
+#effectsPanel .horizontal-controls {
+    max-height: 150px;
+    padding: 15px;
+    overflow-y: hidden;
+    overflow-x: auto;
+}
+
+#effectsPanel .tool-section {
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#effectsPanel .tool-section:last-child {
+    border-bottom: none;
+}
+
+.effects-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    background: var(--primary-color);
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.effects-header .toggle-expand {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.effects-header .toggle-expand:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.effects-header .toggle-expand:active {
+    background: rgba(255,255,255,0.3);
+}
+
 .horizontal-scroll-panel {
     padding: 0;
     max-height: 50vh;
@@ -1339,6 +1403,36 @@ body[dir="ltr"] {
     .text-card-btn {
         padding: 12px 20px;
         font-size: 14px;
+    }
+    
+    /* تحسينات لوحة التأثيرات للشاشات الصغيرة */
+    #effectsPanel {
+        max-height: 55vh;
+    }
+    
+    #effectsPanel .tool-section {
+        padding: 12px 16px;
+    }
+    
+    #effectsPanel .effect-option {
+        padding: 10px 12px;
+        font-size: 15px;
+    }
+    
+    #effectsPanel .color-scroll .color-item {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .effects-header {
+        padding: 15px 20px;
+        font-size: 16px;
+    }
+    
+    .effects-header .toggle-expand {
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
     }
     
     .tool-panel {
