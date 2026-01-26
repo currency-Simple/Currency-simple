@@ -5,9 +5,10 @@ let imageLoaded = false;
 let originalImageWidth = 0;
 let originalImageHeight = 0;
 
-// متغيرات التحكم باللمس للنص
+// متغيرات التحكم باللمس للنص مع تحسينات للحركة
 let isDragging = false;
 let isResizing = false;
+let isRotating = false;
 let startX = 0;
 let startY = 0;
 let textX = 0.5;
@@ -17,6 +18,8 @@ let textRotation = 0;
 let initialDistance = 0;
 let initialScale = 1;
 let initialAngle = 0;
+let initialRotation = 0;
+let lastTouchTime = 0;
 
 // متغيرات الملصقات
 let canvasStickers = [];
@@ -33,15 +36,6 @@ let imageFlipV = false;
 let imageBorderWidth = 0;
 let imageBorderColor = '#000000';
 let currentFilter = 'none';
-
-// متغيرات الخلفية الجديدة
-let backgroundColor = '#FFFFFF';
-let backgroundSize = 'original';
-let backgroundCanvas = null;
-let backgroundCtx = null;
-
-// تصدير imageBorderColor لـ window
-window.imageBorderColor = imageBorderColor;
 
 // متغيرات تأثيرات النص الجديدة
 let shadowIntensity = 5;
@@ -68,6 +62,7 @@ let lastRenderTime = 0;
 let renderThrottleDelay = 16;
 let isRendering = false;
 
+// تهيئة المحرر
 window.addEventListener('DOMContentLoaded', () => {
     console.log('Editor initializing...');
     
@@ -85,18 +80,9 @@ window.addEventListener('DOMContentLoaded', () => {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     
-    // إنشاء كانفاس للخلفية
-    backgroundCanvas = document.createElement('canvas');
-    backgroundCtx = backgroundCanvas.getContext('2d');
-    
     // تهيئة القيم من window
     if (window.textScale === undefined) window.textScale = 1;
     if (window.textRotation === undefined) window.textRotation = 0;
-    if (window.currentBackgroundColor === undefined) window.currentBackgroundColor = '#FFFFFF';
-    if (window.currentBackgroundSize === undefined) window.currentBackgroundSize = 'original';
-    
-    backgroundColor = window.currentBackgroundColor;
-    backgroundSize = window.currentBackgroundSize;
     
     if (typeof initializeFonts === 'function') {
         initializeFonts();
@@ -280,6 +266,7 @@ function setupEventListeners() {
             
             // تحديث حجم النص فوراً
             window.textScale = value / 50;
+            textScale = window.textScale;
             if (window.currentText && window.currentText.trim() !== '') {
                 renderFullCanvas();
             }
@@ -288,17 +275,19 @@ function setupEventListeners() {
 }
 
 function setupTouchControls() {
+    // التحكم باللمس
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
     
+    // التحكم بالفأرة
     canvas.addEventListener('mousedown', (e) => {
         const touch = { clientX: e.clientX, clientY: e.clientY };
         handleTouchStart({ touches: [touch], preventDefault: () => e.preventDefault() });
     });
     
     canvas.addEventListener('mousemove', (e) => {
-        if (isDragging || isResizing || stickerDragging) {
+        if (isDragging || isResizing || isRotating || stickerDragging) {
             const touch = { clientX: e.clientX, clientY: e.clientY };
             handleTouchMove({ touches: [touch], preventDefault: () => e.preventDefault() });
         }
@@ -307,10 +296,22 @@ function setupTouchControls() {
     canvas.addEventListener('mouseup', (e) => {
         handleTouchEnd({ preventDefault: () => e.preventDefault() });
     });
+    
+    // منع سلوك اللمس الافتراضي
+    canvas.addEventListener('touchmove', (e) => {
+        if (isDragging || isResizing || isRotating) {
+            e.preventDefault();
+        }
+    }, { passive: false });
 }
 
 function handleTouchStart(e) {
     e.preventDefault();
+    const now = Date.now();
+    
+    // منع النقرات السريعة المتتالية
+    if (now - lastTouchTime < 100) return;
+    lastTouchTime = now;
     
     if (e.touches.length === 1) {
         const touch = e.touches[0];
@@ -318,6 +319,7 @@ function handleTouchStart(e) {
         const x = (touch.clientX - rect.left) / canvas.width;
         const y = (touch.clientY - rect.top) / canvas.height;
         
+        // التحقق من الملصقات أولاً
         for (let i = canvasStickers.length - 1; i >= 0; i--) {
             const sticker = canvasStickers[i];
             if (isTouchOnSticker(x * canvas.width, y * canvas.height, sticker)) {
@@ -330,25 +332,36 @@ function handleTouchStart(e) {
             }
         }
         
+        // التحقق إذا كان اللمس على النص
         if (window.currentText && window.currentText.trim() !== '') {
             isDragging = true;
             startX = touch.clientX;
             startY = touch.clientY;
+            
+            // تحديد بداية تحريك النص
+            textX = Math.max(0.1, Math.min(0.9, x));
+            textY = Math.max(0.1, Math.min(0.9, y));
         }
+        
     } else if (e.touches.length === 2 && window.currentText) {
         isDragging = false;
-        isResizing = true;
         
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         
+        // حساب المسافة بين الإصبعين
         const dx = touch2.clientX - touch1.clientX;
         const dy = touch2.clientY - touch1.clientY;
         initialDistance = Math.sqrt(dx * dx + dy * dy);
         initialScale = window.textScale || 1;
         initialAngle = Math.atan2(dy, dx);
+        initialRotation = window.textRotation || 0;
         
-        console.log('بدء التكبير/التصغير - المسافة الأولية:', initialDistance);
+        // تحديد نوع الحركة بناءً على المسافة الأولية
+        if (initialDistance > 50) {
+            isResizing = true;
+            console.log('بدء التكبير/التصغير - المسافة الأولية:', initialDistance);
+        }
     }
 }
 
@@ -373,19 +386,26 @@ function handleTouchMove(e) {
         selectedSticker.x = x - stickerStartX;
         selectedSticker.y = y - stickerStartY;
         
+        // التأكد من بقاء الملصق داخل الكانفاس
+        selectedSticker.x = Math.max(0, Math.min(canvas.width - selectedSticker.width, selectedSticker.x));
+        selectedSticker.y = Math.max(0, Math.min(canvas.height - selectedSticker.height, selectedSticker.y));
+        
         lastRenderTime = now;
         renderFullCanvas();
         return;
     }
     
-    if (e.touches.length === 1 && isDragging && !isResizing) {
+    if (e.touches.length === 1 && isDragging) {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
+        
+        // حساب الموضع النسبي الجديد
         const x = Math.max(0.1, Math.min(0.9, (touch.clientX - rect.left) / canvas.width));
         const y = Math.max(0.1, Math.min(0.9, (touch.clientY - rect.top) / canvas.height));
         
-        textX = x;
-        textY = y;
+        // تحريك النص مع تأثير تنعيم
+        textX = textX * 0.7 + x * 0.3;
+        textY = textY * 0.7 + y * 0.3;
         
         lastRenderTime = now;
         renderFullCanvas();
@@ -402,13 +422,15 @@ function handleTouchMove(e) {
         // حساب التكبير/التصغير
         if (initialDistance > 0) {
             const scaleMultiplier = currentDistance / initialDistance;
-            window.textScale = Math.max(0.2, Math.min(2, initialScale * scaleMultiplier));
+            const newScale = Math.max(0.2, Math.min(3, initialScale * scaleMultiplier));
+            window.textScale = newScale;
+            textScale = newScale;
             
             // تحديث شريط التحكم
             const fontSizeSlider = document.getElementById('fontSizeSlider');
             if (fontSizeSlider) {
                 const newValue = Math.round(window.textScale * 50);
-                fontSizeSlider.value = Math.max(10, Math.min(100, newValue));
+                fontSizeSlider.value = Math.max(10, Math.min(150, newValue));
                 const display = document.getElementById('fontSizeDisplay');
                 if (display) {
                     display.textContent = fontSizeSlider.value;
@@ -418,13 +440,14 @@ function handleTouchMove(e) {
         
         // حساب التدوير
         const angleChange = currentAngle - initialAngle;
-        window.textRotation = (window.textRotation + angleChange * (180 / Math.PI)) % 360;
-        initialAngle = currentAngle;
+        const newRotation = (initialRotation + angleChange * (180 / Math.PI)) % 360;
+        window.textRotation = newRotation;
+        textRotation = newRotation;
         
         lastRenderTime = now;
         renderFullCanvas();
         
-        console.log('حجم النص:', window.textScale.toFixed(2));
+        console.log('تحديث النص - الحجم:', textScale.toFixed(2), 'الدرجة:', textRotation.toFixed(1));
     }
 }
 
@@ -432,16 +455,19 @@ function handleTouchEnd(e) {
     e.preventDefault();
     
     if (isResizing) {
-        console.log('انتهى التكبير/التصغير - الحجم النهائي:', window.textScale.toFixed(2));
+        console.log('انتهى التكبير/التصغير - الحجم النهائي:', textScale.toFixed(2), 'الدرجة النهائية:', textRotation.toFixed(1));
     }
     
+    // إعادة تعيين جميع حالات التحكم
     isDragging = false;
     isResizing = false;
+    isRotating = false;
     stickerDragging = false;
     selectedSticker = null;
     initialDistance = 0;
     initialScale = 1;
     initialAngle = 0;
+    initialRotation = 0;
 }
 
 function isTouchOnSticker(x, y, sticker) {
@@ -499,33 +525,15 @@ function calculateCanvasDimensions() {
     let targetWidth = containerWidth;
     let targetHeight = containerHeight;
     
-    // حساب الأبعاد بناءً على حجم الخلفية
-    if (backgroundSize !== 'original' && backgroundSize !== 'cover') {
-        if (backgroundSize.includes(':')) {
-            const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
-            const aspectRatio = widthRatio / heightRatio;
-            
-            if (targetWidth / targetHeight > aspectRatio) {
-                targetWidth = targetHeight * aspectRatio;
-            } else {
-                targetHeight = targetWidth / aspectRatio;
-            }
-        }
-    } else if (backgroundSize === 'cover' && currentImage) {
+    if (currentImage && imageLoaded) {
         const imageAspect = originalImageWidth / originalImageHeight;
-        if (targetWidth / targetHeight > imageAspect) {
+        const containerAspect = targetWidth / targetHeight;
+        
+        if (containerAspect > imageAspect) {
             targetHeight = targetWidth / imageAspect;
         } else {
             targetWidth = targetHeight * imageAspect;
         }
-    } else if (backgroundSize === 'original' && currentImage) {
-        // استخدام الأبعاد الأصلية مع التكبير للاستفادة من المساحة المتاحة
-        const widthRatio = targetWidth / originalImageWidth;
-        const heightRatio = targetHeight / originalImageHeight;
-        const scale = Math.min(widthRatio, heightRatio, 1);
-        
-        targetWidth = originalImageWidth * scale;
-        targetHeight = originalImageHeight * scale;
     }
     
     // إضافة مساحة للحواف
@@ -566,6 +574,7 @@ function loadImageToEditor(imageUrl) {
         
         adjustImageForBorder();
         
+        // إعادة تعيين جميع الإعدادات
         imageBlur = 0;
         imageRotation = 0;
         imageFlipH = false;
@@ -574,10 +583,13 @@ function loadImageToEditor(imageUrl) {
         currentFilter = 'none';
         canvasStickers = [];
         
+        // إعادة تعيين إعدادات النص
         textX = 0.5;
         textY = 0.5;
         window.textScale = 1;
         window.textRotation = 0;
+        textScale = 1;
+        textRotation = 0;
         
         // تحديث شريط التحكم
         const fontSizeSlider = document.getElementById('fontSizeSlider');
@@ -616,11 +628,9 @@ function renderFullCanvas() {
         // تنظيف الكانفاس
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // رسم الخلفية أولاً
-        if (backgroundColor !== 'transparent') {
-            ctx.fillStyle = backgroundColor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
+        // رسم خلفية بيضاء
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         if (imageLoaded && currentImage) {
             ctx.save();
@@ -629,25 +639,14 @@ function renderFullCanvas() {
             let imageWidth = canvas.width - (borderSpace * 2);
             let imageHeight = canvas.height - (borderSpace * 2);
             
-            // ضبط حجم الصورة بناءً على حجم الخلفية
-            if (backgroundSize === 'cover') {
-                const imageAspect = originalImageWidth / originalImageHeight;
-                const canvasAspect = imageWidth / imageHeight;
-                
-                if (canvasAspect > imageAspect) {
-                    imageHeight = imageWidth / imageAspect;
-                } else {
-                    imageWidth = imageHeight * imageAspect;
-                }
-            } else if (backgroundSize !== 'original' && backgroundSize.includes(':')) {
-                const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
-                const aspectRatio = widthRatio / heightRatio;
-                
-                if (imageWidth / imageHeight > aspectRatio) {
-                    imageHeight = imageWidth / aspectRatio;
-                } else {
-                    imageWidth = imageHeight * aspectRatio;
-                }
+            // حساب نسبة الصورة الأصلية
+            const imageAspect = originalImageWidth / originalImageHeight;
+            const canvasAspect = imageWidth / imageHeight;
+            
+            if (canvasAspect > imageAspect) {
+                imageHeight = imageWidth / imageAspect;
+            } else {
+                imageWidth = imageHeight * imageAspect;
             }
             
             // حساب موضع الصورة في المنتصف
@@ -692,6 +691,7 @@ function renderFullCanvas() {
             }
         }
         
+        // رسم الملصقات
         canvasStickers.forEach(sticker => {
             ctx.save();
             ctx.translate(sticker.x + sticker.width / 2, sticker.y + sticker.height / 2);
@@ -706,6 +706,7 @@ function renderFullCanvas() {
             ctx.restore();
         });
         
+        // رسم النص إذا كان موجوداً
         if (window.currentText && window.currentText.trim() !== '') {
             renderTextContent();
         }
@@ -755,6 +756,7 @@ function renderTextContent() {
     let adjustedFontSize = finalFontSize;
     let adjustedLines = lines;
     
+    // ضبط حجم الخط ليناسب العرض
     for (let i = 0; i < 5; i++) {
         const maxWidth = Math.max(...adjustedLines.map(line => ctx.measureText(line).width));
         if (maxWidth <= maxLineWidth) {
@@ -857,23 +859,6 @@ function prepareImageForExport() {
     let exportWidth = originalImageWidth;
     let exportHeight = originalImageHeight;
     
-    // ضبط الحجم بناءً على حجم الخلفية المختار
-    if (backgroundSize !== 'original') {
-        if (backgroundSize === 'cover') {
-            exportWidth = Math.max(originalImageWidth, 1920);
-            exportHeight = Math.max(originalImageHeight, 1080);
-        } else if (backgroundSize.includes(':')) {
-            const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
-            const aspectRatio = widthRatio / heightRatio;
-            
-            exportWidth = Math.max(originalImageWidth, 1200);
-            exportHeight = Math.round(exportWidth / aspectRatio);
-        } else {
-            exportWidth = Math.max(originalImageWidth, 1200);
-            exportHeight = Math.max(originalImageHeight, 800);
-        }
-    }
-    
     const borderSpace = imageBorderWidth;
     exportCanvas.width = exportWidth + (borderSpace * 2);
     exportCanvas.height = exportHeight + (borderSpace * 2);
@@ -886,37 +871,14 @@ function prepareImageForExport() {
     exportCtx.imageSmoothingEnabled = true;
     exportCtx.imageSmoothingQuality = 'high';
     
-    // رسم الخلفية أولاً
-    if (backgroundColor !== 'transparent') {
-        exportCtx.fillStyle = backgroundColor;
-        exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-    }
+    // رسم خلفية بيضاء
+    exportCtx.fillStyle = '#FFFFFF';
+    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
     
     exportCtx.save();
     
     let imageWidth = exportWidth;
     let imageHeight = exportHeight;
-    
-    // ضبط حجم الصورة بناءً على حجم الخلفية
-    if (backgroundSize === 'cover') {
-        const imageAspect = originalImageWidth / originalImageHeight;
-        const canvasAspect = imageWidth / imageHeight;
-        
-        if (canvasAspect > imageAspect) {
-            imageHeight = imageWidth / imageAspect;
-        } else {
-            imageWidth = imageHeight * imageAspect;
-        }
-    } else if (backgroundSize !== 'original' && backgroundSize.includes(':')) {
-        const [widthRatio, heightRatio] = backgroundSize.split(':').map(Number);
-        const aspectRatio = widthRatio / heightRatio;
-        
-        if (imageWidth / imageHeight > aspectRatio) {
-            imageHeight = imageWidth / aspectRatio;
-        } else {
-            imageWidth = imageHeight * aspectRatio;
-        }
-    }
     
     // حساب موضع الصورة في المنتصف
     const x = (exportCanvas.width - imageWidth) / 2;
@@ -1051,14 +1013,6 @@ function setBorderColor(color) {
     renderFullCanvas();
 }
 
-// دالة جديدة لتحديث الخلفية
-function updateBackground() {
-    backgroundColor = window.currentBackgroundColor || '#FFFFFF';
-    backgroundSize = window.currentBackgroundSize || 'original';
-    adjustImageForBorder();
-    renderFullCanvas();
-}
-
 // تصدير جميع الدوال المهمة
 window.prepareImageForExport = prepareImageForExport;
 window.renderFullCanvas = renderFullCanvas;
@@ -1072,5 +1026,4 @@ window.flipImageH = flipImageH;
 window.flipImageV = flipImageV;
 window.applyFilter = applyFilter;
 window.setBorderColor = setBorderColor;
-window.updateBackground = updateBackground;
 window.FILTERS = FILTERS;
