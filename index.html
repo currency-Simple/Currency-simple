@@ -44,6 +44,9 @@
                 <span class="material-symbols-outlined">arrow_back</span>
             </button>
             <div class="header-actions">
+                <button onclick="undoEdit()" class="icon-btn undo-header-btn" id="undoBtn" disabled>
+                    <span class="material-symbols-outlined">undo</span>
+                </button>
                 <button onclick="shareImage()" class="icon-btn share-header-btn">
                     <span class="material-symbols-outlined">share</span>
                 </button>
@@ -92,9 +95,16 @@
                         <span>حواف</span>
                     </button>
 
-                    <button class="tool-btn" onclick="toggleToolPanel('effectsPanel')">
-                        <span class="material-symbols-outlined">bedtime</span>
-                        <span>تأثيرات</span>
+                    <!-- زر الظل الجديد -->
+                    <button class="tool-btn" onclick="toggleToolPanel('shadowPanel')">
+                        <span class="material-symbols-outlined">shadow</span>
+                        <span>ظل</span>
+                    </button>
+
+                    <!-- زر الخلفية الجديد -->
+                    <button class="tool-btn" onclick="toggleToolPanel('backgroundPanel')">
+                        <span class="material-symbols-outlined">format_color_fill</span>
+                        <span>خلفية</span>
                     </button>
 
                     <button class="tool-btn" onclick="toggleToolPanel('blurPanel')">
@@ -195,43 +205,48 @@
                 </div>
             </div>
 
-            <!-- لوحة التأثيرات -->
-            <div id="effectsPanel" class="tool-panel horizontal-scroll-panel">
-                <div class="effects-header">
-                    <span>تأثيرات النص</span>
-                    <button class="toggle-expand" onclick="toggleEffectsSize()" aria-label="تصغير/تكبير لوحة التأثيرات">
-                        <span class="material-symbols-outlined">expand_less</span>
-                    </button>
-                </div>
-                
-                <div class="horizontal-controls color-scroll" id="cardColorGrid"></div>
-                
+            <!-- لوحة الظل الجديدة -->
+            <div id="shadowPanel" class="tool-panel">
                 <div class="tool-section">
+                    <h4>تفعيل الظل</h4>
                     <label class="effect-option">
                         <input type="checkbox" id="shadowEnabled" checked>
-                        <span>ظل النص</span>
-                    </label>
-                    <label class="effect-option">
-                        <input type="checkbox" id="cardEnabled">
-                        <span>خلفية النص</span>
+                        <span>تفعيل ظل النص</span>
                     </label>
                 </div>
-                
                 <div class="tool-section">
-                    <h4>قوة الظل</h4>
+                    <h4>لون الظل</h4>
+                    <div class="horizontal-controls color-scroll" id="shadowColorGrid"></div>
+                </div>
+                <div class="tool-section">
+                    <h4>شدة الظل</h4>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span class="material-symbols-outlined" style="color: var(--text-secondary);">dark_mode</span>
-                        <input type="range" id="shadowSlider" min="0" max="20" value="5" class="shadow-slider">
-                        <span id="shadowDisplay" style="min-width: 35px;">5</span>
+                        <input type="range" id="shadowIntensitySlider" min="0" max="20" value="5" class="shadow-slider">
+                        <span id="shadowIntensityDisplay" style="min-width: 35px;">5</span>
                     </div>
                 </div>
-                
+            </div>
+
+            <!-- لوحة الخلفية الجديدة -->
+            <div id="backgroundPanel" class="tool-panel">
+                <div class="tool-section">
+                    <h4>تفعيل خلفية النص</h4>
+                    <label class="effect-option">
+                        <input type="checkbox" id="backgroundEnabled">
+                        <span>تفعيل خلفية النص</span>
+                    </label>
+                </div>
+                <div class="tool-section">
+                    <h4>لون الخلفية</h4>
+                    <div class="horizontal-controls color-scroll" id="backgroundColorGrid"></div>
+                </div>
                 <div class="tool-section">
                     <h4>شفافية الخلفية</h4>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span class="material-symbols-outlined" style="color: var(--text-secondary);">opacity</span>
-                        <input type="range" id="bgOpacitySlider" min="10" max="100" value="70" class="bg-opacity-slider">
-                        <span id="bgOpacityDisplay" style="min-width: 35px;">70</span>
+                        <input type="range" id="backgroundOpacitySlider" min="10" max="100" value="70" class="bg-opacity-slider">
+                        <span id="backgroundOpacityDisplay" style="min-width: 35px;">70</span>
                     </div>
                 </div>
             </div>
@@ -325,3 +340,4 @@
     <script src="js/app.js"></script>
 </body>
 </html>
+[file content end]
