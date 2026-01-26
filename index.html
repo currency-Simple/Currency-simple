@@ -2,28 +2,50 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, height=device-height">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>محرر النصوص على الصور</title>
     
+    <!-- Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     
-    <!-- خطوط Bunny Fonts المحدثة -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=abeezee:400,400i|abhaya-libre:600,800|aboreto:400|abril-fatface:400|abyssinica-sil:400|aclonica:400|acme:400|advent-pro:700i,800i,900i|aguafina-script:400|akaya-telivigala:400|akronim:400|aladin:400|aldrich:400|alegreya:600i,700,900,900i|alegreya-sc:500,500i,800,900i|alex-brush:400|alfa-slab-one:400|allan:400,700|almendra:400i,700i|almendra-sc:400|alumni-sans:100,200,500i,800i|alumni-sans-inline-one:400,400i|amatic-sc:700|amita:700|arbutus:400|architects-daughter:400|are-you-serious:400|aref-ruqaa:400,700|asset:400|astloch:400,700|atomic-age:400|aubrey:400|audiowide:400|bahiana:400|bakbak-one:400|ballet:400|bangers:400|barriecito:400|beau-rivage:400|berkshire-swash:400|beth-ellen:400|bhutuka-expanded-one:400|big-shoulders-display:100,400,800,900|bigelow-rules:400|biorhyme-expanded:200,700,800|black-and-white-picture:400|bonbon:400|bowlby-one-sc:400|bruno-ace:400|bungee:400|bungee-inline:400|bungee-outline:400|bungee-shade:400|bungee-tint:400|butcherman:400|caesar-dressing:400|castoro-titling:400|chathura:300,800|cinzel:500,900|cute-font:400|damion:400|diplomata:400|dokdo:400|dorsa:400|dr-sugiyama:400|eagle-lake:400|edu-qld-beginner:400,700|erica-one:400|fascinate:400|faster-one:400|fleur-de-leah:400|ga-maamli:400|gajraj-one:400|great-vibes:400|hanalei:400|homemade-apple:400|honk:400|ibm-plex-sans-arabic:400,700|jacquard-12-charted:400|jacquard-24-charted:400|jacquarda-bastarda-9:400|jersey-25-charted:400|jomhuria:400|kablammo:400|kalnia-glaze:300,700|kumar-one-outline:400|libre-barcode-39-text:400|limelight:400|major-mono-display:400|moirai-one:400|monofett:400|monoton:400|mrs-sheppards:400|nosifer:400|noto-kufi-arabic:400,800,900|palette-mosaic:400|rock-salt:400|rubik-beastly:400|rubik-broken-fax:400|rubik-gemstones:400|rubik-glitch-pop:400|rubik-puddles:400|sancreek:400|sixtyfour:400|sonsie-one:400" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=abeezee:400|abhaya-libre:600|abril-fatface:400|acme:400|alex-brush:400|alfa-slab-one:400|aref-ruqaa:400|audiowide:400|bangers:400|cinzel:500|damion:400|great-vibes:400|jomhuria:400|monoton:400|noto-kufi-arabic:400|rock-salt:400" rel="stylesheet" />
     
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- صفحة الفئات -->
     <div id="categoriesPage" class="page active">
         <div class="header">
             <h1>اختر فئة</h1>
+            <button onclick="showPage('upload')" class="icon-btn">
+                <span class="material-symbols-outlined">add_photo_alternate</span>
+            </button>
         </div>
-        
         <div class="categories-grid" id="categoriesGrid"></div>
+    </div>
+
+    <!-- صفحة رفع الصورة -->
+    <div id="uploadPage" class="page">
+        <div class="header">
+            <button onclick="showPage('categories')" class="icon-btn back-btn">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h1>رفع صورة</h1>
+        </div>
+        <div class="upload-container">
+            <div class="upload-area" id="uploadArea">
+                <span class="material-symbols-outlined">cloud_upload</span>
+                <p>اسحب وأفلت الصورة هنا</p>
+                <p class="upload-sub">أو انقر للاختيار</p>
+                <input type="file" id="imageUpload" accept="image/*" hidden>
+            </div>
+            <button onclick="useSampleImage()" class="sample-btn">
+                <span class="material-symbols-outlined">image</span>
+                استخدام صورة تجريبية
+            </button>
+        </div>
     </div>
 
     <!-- صفحة الصور -->
@@ -40,304 +62,93 @@
     <!-- صفحة المحرر -->
     <div id="editorPage" class="page">
         <div class="header">
-            <button onclick="goBackToImages()" class="icon-btn back-btn">
+            <button onclick="goBack()" class="icon-btn back-btn">
                 <span class="material-symbols-outlined">arrow_back</span>
             </button>
             <div class="header-actions">
-                <button onclick="undoEdit()" class="icon-btn undo-header-btn" id="undoBtn" disabled>
-                    <span class="material-symbols-outlined">undo</span>
-                </button>
-                <button onclick="shareImage()" class="icon-btn share-header-btn">
+                <button onclick="shareImage()" class="icon-btn">
                     <span class="material-symbols-outlined">share</span>
                 </button>
-                <button onclick="downloadImage()" class="icon-btn download-header-btn">
+                <button onclick="downloadImage()" class="icon-btn">
                     <span class="material-symbols-outlined">download</span>
                 </button>
             </div>
         </div>
         
-        <!-- حاوية المحرر -->
         <div class="editor-container">
-            <div class="canvas-wrapper-fixed" id="canvasWrapperFixed">
+            <!-- الكانفاس -->
+            <div class="canvas-wrapper">
                 <canvas id="canvas"></canvas>
             </div>
             
-            <!-- أدوات التحرير -->
-            <div class="editor-toolbar-container">
-                <div class="editor-toolbar">
-                    <button class="tool-btn" onclick="toggleTextCard()">
-                        <span class="material-symbols-outlined">text_fields</span>
-                        <span>نص</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('uploadPanel')">
-                        <span class="material-symbols-outlined">upload</span>
-                        <span>رفع</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('fontPanel')">
-                        <span class="material-symbols-outlined">brand_family</span>
-                        <span>خط</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('fontSizePanel')">
-                        <span class="material-symbols-outlined">format_size</span>
-                        <span>حجم</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('colorPanel')">
-                        <span class="material-symbols-outlined">colors</span>
-                        <span>لون</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('strokePanel')">
-                        <span class="material-symbols-outlined">format_color_text</span>
-                        <span>حواف</span>
-                    </button>
-
-                    <!-- زر الظل الجديد -->
-                    <button class="tool-btn" onclick="toggleToolPanel('shadowPanel')">
-                        <span class="material-symbols-outlined">shadow</span>
-                        <span>ظل</span>
-                    </button>
-
-                    <!-- زر الخلفية الجديد -->
-                    <button class="tool-btn" onclick="toggleToolPanel('backgroundPanel')">
-                        <span class="material-symbols-outlined">format_color_fill</span>
-                        <span>خلفية</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('blurPanel')">
-                        <span class="material-symbols-outlined">blur_on</span>
-                        <span>ضبابية</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('borderPanel')">
-                        <span class="material-symbols-outlined">border_style</span>
-                        <span>حواف صورة</span>
-                    </button>
-
-                    <button class="tool-btn" onclick="toggleToolPanel('rotatePanel')">
-                        <span class="material-symbols-outlined">rotate_right</span>
-                        <span>تدوير</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- لوحات الأدوات المنبثقة -->
-            
-            <!-- لوحة رفع الصورة -->
-            <div id="uploadPanel" class="tool-panel">
-                <div class="tool-section">
-                    <button class="tool-action-btn" id="uploadImageBtn">
-                        <span class="material-symbols-outlined">upload</span>
-                        <span>رفع صورة من الجهاز</span>
-                    </button>
-                    <input type="file" id="uploadImageInput" accept="image/*" style="display: none;">
-                </div>
-            </div>
-
-            <!-- لوحة الضبابية -->
-            <div id="blurPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>مستوى الضبابية</h4>
-                    <input type="range" id="blurSlider" min="0" max="20" value="0" class="size-slider">
-                    <span id="blurDisplay">0</span>
-                </div>
-            </div>
-
-            <!-- لوحة التدوير والقلب -->
-            <div id="rotatePanel" class="tool-panel">
-                <div class="tool-buttons-grid">
-                    <button class="tool-action-btn" onclick="rotateImage()">
-                        <span class="material-symbols-outlined">rotate_right</span>
-                        <span>تدوير 90°</span>
-                    </button>
-                    <button class="tool-action-btn" onclick="flipImageH()">
-                        <span class="material-symbols-outlined">flip</span>
-                        <span>قلب أفقي</span>
-                    </button>
-                    <button class="tool-action-btn" onclick="flipImageV()">
-                        <span class="material-symbols-outlined">flip</span>
-                        <span>قلب عمودي</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- لوحة حواف الصورة -->
-            <div id="borderPanel" class="tool-panel horizontal-scroll-panel">
-                <div class="horizontal-controls color-scroll" id="borderColorGrid"></div>
-                <div class="tool-section">
-                    <h4>سُمك حواف الصورة</h4>
-                    <input type="range" id="borderSlider" min="0" max="50" value="0" class="border-slider">
-                    <span id="borderDisplay">0</span>
+            <!-- أدوات النص -->
+            <div class="text-controls">
+                <button onclick="toggleTextPanel()" class="text-btn">
+                    <span class="material-symbols-outlined">text_fields</span>
+                    إضافة نص
+                </button>
+                
+                <div id="textPanel" class="text-panel hidden">
+                    <textarea id="textInput" placeholder="اكتب النص هنا..."></textarea>
+                    <div class="text-buttons">
+                        <button onclick="applyText()" class="btn-primary">تطبيق</button>
+                        <button onclick="clearText()" class="btn-secondary">حذف</button>
+                    </div>
                 </div>
             </div>
             
-            <!-- لوحة الخطوط -->
-            <div id="fontPanel" class="tool-panel horizontal-scroll-panel">
-                <div class="horizontal-controls" id="fontGrid"></div>
+            <!-- أدوات التحكم -->
+            <div class="editor-toolbar">
+                <button onclick="openToolPanel('fonts')" class="tool-btn">
+                    <span class="material-symbols-outlined">font_download</span>
+                    خط
+                </button>
+                <button onclick="openToolPanel('colors')" class="tool-btn">
+                    <span class="material-symbols-outlined">palette</span>
+                    لون
+                </button>
+                <button onclick="openToolPanel('effects')" class="tool-btn">
+                    <span class="material-symbols-outlined">tune</span>
+                    تأثيرات
+                </button>
+                <button onclick="openToolPanel('adjust')" class="tool-btn">
+                    <span class="material-symbols-outlined">adjust</span>
+                    ضبط
+                </button>
             </div>
-
-            <!-- لوحة حجم النص -->
-            <div id="fontSizePanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>حجم النص</h4>
-                    <div style="display: flex; align-items: center; gap: 15px; margin-top: 20px;">
-                        <input type="range" id="fontSizeSlider" min="10" max="100" value="50" class="size-slider" style="flex: 1;">
-                        <span id="fontSizeDisplay" style="min-width: 45px; text-align: center; font-size: 18px; font-weight: bold; color: var(--primary-color);">50</span>
-                    </div>
-                </div>
+            
+            <!-- اللوحات المنبثقة -->
+            <div id="fontsPanel" class="tool-panel hidden">
+                <div class="fonts-grid" id="fontsGrid"></div>
             </div>
-
-            <!-- لوحة لون النص -->
-            <div id="colorPanel" class="tool-panel horizontal-scroll-panel">
-                <div class="horizontal-controls color-scroll" id="colorGrid"></div>
-            </div>
-
-            <!-- لوحة حواف النص -->
-            <div id="strokePanel" class="tool-panel horizontal-scroll-panel">
-                <div class="horizontal-controls color-scroll" id="strokeColorGrid"></div>
-                <div class="tool-section">
-                    <h4>سُمك حواف النص</h4>
-                    <input type="range" id="strokeWidth" min="0" max="10" value="3" class="stroke-slider">
-                    <span id="strokeWidthDisplay">3</span>
-                </div>
-            </div>
-
-            <!-- لوحة الظل الجديدة -->
-            <div id="shadowPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>تفعيل الظل</h4>
-                    <label class="effect-option">
-                        <input type="checkbox" id="shadowEnabled" checked>
-                        <span>تفعيل ظل النص</span>
-                    </label>
-                </div>
-                <div class="tool-section">
-                    <h4>لون الظل</h4>
-                    <div class="horizontal-controls color-scroll" id="shadowColorGrid"></div>
-                </div>
-                <div class="tool-section">
-                    <h4>شدة الظل</h4>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span class="material-symbols-outlined" style="color: var(--text-secondary);">dark_mode</span>
-                        <input type="range" id="shadowIntensitySlider" min="0" max="20" value="5" class="shadow-slider">
-                        <span id="shadowIntensityDisplay" style="min-width: 35px;">5</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- لوحة الخلفية الجديدة -->
-            <div id="backgroundPanel" class="tool-panel">
-                <div class="tool-section">
-                    <h4>تفعيل خلفية النص</h4>
-                    <label class="effect-option">
-                        <input type="checkbox" id="backgroundEnabled">
-                        <span>تفعيل خلفية النص</span>
-                    </label>
-                </div>
-                <div class="tool-section">
-                    <h4>لون الخلفية</h4>
-                    <div class="horizontal-controls color-scroll" id="backgroundColorGrid"></div>
-                </div>
-                <div class="tool-section">
-                    <h4>شفافية الخلفية</h4>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span class="material-symbols-outlined" style="color: var(--text-secondary);">opacity</span>
-                        <input type="range" id="backgroundOpacitySlider" min="10" max="100" value="70" class="bg-opacity-slider">
-                        <span id="backgroundOpacityDisplay" style="min-width: 35px;">70</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- صفحة الإعدادات -->
-    <div id="settingsPage" class="page">
-        <div class="header">
-            <h1>الإعدادات</h1>
-        </div>
-        <div class="settings-content">
-            <div class="setting-card">
-                <h3>السمة</h3>
-                <div class="theme-options">
-                    <button class="theme-btn active" onclick="changeTheme('light')" data-theme="light">
-                        <span>فاتح</span>
-                    </button>
-                    <button class="theme-btn" onclick="changeTheme('dark')" data-theme="dark">
-                        <span>داكن</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="setting-card">
-                <h3>اللغة</h3>
-                <div class="language-options">
-                    <button class="lang-btn active" onclick="changeLanguage('ar')" data-lang-btn="ar">
-                        العربية
-                    </button>
-                    <button class="lang-btn" onclick="changeLanguage('en')" data-lang-btn="en">
-                        English
-                    </button>
-                    <button class="lang-btn" onclick="changeLanguage('fr')" data-lang-btn="fr">
-                        Français
-                    </button>
-                </div>
-            </div>
-
-            <!-- روابط إضافية -->
-            <div class="setting-card">
-                <h3>روابط مفيدة</h3>
-                <div class="settings-links">
-                    <a href="#privacy" class="settings-link" onclick="showPrivacyPolicy(); return false;">
-                        <span class="material-symbols-outlined">policy</span>
-                        <span>سياسة الخصوصية</span>
-                    </a>
-                    <a href="#about" class="settings-link" onclick="showAbout(); return false;">
-                        <span class="material-symbols-outlined">info</span>
-                        <span>معلومات حول</span>
-                    </a>
-                    <a href="#help" class="settings-link" onclick="showHelp(); return false;">
-                        <span class="material-symbols-outlined">help</span>
-                        <span>مركز المساعدة</span>
-                    </a>
-                    <a href="#contact" class="settings-link" onclick="showContact(); return false;">
-                        <span class="material-symbols-outlined">email</span>
-                        <span>اتصل بنا</span>
-                    </a>
-                </div>
-            </div>
-
-            <div class="setting-card">
-                <p style="text-align: center; color: #86868b; font-size: 14px;">
-                    <span>الإصدار</span> 10.1 Final
-                </p>
+            
+            <div id="colorsPanel" class="tool-panel hidden">
+                <div class="colors-grid" id="colorsGrid"></div>
             </div>
         </div>
     </div>
 
     <!-- القائمة السفلية -->
-    <div class="bottom-nav">
-        <button onclick="showPage('categories')" class="nav-btn active" id="navCategories">
+    <nav class="bottom-nav">
+        <button onclick="showPage('categories')" class="nav-btn active">
             <span class="material-symbols-outlined">dashboard</span>
-            <span>الفئات</span>
+            الفئات
         </button>
-        <button onclick="showPage('editor')" class="nav-btn" id="navEditor">
+        <button onclick="showPage('upload')" class="nav-btn">
+            <span class="material-symbols-outlined">add</span>
+            رفع
+        </button>
+        <button onclick="showPage('editor')" class="nav-btn">
             <span class="material-symbols-outlined">edit</span>
-            <span>التحرير</span>
+            تعديل
         </button>
-        <button onclick="showPage('settings')" class="nav-btn" id="navSettings">
-            <span class="material-symbols-outlined">settings</span>
-            <span>الإعدادات</span>
-        </button>
-    </div>
+    </nav>
 
+    <!-- Scripts -->
+    <script src="js/supabase.js"></script>
     <script src="js/fonts.js"></script>
     <script src="js/colors.js"></script>
-    <script src="js/settings.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
-[file content end]
