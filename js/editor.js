@@ -338,9 +338,12 @@ function handleTouchStart(e) {
             startX = touch.clientX;
             startY = touch.clientY;
             
-            // تحديد بداية تحريك النص
+            // تحديد بداية تحريك النص فوراً
             textX = Math.max(0.1, Math.min(0.9, x));
             textY = Math.max(0.1, Math.min(0.9, y));
+            
+            // تحديث فوري للعرض
+            renderFullCanvas();
         }
         
     } else if (e.touches.length === 2 && window.currentText) {
@@ -360,7 +363,6 @@ function handleTouchStart(e) {
         // تحديد نوع الحركة بناءً على المسافة الأولية
         if (initialDistance > 50) {
             isResizing = true;
-            console.log('بدء التكبير/التصغير - المسافة الأولية:', initialDistance);
         }
     }
 }
@@ -403,9 +405,9 @@ function handleTouchMove(e) {
         const x = Math.max(0.1, Math.min(0.9, (touch.clientX - rect.left) / canvas.width));
         const y = Math.max(0.1, Math.min(0.9, (touch.clientY - rect.top) / canvas.height));
         
-        // تحريك النص مع تأثير تنعيم
-        textX = textX * 0.7 + x * 0.3;
-        textY = textY * 0.7 + y * 0.3;
+        // تحريك النص مباشرة دون تأخير
+        textX = x;
+        textY = y;
         
         lastRenderTime = now;
         renderFullCanvas();
@@ -446,17 +448,11 @@ function handleTouchMove(e) {
         
         lastRenderTime = now;
         renderFullCanvas();
-        
-        console.log('تحديث النص - الحجم:', textScale.toFixed(2), 'الدرجة:', textRotation.toFixed(1));
     }
 }
 
 function handleTouchEnd(e) {
     e.preventDefault();
-    
-    if (isResizing) {
-        console.log('انتهى التكبير/التصغير - الحجم النهائي:', textScale.toFixed(2), 'الدرجة النهائية:', textRotation.toFixed(1));
-    }
     
     // إعادة تعيين جميع حالات التحكم
     isDragging = false;
@@ -522,26 +518,47 @@ function calculateCanvasDimensions() {
     const containerWidth = container.clientWidth - 30;
     const containerHeight = container.clientHeight - 30;
     
-    let targetWidth = containerWidth;
-    let targetHeight = containerHeight;
-    
+    // استخدم الأبعاد الأصلية للصورة مع الحفاظ على التناسب
     if (currentImage && imageLoaded) {
         const imageAspect = originalImageWidth / originalImageHeight;
-        const containerAspect = targetWidth / targetHeight;
+        const containerAspect = containerWidth / containerHeight;
+        
+        let targetWidth, targetHeight;
         
         if (containerAspect > imageAspect) {
-            targetHeight = targetWidth / imageAspect;
+            // الحاوية أوسع من الصورة
+            targetHeight = containerHeight;
+            targetWidth = targetHeight * imageAspect;
         } else {
+            // الحاوية أطول من الصورة
+            targetWidth = containerWidth;
+            targetHeight = targetWidth / imageAspect;
+        }
+        
+        // التأكد من أن الأبعاد لا تتجاوز الحاوية
+        if (targetWidth > containerWidth) {
+            targetWidth = containerWidth;
+            targetHeight = targetWidth / imageAspect;
+        }
+        
+        if (targetHeight > containerHeight) {
+            targetHeight = containerHeight;
             targetWidth = targetHeight * imageAspect;
         }
+        
+        // إضافة مساحة للحواف
+        const borderSpace = imageBorderWidth * 2;
+        return { 
+            width: Math.round(targetWidth) + borderSpace, 
+            height: Math.round(targetHeight) + borderSpace 
+        };
     }
     
-    // إضافة مساحة للحواف
-    const borderSpace = imageBorderWidth * 2;
-    targetWidth = Math.max(300, Math.min(targetWidth, containerWidth)) + borderSpace;
-    targetHeight = Math.max(200, Math.min(targetHeight, containerHeight)) + borderSpace;
-    
-    return { width: Math.round(targetWidth), height: Math.round(targetHeight) };
+    // إذا لم توجد صورة، استخدم أبعاد الحاوية
+    return { 
+        width: Math.max(300, Math.min(containerWidth, 1200)), 
+        height: Math.max(200, Math.min(containerHeight, 800)) 
+    };
 }
 
 function adjustImageForBorder() {
@@ -572,6 +589,7 @@ function loadImageToEditor(imageUrl) {
         
         console.log('Original image dimensions:', originalImageWidth, 'x', originalImageHeight);
         
+        // ضبط الكانفاس ليتناسب مع الصورة الأصلية
         adjustImageForBorder();
         
         // إعادة تعيين جميع الإعدادات
@@ -649,7 +667,7 @@ function renderFullCanvas() {
                 imageWidth = imageHeight * imageAspect;
             }
             
-            // حساب موضع الصورة في المنتصف
+            // حساب موضع الصورة في المنتصف مع مراعاة الحواف
             const x = (canvas.width - imageWidth) / 2;
             const y = (canvas.height - imageHeight) / 2;
             
