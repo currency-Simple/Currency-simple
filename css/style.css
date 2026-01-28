@@ -285,7 +285,7 @@ body {
     outline-offset: 4px;
 }
 
-/* مربع التحكم بالنص - مثل PicsArt */
+/* مربع التحكم بالنص - مبسط */
 .text-transform-box {
     position: absolute;
     border: 2px solid #fff;
@@ -298,55 +298,47 @@ body {
     display: block;
 }
 
-/* زوايا التحكم */
-.transform-handle {
+/* أزرار التحكم الثلاثة */
+.transform-controls {
     position: absolute;
-    width: 20px;
-    height: 20px;
-    background: #fff;
-    border: 2px solid #2196F3;
-    border-radius: 50%;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
     pointer-events: auto;
+}
+
+.transform-btn {
+    width: 40px;
+    height: 40px;
+    background: #2196F3;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
 }
 
-/* الزوايا الأربع */
-.handle-tl { top: -10px; left: -10px; cursor: nwse-resize; }
-.handle-tr { top: -10px; right: -10px; cursor: nesw-resize; }
-.handle-bl { bottom: -10px; left: -10px; cursor: nesw-resize; }
-.handle-br { bottom: -10px; right: -10px; cursor: nwse-resize; }
+.transform-btn:active {
+    transform: scale(0.9);
+}
 
-/* مقابض الدوران */
-.handle-rotate {
-    top: -40px;
-    left: 50%;
-    transform: translateX(-50%);
+.transform-btn.rotate-btn {
     background: #4CAF50;
-    border-color: #4CAF50;
-    cursor: grab;
 }
 
-.handle-rotate:active {
-    cursor: grabbing;
+.transform-btn.width-btn {
+    background: #FF9800;
 }
 
-/* مقابض التمديد */
-.handle-t { top: -10px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
-.handle-b { bottom: -10px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
-.handle-l { left: -10px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
-.handle-r { right: -10px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
-
-/* خط الدوران */
-.rotate-line {
-    position: absolute;
-    width: 2px;
-    height: 30px;
-    background: #4CAF50;
-    top: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    pointer-events: none;
+.transform-btn.scale-btn {
+    background: #2196F3;
 }
 
 .tools-drawer {
