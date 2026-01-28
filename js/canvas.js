@@ -270,30 +270,35 @@ class CanvasEditor {
         const box = document.createElement('div');
         box.className = 'text-transform-box';
         
-        // Create rotation line
-        const rotateLine = document.createElement('div');
-        rotateLine.className = 'rotate-line';
-        box.appendChild(rotateLine);
+        // Create controls container
+        const controls = document.createElement('div');
+        controls.className = 'transform-controls';
         
-        // Create handles
-        const handles = [
-            { class: 'handle-tl', type: 'corner' },
-            { class: 'handle-tr', type: 'corner' },
-            { class: 'handle-bl', type: 'corner' },
-            { class: 'handle-br', type: 'corner' },
-            { class: 'handle-t', type: 'edge' },
-            { class: 'handle-b', type: 'edge' },
-            { class: 'handle-l', type: 'edge' },
-            { class: 'handle-r', type: 'edge' },
-            { class: 'handle-rotate', type: 'rotate' }
-        ];
+        // Rotate button (🔄)
+        const rotateBtn = document.createElement('button');
+        rotateBtn.className = 'transform-btn rotate-btn';
+        rotateBtn.innerHTML = '🔄';
+        rotateBtn.title = 'Rotate';
+        rotateBtn.dataset.action = 'rotate';
         
-        handles.forEach(h => {
-            const handle = document.createElement('div');
-            handle.className = `transform-handle ${h.class}`;
-            handle.dataset.type = h.type;
-            box.appendChild(handle);
-        });
+        // Width button (↔️) - تصغير/تكبير العرض (السطور)
+        const widthBtn = document.createElement('button');
+        widthBtn.className = 'transform-btn width-btn';
+        widthBtn.innerHTML = '↔';
+        widthBtn.title = 'Width';
+        widthBtn.dataset.action = 'width';
+        
+        // Scale button (⇲) - تكبير/تصغير الحجم
+        const scaleBtn = document.createElement('button');
+        scaleBtn.className = 'transform-btn scale-btn';
+        scaleBtn.innerHTML = '⇲';
+        scaleBtn.title = 'Scale';
+        scaleBtn.dataset.action = 'scale';
+        
+        controls.appendChild(rotateBtn);
+        controls.appendChild(widthBtn);
+        controls.appendChild(scaleBtn);
+        box.appendChild(controls);
         
         this.canvasWrapper.appendChild(box);
         this.transformBox = box;
@@ -314,33 +319,32 @@ class CanvasEditor {
     
     makeTransformable(element) {
         let isDragging = false;
-        let isResizing = false;
         let isRotating = false;
-        let currentHandle = null;
+        let isResizingWidth = false;
+        let isScaling = false;
         
         let startX, startY;
         let startWidth, startHeight;
         let startRotation = 0;
         let currentRotation = 0;
         let elementX = 0, elementY = 0;
+        let startFontSize = this.textProps.size;
         
         // Parse transform
         const getTransform = () => {
             const transform = element.style.transform || '';
             const translateMatch = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
             const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
-            const scaleMatch = transform.match(/scale\(([^)]+)\)/);
             
             return {
                 x: translateMatch ? parseFloat(translateMatch[1]) : 0,
                 y: translateMatch ? parseFloat(translateMatch[2]) : 0,
-                rotation: rotateMatch ? parseFloat(rotateMatch[1]) : 0,
-                scale: scaleMatch ? parseFloat(scaleMatch[1]) : 1
+                rotation: rotateMatch ? parseFloat(rotateMatch[1]) : 0
             };
         };
         
-        const setTransform = (x, y, rotation, scale = 1) => {
-            element.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
+        const setTransform = (x, y, rotation) => {
+            element.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg)`;
             this.updateTransformBox(element);
         };
         
@@ -377,80 +381,86 @@ class CanvasEditor {
             }
         }, { passive: false });
         
-        // Handle resize and rotate
-        this.transformBox.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('transform-handle')) {
-                const type = e.target.dataset.type;
-                currentHandle = e.target;
-                
-                if (type === 'rotate') {
-                    isRotating = true;
-                    const rect = element.getBoundingClientRect();
-                    const centerX = rect.left + rect.width / 2;
-                    const centerY = rect.top + rect.height / 2;
-                    startRotation = Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180 / Math.PI;
-                    currentRotation = getTransform().rotation;
+        // Handle button clicks
+        this.transformBox.addEventListener('click', (e) => {
+            const btn = e.target.closest('.transform-btn');
+            if (!btn) return;
+            
+            const action = btn.dataset.action;
+            
+            if (action === 'rotate') {
+                // Rotate 90 degrees
+                const transform = getTransform();
+                setTransform(transform.x, transform.y, transform.rotation + 90);
+            } else if (action === 'width') {
+                // Toggle width between normal and wider
+                const currentWidth = element.style.width;
+                if (!currentWidth || currentWidth === 'auto') {
+                    element.style.width = element.offsetWidth * 1.5 + 'px';
                 } else {
-                    isResizing = true;
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    startWidth = element.offsetWidth;
-                    startHeight = element.offsetHeight;
+                    const width = parseFloat(currentWidth);
+                    if (width > element.scrollWidth) {
+                        element.style.width = 'auto';
+                    } else {
+                        element.style.width = width * 1.5 + 'px';
+                    }
                 }
+                this.updateTransformBox(element);
+            } else if (action === 'scale') {
+                // Scale font size
+                const currentSize = this.textProps.size;
+                const newSize = currentSize < 200 ? currentSize + 10 : 48;
+                this.textProps.size = newSize;
+                this.updateTextElement();
+                this.updateTransformBox(element);
+                
+                // Update UI slider
+                if (document.getElementById('fontSize')) {
+                    document.getElementById('fontSize').value = newSize;
+                    document.getElementById('fontSizeValue').textContent = newSize;
+                }
+            }
+            
+            e.stopPropagation();
+        });
+        
+        // Long press on rotate button for continuous rotation
+        let rotateInterval = null;
+        this.transformBox.addEventListener('mousedown', (e) => {
+            const btn = e.target.closest('.transform-btn');
+            if (btn && btn.dataset.action === 'rotate') {
+                isRotating = true;
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                startRotation = Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180 / Math.PI;
+                currentRotation = getTransform().rotation;
                 e.preventDefault();
+                e.stopPropagation();
             }
         });
         
         this.transformBox.addEventListener('touchstart', (e) => {
-            if (e.target.classList.contains('transform-handle')) {
-                const type = e.target.dataset.type;
-                currentHandle = e.target;
-                
-                if (type === 'rotate') {
-                    isRotating = true;
-                    const rect = element.getBoundingClientRect();
-                    const centerX = rect.left + rect.width / 2;
-                    const centerY = rect.top + rect.height / 2;
-                    const touch = e.touches[0];
-                    startRotation = Math.atan2(touch.clientY - centerY, touch.clientX - centerX) * 180 / Math.PI;
-                    currentRotation = getTransform().rotation;
-                } else {
-                    isResizing = true;
-                    startX = e.touches[0].clientX;
-                    startY = e.touches[0].clientY;
-                    startWidth = element.offsetWidth;
-                    startHeight = element.offsetHeight;
-                }
+            const btn = e.target.closest('.transform-btn');
+            if (btn && btn.dataset.action === 'rotate') {
+                isRotating = true;
+                const touch = e.touches[0];
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                startRotation = Math.atan2(touch.clientY - centerY, touch.clientX - centerX) * 180 / Math.PI;
+                currentRotation = getTransform().rotation;
                 e.preventDefault();
+                e.stopPropagation();
             }
         }, { passive: false });
         
-        // Mouse move
+        // Mouse/Touch move
         document.addEventListener('mousemove', (e) => {
-            if (isDragging && !isResizing && !isRotating) {
+            if (isDragging && !isRotating) {
                 const deltaX = e.clientX - startX;
                 const deltaY = e.clientY - startY;
                 setTransform(elementX + deltaX, elementY + deltaY, currentRotation);
-            } else if (isResizing && currentHandle) {
-                const deltaX = e.clientX - startX;
-                const deltaY = e.clientY - startY;
-                
-                const handleClass = currentHandle.className;
-                
-                if (handleClass.includes('handle-br') || handleClass.includes('handle-tr')) {
-                    element.style.width = Math.max(100, startWidth + deltaX) + 'px';
-                }
-                if (handleClass.includes('handle-br') || handleClass.includes('handle-bl')) {
-                    element.style.height = Math.max(50, startHeight + deltaY) + 'px';
-                }
-                if (handleClass.includes('handle-r')) {
-                    element.style.width = Math.max(100, startWidth + deltaX) + 'px';
-                }
-                if (handleClass.includes('handle-b')) {
-                    element.style.height = Math.max(50, startHeight + deltaY) + 'px';
-                }
-                
-                this.updateTransformBox(element);
             } else if (isRotating) {
                 const rect = element.getBoundingClientRect();
                 const centerX = rect.left + rect.width / 2;
@@ -463,34 +473,12 @@ class CanvasEditor {
             }
         });
         
-        // Touch move
         document.addEventListener('touchmove', (e) => {
-            if (isDragging && !isResizing && !isRotating) {
+            if (isDragging && !isRotating) {
                 const touch = e.touches[0];
                 const deltaX = touch.clientX - startX;
                 const deltaY = touch.clientY - startY;
                 setTransform(elementX + deltaX, elementY + deltaY, currentRotation);
-            } else if (isResizing && currentHandle) {
-                const touch = e.touches[0];
-                const deltaX = touch.clientX - startX;
-                const deltaY = touch.clientY - startY;
-                
-                const handleClass = currentHandle.className;
-                
-                if (handleClass.includes('handle-br') || handleClass.includes('handle-tr')) {
-                    element.style.width = Math.max(100, startWidth + deltaX) + 'px';
-                }
-                if (handleClass.includes('handle-br') || handleClass.includes('handle-bl')) {
-                    element.style.height = Math.max(50, startHeight + deltaY) + 'px';
-                }
-                if (handleClass.includes('handle-r')) {
-                    element.style.width = Math.max(100, startWidth + deltaX) + 'px';
-                }
-                if (handleClass.includes('handle-b')) {
-                    element.style.height = Math.max(50, startHeight + deltaY) + 'px';
-                }
-                
-                this.updateTransformBox(element);
             } else if (isRotating) {
                 const touch = e.touches[0];
                 const rect = element.getBoundingClientRect();
@@ -507,9 +495,13 @@ class CanvasEditor {
         // Mouse/touch up
         const endInteraction = () => {
             isDragging = false;
-            isResizing = false;
             isRotating = false;
-            currentHandle = null;
+            isResizingWidth = false;
+            isScaling = false;
+            if (rotateInterval) {
+                clearInterval(rotateInterval);
+                rotateInterval = null;
+            }
         };
         
         document.addEventListener('mouseup', endInteraction);
@@ -600,98 +592,112 @@ class CanvasEditor {
             return;
         }
         
-        // Create temporary canvas with text rendered
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = this.canvas.width;
-        tempCanvas.height = this.canvas.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        
-        // Draw base image/background first
-        tempCtx.drawImage(this.canvas, 0, 0);
-        
-        // Draw text if exists
-        if (this.currentTextElement && this.textProps.content) {
-            // Get actual position from the DOM element
-            const canvasRect = this.canvas.getBoundingClientRect();
-            const textRect = this.currentTextElement.getBoundingClientRect();
-            
-            // Calculate scale factor for canvas coordinates
-            const scaleX = this.canvas.width / canvasRect.width;
-            const scaleY = this.canvas.height / canvasRect.height;
-            
-            // Get center position of text relative to canvas
-            const x = ((textRect.left - canvasRect.left) + textRect.width / 2) * scaleX;
-            const y = ((textRect.top - canvasRect.top) + textRect.height / 2) * scaleY;
-            
-            // Get rotation from transform
-            const transform = this.currentTextElement.style.transform || '';
-            const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
-            const rotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
-            
-            // Save context
-            tempCtx.save();
-            
-            // Move to text position and rotate
-            tempCtx.translate(x, y);
-            tempCtx.rotate(rotation * Math.PI / 180);
-            
-            // Apply text styling
-            tempCtx.font = `${this.textProps.size}px "${this.textProps.font}"`;
-            tempCtx.textAlign = 'center';
-            tempCtx.textBaseline = 'middle';
-            
-            // Draw text background if exists
-            if (this.textProps.bgOpacity > 0) {
-                const metrics = tempCtx.measureText(this.textProps.content);
-                const pad = 20;
-                const opacity = this.textProps.bgOpacity / 100;
-                const hex = this.textProps.bgColor;
-                const r = parseInt(hex.slice(1, 3), 16);
-                const g = parseInt(hex.slice(3, 5), 16);
-                const b = parseInt(hex.slice(5, 7), 16);
-                
-                tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                tempCtx.fillRect(
-                    -metrics.width / 2 - pad, 
-                    -this.textProps.size / 2 - pad, 
-                    metrics.width + pad * 2, 
-                    this.textProps.size + pad * 2
-                );
-            }
-            
-            // Draw shadow if exists
-            if (this.textProps.shadowBlur > 0) {
-                tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                tempCtx.shadowBlur = this.textProps.shadowBlur;
-                tempCtx.shadowOffsetX = 4;
-                tempCtx.shadowOffsetY = 4;
-            }
-            
-            // Draw stroke if exists
-            if (this.textProps.strokeWidth > 0) {
-                tempCtx.strokeStyle = this.textProps.strokeColor;
-                tempCtx.lineWidth = this.textProps.strokeWidth * 2;
-                tempCtx.strokeText(this.textProps.content, 0, 0);
-            }
-            
-            // Draw fill text
-            tempCtx.fillStyle = this.textProps.color;
-            tempCtx.fillText(this.textProps.content, 0, 0);
-            
-            // Restore context
-            tempCtx.restore();
-        }
-        
-        // Download with proper format
         try {
+            // Use html2canvas-like approach: capture the actual visual
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = this.canvas.width;
+            tempCanvas.height = this.canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Draw the base image/background
+            tempCtx.drawImage(this.canvas, 0, 0);
+            
+            // If text exists, capture it from DOM by rendering it properly
+            if (this.currentTextElement && this.textProps.content) {
+                // Get the text element's computed style and position
+                const canvasRect = this.canvas.getBoundingClientRect();
+                const textRect = this.currentTextElement.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(this.currentTextElement);
+                
+                // Calculate position relative to canvas
+                const scaleX = this.canvas.width / canvasRect.width;
+                const scaleY = this.canvas.height / canvasRect.height;
+                
+                const x = (textRect.left - canvasRect.left) * scaleX;
+                const y = (textRect.top - canvasRect.top) * scaleY;
+                const width = textRect.width * scaleX;
+                const height = textRect.height * scaleY;
+                
+                // Get transform values
+                const transform = this.currentTextElement.style.transform || '';
+                const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
+                const rotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
+                
+                // Save context
+                tempCtx.save();
+                
+                // Apply rotation around text center
+                const centerX = x + width / 2;
+                const centerY = y + height / 2;
+                tempCtx.translate(centerX, centerY);
+                tempCtx.rotate(rotation * Math.PI / 180);
+                tempCtx.translate(-centerX, -centerY);
+                
+                // Draw text background if exists
+                if (this.textProps.bgOpacity > 0) {
+                    const hex = this.textProps.bgColor;
+                    const r = parseInt(hex.slice(1, 3), 16);
+                    const g = parseInt(hex.slice(3, 5), 16);
+                    const b = parseInt(hex.slice(5, 7), 16);
+                    const opacity = this.textProps.bgOpacity / 100;
+                    
+                    tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                    tempCtx.fillRect(x, y, width, height);
+                }
+                
+                // Split text into lines as displayed
+                const lines = this.textProps.content.split('\n');
+                const fontSize = this.textProps.size;
+                const lineHeight = fontSize * 1.3;
+                
+                // Set up text styling
+                tempCtx.font = `${fontSize}px "${this.textProps.font}"`;
+                tempCtx.textAlign = computedStyle.textAlign || 'center';
+                tempCtx.textBaseline = 'middle';
+                
+                // Draw shadow if exists
+                if (this.textProps.shadowBlur > 0) {
+                    tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                    tempCtx.shadowBlur = this.textProps.shadowBlur;
+                    tempCtx.shadowOffsetX = 4;
+                    tempCtx.shadowOffsetY = 4;
+                }
+                
+                // Calculate starting Y position to center text vertically
+                const totalTextHeight = lines.length * lineHeight;
+                let currentY = y + (height - totalTextHeight) / 2 + lineHeight / 2;
+                
+                // Draw each line
+                lines.forEach(line => {
+                    const lineX = tempCtx.textAlign === 'center' ? x + width / 2 : x + 10;
+                    
+                    // Draw stroke if exists
+                    if (this.textProps.strokeWidth > 0) {
+                        tempCtx.strokeStyle = this.textProps.strokeColor;
+                        tempCtx.lineWidth = this.textProps.strokeWidth * 2;
+                        tempCtx.strokeText(line, lineX, currentY);
+                    }
+                    
+                    // Draw fill text
+                    tempCtx.fillStyle = this.textProps.color;
+                    tempCtx.fillText(line, lineX, currentY);
+                    
+                    currentY += lineHeight;
+                });
+                
+                // Restore context
+                tempCtx.restore();
+            }
+            
+            // Download with maximum quality
             const link = document.createElement('a');
             link.download = `photo-editor-${Date.now()}.png`;
             link.href = tempCanvas.toDataURL('image/png', 1.0);
             
-            // Trigger download
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            
         } catch (error) {
             console.error('Download error:', error);
             alert('Download failed. Please try again.');
@@ -705,72 +711,67 @@ class CanvasEditor {
             if (lang === 'ar') {
                 message = 'الرجاء رفع صورة أو إنشاء خلفية أولاً';
             } else if (lang === 'fr') {
-                message = 'Veuillez télécharger une image ou créer un fond d\'abord';
+                message = 'Veuillez télécharger une image أو créer un fond d\'abord';
             }
             alert(message);
             return;
         }
         
         try {
-            // Create temporary canvas with text
+            // Use same approach as download
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = this.canvas.width;
             tempCanvas.height = this.canvas.height;
             const tempCtx = tempCanvas.getContext('2d');
             
-            // Draw base image/background
+            // Draw the base image/background
             tempCtx.drawImage(this.canvas, 0, 0);
             
-            // Draw text if exists
+            // If text exists, capture it from DOM
             if (this.currentTextElement && this.textProps.content) {
-                // Get actual position from the DOM element
                 const canvasRect = this.canvas.getBoundingClientRect();
                 const textRect = this.currentTextElement.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(this.currentTextElement);
                 
-                // Calculate scale factor for canvas coordinates
                 const scaleX = this.canvas.width / canvasRect.width;
                 const scaleY = this.canvas.height / canvasRect.height;
                 
-                // Get center position of text relative to canvas
-                const x = ((textRect.left - canvasRect.left) + textRect.width / 2) * scaleX;
-                const y = ((textRect.top - canvasRect.top) + textRect.height / 2) * scaleY;
+                const x = (textRect.left - canvasRect.left) * scaleX;
+                const y = (textRect.top - canvasRect.top) * scaleY;
+                const width = textRect.width * scaleX;
+                const height = textRect.height * scaleY;
                 
-                // Get rotation from transform
                 const transform = this.currentTextElement.style.transform || '';
                 const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
                 const rotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
                 
-                // Save context
                 tempCtx.save();
                 
-                // Move to text position and rotate
-                tempCtx.translate(x, y);
+                const centerX = x + width / 2;
+                const centerY = y + height / 2;
+                tempCtx.translate(centerX, centerY);
                 tempCtx.rotate(rotation * Math.PI / 180);
+                tempCtx.translate(-centerX, -centerY);
                 
-                tempCtx.font = `${this.textProps.size}px "${this.textProps.font}"`;
-                tempCtx.textAlign = 'center';
-                tempCtx.textBaseline = 'middle';
-                
-                // Draw text background if exists
                 if (this.textProps.bgOpacity > 0) {
-                    const metrics = tempCtx.measureText(this.textProps.content);
-                    const pad = 20;
-                    const opacity = this.textProps.bgOpacity / 100;
                     const hex = this.textProps.bgColor;
                     const r = parseInt(hex.slice(1, 3), 16);
                     const g = parseInt(hex.slice(3, 5), 16);
                     const b = parseInt(hex.slice(5, 7), 16);
+                    const opacity = this.textProps.bgOpacity / 100;
                     
                     tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                    tempCtx.fillRect(
-                        -metrics.width / 2 - pad, 
-                        -this.textProps.size / 2 - pad, 
-                        metrics.width + pad * 2, 
-                        this.textProps.size + pad * 2
-                    );
+                    tempCtx.fillRect(x, y, width, height);
                 }
                 
-                // Draw shadow if exists
+                const lines = this.textProps.content.split('\n');
+                const fontSize = this.textProps.size;
+                const lineHeight = fontSize * 1.3;
+                
+                tempCtx.font = `${fontSize}px "${this.textProps.font}"`;
+                tempCtx.textAlign = computedStyle.textAlign || 'center';
+                tempCtx.textBaseline = 'middle';
+                
                 if (this.textProps.shadowBlur > 0) {
                     tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
                     tempCtx.shadowBlur = this.textProps.shadowBlur;
@@ -778,22 +779,28 @@ class CanvasEditor {
                     tempCtx.shadowOffsetY = 4;
                 }
                 
-                // Draw stroke if exists
-                if (this.textProps.strokeWidth > 0) {
-                    tempCtx.strokeStyle = this.textProps.strokeColor;
-                    tempCtx.lineWidth = this.textProps.strokeWidth * 2;
-                    tempCtx.strokeText(this.textProps.content, 0, 0);
-                }
+                const totalTextHeight = lines.length * lineHeight;
+                let currentY = y + (height - totalTextHeight) / 2 + lineHeight / 2;
                 
-                // Draw fill text
-                tempCtx.fillStyle = this.textProps.color;
-                tempCtx.fillText(this.textProps.content, 0, 0);
+                lines.forEach(line => {
+                    const lineX = tempCtx.textAlign === 'center' ? x + width / 2 : x + 10;
+                    
+                    if (this.textProps.strokeWidth > 0) {
+                        tempCtx.strokeStyle = this.textProps.strokeColor;
+                        tempCtx.lineWidth = this.textProps.strokeWidth * 2;
+                        tempCtx.strokeText(line, lineX, currentY);
+                    }
+                    
+                    tempCtx.fillStyle = this.textProps.color;
+                    tempCtx.fillText(line, lineX, currentY);
+                    
+                    currentY += lineHeight;
+                });
                 
-                // Restore context
                 tempCtx.restore();
             }
             
-            // Try Web Share API first (works on mobile and some desktop browsers)
+            // Try Web Share API
             if (navigator.share && navigator.canShare) {
                 const blob = await new Promise(resolve => {
                     tempCanvas.toBlob(resolve, 'image/png', 1.0);
@@ -801,7 +808,6 @@ class CanvasEditor {
                 
                 const file = new File([blob], `photo-editor-${Date.now()}.png`, { type: 'image/png' });
                 
-                // Check if we can share files
                 if (navigator.canShare({ files: [file] })) {
                     await navigator.share({
                         files: [file],
@@ -812,7 +818,7 @@ class CanvasEditor {
                 }
             }
             
-            // Fallback: Just download the image
+            // Fallback: download
             const link = document.createElement('a');
             link.download = `photo-editor-${Date.now()}.png`;
             link.href = tempCanvas.toDataURL('image/png', 1.0);
@@ -821,7 +827,6 @@ class CanvasEditor {
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error('Share error:', error);
-                // Final fallback: download
                 this.download();
             }
         }
