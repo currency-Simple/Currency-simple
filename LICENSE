@@ -1,0 +1,131 @@
+MIT License
+
+Copyright (c) 2026 Photo Text Editor
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+THIRD-PARTY RESOURCES AND ATTRIBUTIONS
+================================================================================
+
+This application uses the following third-party resources:
+
+1. PEXELS API
+   - Provider: Pexels (https://www.pexels.com)
+   - License: Pexels License (https://www.pexels.com/license/)
+   - Usage: All photos provided through Pexels API
+   - Free for commercial and non-commercial use
+   - Attribution not required but appreciated
+   - Photos cannot be sold as-is or in a database
+   - Note: This application displays photos from Pexels for user selection and editing
+
+2. BUNNY FONTS
+   - Provider: Bunny Fonts (https://fonts.bunny.net)
+   - License: Open Font License (OFL) and various open source licenses
+   - Usage: Web font delivery service
+   - Free to use for personal and commercial projects
+   - Privacy-focused alternative to Google Fonts
+   - Includes fonts like: Abeezee, Abril Fatface, Acme, Aladin, Amatic SC, 
+     Audiowide, Bangers, Berkshire Swash, Cinzel, Damion, Great Vibes, 
+     IBM Plex Sans Arabic, Noto Kufi Arabic, and many more
+
+3. COLOR HUNT
+   - Provider: Color Hunt (https://colorhunt.co)
+   - License: Free to use color palettes
+   - Usage: Color palette inspiration and selection
+   - Free for personal and commercial use
+   - Colors used in this application are inspired by Color Hunt palettes
+   - No copyright restrictions on individual colors
+
+4. GOOGLE MATERIAL ICONS
+   - Provider: Google (https://fonts.google.com/icons)
+   - License: Apache License 2.0
+   - Usage: User interface icons
+   - Free for personal and commercial use
+   - Available at: https://github.com/google/material-design-icons
+
+================================================================================
+IMPORTANT LEGAL NOTICES
+================================================================================
+
+IMAGE USAGE NOTICE:
+- All images displayed in this application are sourced from Pexels API
+- Images are subject to Pexels License terms
+- Users are responsible for ensuring proper usage of images they edit/download
+- This application does not claim ownership of any images from Pexels
+- Images are provided "as is" for editing purposes only
+
+FONT USAGE NOTICE:
+- All fonts are loaded from Bunny Fonts CDN
+- Fonts are subject to their respective open source licenses
+- Most fonts use the SIL Open Font License (OFL)
+- This application does not redistribute font files
+- Fonts are loaded dynamically from Bunny Fonts servers
+
+COLOR USAGE NOTICE:
+- Color palettes are inspired by Color Hunt
+- Individual colors are not copyrightable
+- Color combinations are provided for design inspiration
+- No trademark or copyright infringement is intended
+
+NO DATA COLLECTION:
+- This application does not collect, store, or transmit user data
+- All image editing happens locally in the browser
+- No images or edits are uploaded to any server (except Pexels API for browsing)
+- User preferences (theme, language) are stored locally using localStorage
+
+DISCLAIMER:
+This application is provided as-is for educational and personal use. The developers
+make no warranties about the completeness, reliability, or accuracy of this
+application. Any action you take upon the information in this application is
+strictly at your own risk.
+
+================================================================================
+GOOGLE PLAY STORE COMPLIANCE
+================================================================================
+
+This application complies with Google Play Store policies:
+
+1. NO COPYRIGHT INFRINGEMENT
+   - All images from Pexels (Free License)
+   - All fonts from Bunny Fonts (Open Source)
+   - All colors from Color Hunt (Free to use)
+   - All icons from Google Material Icons (Apache 2.0)
+
+2. NO DATA COLLECTION
+   - No personal information collected
+   - No analytics or tracking
+   - No server-side storage
+   - localStorage only for user preferences
+
+3. TRANSPARENT LICENSING
+   - All resources properly attributed
+   - Licenses clearly stated
+   - No misleading claims
+   - Open source codebase
+
+4. INTELLECTUAL PROPERTY RESPECT
+   - Pexels API terms followed
+   - Font licenses respected
+   - No trademark violations
+   - Proper attributions provided
+
+For questions or concerns about licensing, please contact the developer.
+
+Last Updated: January 2026
