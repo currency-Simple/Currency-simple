@@ -1,195 +1,322 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>محرر النصوص على الصور</title>
+    <title>Professional Photo Editor</title>
     
-    <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
-    
-    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=abeezee:400,400i|abhaya-libre:600,800|abril-fatface:400|amatic-sc:700|audiowide:400|damion:400|great-vibes:400|ibm-plex-sans-arabic:400,700|noto-kufi-arabic:400,800,900" rel="stylesheet">
+    <link href="https://fonts.bunny.net/css?family=abeezee:400,400i|abhaya-libre:600,800|aboreto:400|abril-fatface:400|abyssinica-sil:400|aclonica:400|acme:400|advent-pro:700i,800i,900i|aguafina-script:400|akaya-telivigala:400|akronim:400|aladin:400|aldrich:400|alegreya:600i,700,900,900i|alegreya-sc:500,500i,800,900i|alex-brush:400|alfa-slab-one:400|allan:400,700|almendra:400i,700i|almendra-sc:400|alumni-sans:100,200,500i,800i|alumni-sans-inline-one:400,400i|amatic-sc:700|amita:700|arbutus:400|architects-daughter:400|are-you-serious:400|aref-ruqaa:400,700|asset:400|astloch:400,700|atomic-age:400|aubrey:400|audiowide:400|bahiana:400|bakbak-one:400|ballet:400|bangers:400|barriecito:400|beau-rivage:400|berkshire-swash:400|beth-ellen:400|bhutuka-expanded-one:400|big-shoulders-display:100,400,800,900|bigelow-rules:400|biorhyme-expanded:200,700,800|black-and-white-picture:400|bonbon:400|bowlby-one-sc:400|bruno-ace:400|bungee:400|bungee-inline:400|bungee-outline:400|bungee-shade:400|bungee-tint:400|butcherman:400|caesar-dressing:400|castoro-titling:400|chathura:300,800|cinzel:500,900|cute-font:400|damion:400|diplomata:400|dokdo:400|dorsa:400|dr-sugiyama:400|eagle-lake:400|edu-qld-beginner:400,700|erica-one:400|fascinate:400|faster-one:400|fleur-de-leah:400|ga-maamli:400|gajraj-one:400|great-vibes:400|hanalei:400|homemade-apple:400|honk:400|ibm-plex-sans-arabic:400,700|jacquard-12-charted:400|jacquard-24-charted:400|jacquarda-bastarda-9:400|jersey-25-charted:400|jomhuria:400|kablammo:400|kalnia-glaze:300,700|kumar-one-outline:400|libre-barcode-39-text:400|limelight:400|major-mono-display:400|moirai-one:400|monofett:400|monoton:400|mrs-sheppards:400|nosifer:400|noto-kufi-arabic:400,800,900|palette-mosaic:400|rock-salt:400|rubik-beastly:400|rubik-broken-fax:400|rubik-gemstones:400|rubik-glitch-pop:400|rubik-puddles:400|sancreek:400|sixtyfour:400|sonsie-one:400" rel="stylesheet" />
     
-    <!-- Supabase Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
-    
-    <style>
-        /* نافذة تسجيل الدخول المنبثقة */
-        .auth-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .auth-modal-content {
-            background: var(--card);
-            border-radius: 20px;
-            padding: 30px;
-            width: 100%;
-            max-width: 400px;
-            position: relative;
-        }
-    </style>
 </head>
-<body>
-    <!-- صفحة الفئات -->
+<body data-theme="dark">
     <div id="categoriesPage" class="page active">
-        <div class="header">
-            <h1>الفئات</h1>
-            <!-- سيتم إضافة زر الحساب تلقائياً من JavaScript -->
+        <div class="top-bar">
+            <h1 data-translate="categories">Image Categories</h1>
         </div>
         <div class="categories-grid" id="categoriesGrid"></div>
-    </div>
-
-    <!-- صفحة الصور -->
-    <div id="imagesPage" class="page">
-        <div class="header">
-            <button onclick="showPage('categories')" class="icon-btn">
-                <span class="material-symbols-outlined">arrow_back</span>
+        <div class="bottom-nav">
+            <button class="nav-btn active" data-page="categories">
+                <span class="material-icons">grid_view</span>
+                <span data-translate="nav-categories">Categories</span>
             </button>
-            <h1 id="categoryTitle">الصور</h1>
+            <button class="nav-btn" data-page="editor">
+                <span class="material-icons">edit</span>
+                <span data-translate="nav-editor">Editor</span>
+            </button>
+            <button class="nav-btn" data-page="settings">
+                <span class="material-icons">settings</span>
+                <span data-translate="nav-settings">Settings</span>
+            </button>
         </div>
-        <div class="image-grid" id="imageGrid"></div>
     </div>
 
-    <!-- صفحة المحرر -->
+    <div id="galleryPage" class="page">
+        <div class="top-bar">
+            <button class="back-btn" id="galleryBackBtn">
+                <span class="material-icons">arrow_back</span>
+            </button>
+            <h1 id="galleryTitle">Images</h1>
+        </div>
+        <div class="gallery-grid" id="galleryGrid">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+        <div class="bottom-nav">
+            <button class="nav-btn" data-page="categories">
+                <span class="material-icons">grid_view</span>
+                <span data-translate="nav-categories">Categories</span>
+            </button>
+            <button class="nav-btn" data-page="editor">
+                <span class="material-icons">edit</span>
+                <span data-translate="nav-editor">Editor</span>
+            </button>
+            <button class="nav-btn" data-page="settings">
+                <span class="material-icons">settings</span>
+                <span data-translate="nav-settings">Settings</span>
+            </button>
+        </div>
+    </div>
+
     <div id="editorPage" class="page">
-        <div class="header">
-            <button onclick="goBackToImages()" class="icon-btn">
-                <span class="material-symbols-outlined">arrow_back</span>
+        <div class="top-action-bar">
+            <button class="action-btn" id="editorBackBtn">
+                <span class="material-icons">arrow_back</span>
             </button>
-            <div class="header-actions">
-                <button onclick="shareImage()" class="icon-btn">
-                    <span class="material-symbols-outlined">share</span>
+            <div class="action-right">
+                <button class="action-btn" id="resetBtn">
+                    <span class="material-icons">refresh</span>
                 </button>
-                <button onclick="downloadImage()" class="icon-btn">
-                    <span class="material-symbols-outlined">download</span>
+                <button class="action-btn" id="shareBtn">
+                    <span class="material-icons">share</span>
+                </button>
+                <button class="action-btn primary" id="downloadBtn">
+                    <span class="material-icons">download</span>
                 </button>
             </div>
         </div>
-        
-        <div class="editor-container">
-            <div class="canvas-wrapper" id="canvasWrapper">
-                <canvas id="canvas"></canvas>
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        <div class="tools-drawer" id="toolsDrawer">
+            <div class="drawer-handle"></div>
+            <div class="tools-menu" id="toolsMenu">
+                <button class="tool-btn" data-tool="upload">
+                    <span class="material-icons">add_photo_alternate</span>
+                    <span data-translate="tool-upload">Upload Image</span>
+                </button>
+                <button class="tool-btn" data-tool="background">
+                    <span class="material-icons">wallpaper</span>
+                    <span data-translate="tool-background-create">Background</span>
+                </button>
+                <button class="tool-btn active" data-tool="text">
+                    <span class="material-icons">title</span>
+                    <span data-translate="tool-text">Add Text</span>
+                </button>
+                <button class="tool-btn" data-tool="font">
+                    <span class="material-icons">font_download</span>
+                    <span data-translate="tool-font">Fonts</span>
+                </button>
+                <button class="tool-btn" data-tool="size">
+                    <span class="material-icons">format_size</span>
+                    <span data-translate="tool-size">Font Size</span>
+                </button>
+                <button class="tool-btn" data-tool="color">
+                    <span class="material-icons">palette</span>
+                    <span data-translate="tool-color">Color</span>
+                </button>
+                <button class="tool-btn" data-tool="stroke">
+                    <span class="material-icons">border_color</span>
+                    <span data-translate="tool-stroke">Stroke</span>
+                </button>
+                <button class="tool-btn" data-tool="shadow">
+                    <span class="material-icons">blur_on</span>
+                    <span data-translate="tool-shadow">Shadow</span>
+                </button>
+                <button class="tool-btn" data-tool="textbg">
+                    <span class="material-icons">layers</span>
+                    <span data-translate="tool-bg">Text BG</span>
+                </button>
+                <button class="tool-btn" data-tool="blur">
+                    <span class="material-icons">blur_circular</span>
+                    <span data-translate="tool-blur">Blur</span>
+                </button>
+                <button class="tool-btn" data-tool="border">
+                    <span class="material-icons">crop_square</span>
+                    <span data-translate="tool-border">Border</span>
+                </button>
             </div>
-            
-            <!-- شريط الأدوات -->
-            <div class="editor-toolbar">
-                <button class="tool-btn" onclick="toggleTextCard()">
-                    <span class="material-symbols-outlined">text_fields</span>
-                    <span>نص</span>
-                </button>
-
-                <button class="tool-btn" onclick="togglePanel('fontPanel')">
-                    <span class="material-symbols-outlined">font_download</span>
-                    <span>خط</span>
-                </button>
-
-                <button class="tool-btn" onclick="togglePanel('colorPanel')">
-                    <span class="material-symbols-outlined">palette</span>
-                    <span>لون</span>
-                </button>
-
-                <button class="tool-btn" onclick="togglePanel('effectsPanel')">
-                    <span class="material-symbols-outlined">auto_fix_high</span>
-                    <span>تأثيرات</span>
-                </button>
-            </div>
-
-            <!-- لوحة الخطوط -->
-            <div id="fontPanel" class="tool-panel">
-                <div class="panel-header">
-                    <h3>اختر الخط</h3>
-                    <button onclick="closePanel('fontPanel')" class="close-btn">
-                        <span class="material-symbols-outlined">close</span>
+            <div class="tool-panels">
+                <div class="tool-panel" id="uploadPanel">
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                    <button class="upload-area" id="uploadArea">
+                        <span class="material-icons large">cloud_upload</span>
+                        <p data-translate="upload-text">Click to upload image</p>
                     </button>
                 </div>
-                <div class="horizontal-scroll" id="fontGrid"></div>
-            </div>
 
-            <!-- لوحة الألوان -->
-            <div id="colorPanel" class="tool-panel">
-                <div class="panel-header">
-                    <h3>لون النص</h3>
-                    <button onclick="closePanel('colorPanel')" class="close-btn">
-                        <span class="material-symbols-outlined">close</span>
+                <div class="tool-panel" id="backgroundPanel">
+                    <h3 style="margin-bottom: 12px; color: var(--text-secondary); font-size: 14px;" data-translate="bg-title">Create Background</h3>
+                    <p style="margin-bottom: 16px; color: var(--text-secondary); font-size: 12px;" data-translate="bg-subtitle">Select a color to create 3:5 background</p>
+                    <div class="horizontal-scroll" id="bgCreateColorScroll"></div>
+                    <button class="create-bg-btn" id="createBackgroundBtn">
+                        <span class="material-icons">add</span>
+                        <span data-translate="bg-create">Create Background</span>
                     </button>
                 </div>
-                <div class="horizontal-scroll" id="colorGrid"></div>
-            </div>
 
-            <!-- لوحة التأثيرات -->
-            <div id="effectsPanel" class="tool-panel">
-                <div class="panel-header">
-                    <h3>التأثيرات</h3>
-                    <button onclick="closePanel('effectsPanel')" class="close-btn">
-                        <span class="material-symbols-outlined">close</span>
-                    </button>
+                <div class="tool-panel active" id="textPanel">
+                    <textarea id="textInput" data-translate-placeholder="text-placeholder" placeholder="Type text here..." rows="4"></textarea>
                 </div>
-                <div class="panel-content">
-                    <label class="effect-option">
-                        <input type="checkbox" id="shadowEnabled" checked>
-                        <span>ظل النص</span>
-                    </label>
-                    <label class="effect-option">
-                        <input type="checkbox" id="bgEnabled">
-                        <span>خلفية النص</span>
-                    </label>
+
+                <div class="tool-panel" id="fontPanel">
+                    <div class="horizontal-scroll" id="fontScroll"></div>
+                </div>
+
+                <div class="tool-panel" id="sizePanel">
+                    <div class="slider-container">
+                        <span class="slider-label" data-translate="font-size">Font Size</span>
+                        <span class="slider-value" id="fontSizeValue">48</span>
+                    </div>
+                    <input type="range" id="fontSize" min="12" max="200" value="48" class="slider">
+                </div>
+
+                <div class="tool-panel" id="colorPanel">
+                    <div class="horizontal-scroll" id="colorScroll"></div>
+                </div>
+
+                <div class="tool-panel" id="strokePanel">
+                    <div class="horizontal-scroll" id="strokeColorScroll"></div>
+                    <div class="slider-container">
+                        <span class="slider-label" data-translate="stroke-width">Stroke Width</span>
+                        <span class="slider-value" id="strokeWidthValue">2</span>
+                    </div>
+                    <input type="range" id="strokeWidth" min="0" max="20" value="2" class="slider">
+                </div>
+
+                <div class="tool-panel" id="shadowPanel">
+                    <div class="slider-container">
+                        <span class="slider-label" data-translate="shadow-blur">Shadow Intensity</span>
+                        <span class="slider-value" id="shadowBlurValue">10</span>
+                    </div>
+                    <input type="range" id="shadowBlur" min="0" max="50" value="10" class="slider">
+                </div>
+
+                <div class="tool-panel" id="textbgPanel">
+                    <div class="horizontal-scroll" id="bgColorScroll"></div>
+                    <div class="slider-container">
+                        <span class="slider-label" data-translate="bg-opacity">Opacity</span>
+                        <span class="slider-value" id="bgOpacityValue">80</span>
+                    </div>
+                    <input type="range" id="bgOpacity" min="0" max="100" value="80" class="slider">
+                </div>
+
+                <div class="tool-panel" id="blurPanel">
+                    <div class="slider-container">
+                        <span class="slider-label" data-translate="blur-intensity">Blur Intensity</span>
+                        <span class="slider-value" id="blurValue">5</span>
+                    </div>
+                    <input type="range" id="imageBlur" min="0" max="20" value="5" class="slider">
+                </div>
+
+                <div class="tool-panel" id="borderPanel">
+                    <div class="horizontal-scroll" id="borderColorScroll"></div>
+                    <div class="slider-container">
+                        <span class="slider-label" data-translate="border-width">Border Width</span>
+                        <span class="slider-value" id="borderWidthValue">10</span>
+                    </div>
+                    <input type="range" id="borderWidth" min="0" max="50" value="10" class="slider">
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- بطاقة النص -->
-    <div id="textCard" class="text-card" style="display: none;">
-        <div class="text-card-header">
-            <span>إضافة نص</span>
-            <button onclick="closeTextCard()" class="close-btn">
-                <span class="material-symbols-outlined">close</span>
+        <div class="bottom-nav">
+            <button class="nav-btn" data-page="categories">
+                <span class="material-icons">grid_view</span>
+                <span data-translate="nav-categories">Categories</span>
+            </button>
+            <button class="nav-btn active" data-page="editor">
+                <span class="material-icons">edit</span>
+                <span data-translate="nav-editor">Editor</span>
+            </button>
+            <button class="nav-btn" data-page="settings">
+                <span class="material-icons">settings</span>
+                <span data-translate="nav-settings">Settings</span>
             </button>
         </div>
-        <div class="text-card-content">
-            <textarea id="textInput" placeholder="اكتب النص هنا..." rows="4"></textarea>
-            <div class="text-card-buttons">
-                <button onclick="closeTextCard()" class="btn secondary">إلغاء</button>
-                <button onclick="applyText()" class="btn primary">موافق</button>
+    </div>
+
+    <div id="settingsPage" class="page">
+        <div class="top-bar">
+            <h1 data-translate="settings-title">Settings</h1>
+        </div>
+        <div class="settings-content">
+            <div class="setting-section">
+                <h3 data-translate="theme-title">Theme</h3>
+                <div class="theme-options">
+                    <button class="theme-btn active" data-theme="dark">
+                        <span class="material-icons">dark_mode</span>
+                        <span data-translate="theme-dark">Dark</span>
+                    </button>
+                    <button class="theme-btn" data-theme="light">
+                        <span class="material-icons">light_mode</span>
+                        <span data-translate="theme-light">Light</span>
+                    </button>
+                    <button class="theme-btn" data-theme="gray">
+                        <span class="material-icons">contrast</span>
+                        <span data-translate="theme-gray">Gray</span>
+                    </button>
+                </div>
             </div>
+            <div class="setting-section">
+                <h3 data-translate="language-title">Language</h3>
+                <div class="language-options">
+                    <button class="lang-btn active" data-lang="en">
+                        <span>🇬🇧</span>
+                        <span>English</span>
+                    </button>
+                    <button class="lang-btn" data-lang="fr">
+                        <span>🇫🇷</span>
+                        <span>Français</span>
+                    </button>
+                    <button class="lang-btn" data-lang="ar">
+                        <span>🇸🇦</span>
+                        <span>العربية</span>
+                    </button>
+                </div>
+            </div>
+            <div class="setting-section">
+                <h3 data-translate="links-title">Links</h3>
+                <a href="https://images.pexels.com/photos/7615523/pexels-photo-7615523.jpeg" target="_blank" class="setting-link">
+                    <span class="material-icons">info</span>
+                    <span data-translate="about">About App</span>
+                    <span class="material-icons">chevron_right</span>
+                </a>
+                <a href="https://images.pexels.com/photos/7615523/pexels-photo-7615523.jpeg" target="_blank" class="setting-link">
+                    <span class="material-icons">copyright</span>
+                    <span data-translate="copyright">Copyright</span>
+                    <span class="material-icons">chevron_right</span>
+                </a>
+                <a href="https://openmoji.org/library/emoji-1F3C6" target="_blank" class="setting-link">
+                    <span class="material-icons">policy</span>
+                    <span data-translate="privacy">Privacy Policy</span>
+                    <span class="material-icons">chevron_right</span>
+                </a>
+                <a href="https://openmoji.org/library/emoji-1F3C6" target="_blank" class="setting-link">
+                    <span class="material-icons">email</span>
+                    <span data-translate="contact">Contact Us</span>
+                    <span class="material-icons">chevron_right</span>
+                </a>
+                <a href="https://openmoji.org/library/emoji-1F3C6" target="_blank" class="setting-link">
+                    <span class="material-icons">bug_report</span>
+                    <span data-translate="report">Report Issue</span>
+                    <span class="material-icons">chevron_right</span>
+                </a>
+            </div>
+        </div>
+        <div class="bottom-nav">
+            <button class="nav-btn" data-page="categories">
+                <span class="material-icons">grid_view</span>
+                <span data-translate="nav-categories">Categories</span>
+            </button>
+            <button class="nav-btn" data-page="editor">
+                <span class="material-icons">edit</span>
+                <span data-translate="nav-editor">Editor</span>
+            </button>
+            <button class="nav-btn active" data-page="settings">
+                <span class="material-icons">settings</span>
+                <span data-translate="nav-settings">Settings</span>
+            </button>
         </div>
     </div>
 
-    <!-- القائمة السفلية -->
-    <div class="bottom-nav">
-        <button onclick="showPage('categories')" class="nav-btn" id="navCategories">
-            <span class="material-symbols-outlined">dashboard</span>
-            <span>الفئات</span>
-        </button>
-        <button onclick="showPage('editor')" class="nav-btn" id="navEditor">
-            <span class="material-symbols-outlined">edit</span>
-            <span>التحرير</span>
-        </button>
-    </div>
-
-    <!-- Scripts -->
     <script src="js/config.js"></script>
-    <script src="js/fonts.js"></script>
-    <script src="js/colors.js"></script>
-    <script src="js/settings.js"></script>
+    <script src="js/translations.js"></script>
+    <script src="js/gallery.js"></script>
+    <script src="js/canvas.js"></script>
     <script src="js/editor.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
