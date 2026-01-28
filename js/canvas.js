@@ -400,7 +400,14 @@ class CanvasEditor {
     
     async download() {
         if (!this.image) {
-            alert('Please upload an image or create background first');
+            const lang = localStorage.getItem('language') || 'en';
+            let message = 'Please upload an image or create background first';
+            if (lang === 'ar') {
+                message = 'الرجاء رفع صورة أو إنشاء خلفية أولاً';
+            } else if (lang === 'fr') {
+                message = 'Veuillez télécharger une image ou créer un fond d\'abord';
+            }
+            alert(message);
             return;
         }
         
@@ -410,23 +417,29 @@ class CanvasEditor {
         tempCanvas.height = this.canvas.height;
         const tempCtx = tempCanvas.getContext('2d');
         
-        // Draw image
+        // Draw base image/background first
         tempCtx.drawImage(this.canvas, 0, 0);
         
         // Draw text if exists
         if (this.currentTextElement && this.textProps.content) {
-            const rect = this.canvas.getBoundingClientRect();
+            // Get actual position from the DOM element
+            const canvasRect = this.canvas.getBoundingClientRect();
             const textRect = this.currentTextElement.getBoundingClientRect();
             
-            const x = (textRect.left + textRect.width / 2 - rect.left);
-            const y = (textRect.top + textRect.height / 2 - rect.top);
+            // Calculate scale factor for canvas coordinates
+            const scaleX = this.canvas.width / canvasRect.width;
+            const scaleY = this.canvas.height / canvasRect.height;
+            
+            // Get center position of text relative to canvas
+            const x = ((textRect.left - canvasRect.left) + textRect.width / 2) * scaleX;
+            const y = ((textRect.top - canvasRect.top) + textRect.height / 2) * scaleY;
             
             // Apply text styling
             tempCtx.font = `${this.textProps.size}px "${this.textProps.font}"`;
             tempCtx.textAlign = 'center';
             tempCtx.textBaseline = 'middle';
             
-            // Background
+            // Draw text background if exists
             if (this.textProps.bgOpacity > 0) {
                 const metrics = tempCtx.measureText(this.textProps.content);
                 const pad = 20;
@@ -437,11 +450,15 @@ class CanvasEditor {
                 const b = parseInt(hex.slice(5, 7), 16);
                 
                 tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                tempCtx.fillRect(x - metrics.width / 2 - pad, y - this.textProps.size / 2 - pad, 
-                                metrics.width + pad * 2, this.textProps.size + pad * 2);
+                tempCtx.fillRect(
+                    x - metrics.width / 2 - pad, 
+                    y - this.textProps.size / 2 - pad, 
+                    metrics.width + pad * 2, 
+                    this.textProps.size + pad * 2
+                );
             }
             
-            // Shadow
+            // Draw shadow if exists
             if (this.textProps.shadowBlur > 0) {
                 tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
                 tempCtx.shadowBlur = this.textProps.shadowBlur;
@@ -449,28 +466,44 @@ class CanvasEditor {
                 tempCtx.shadowOffsetY = 4;
             }
             
-            // Stroke
+            // Draw stroke if exists
             if (this.textProps.strokeWidth > 0) {
                 tempCtx.strokeStyle = this.textProps.strokeColor;
-                tempCtx.lineWidth = this.textProps.strokeWidth;
+                tempCtx.lineWidth = this.textProps.strokeWidth * 2; // Double for better visibility
                 tempCtx.strokeText(this.textProps.content, x, y);
             }
             
-            // Fill
+            // Draw fill text
             tempCtx.fillStyle = this.textProps.color;
             tempCtx.fillText(this.textProps.content, x, y);
         }
         
-        // Download
-        const link = document.createElement('a');
-        link.download = `edited-${Date.now()}.png`;
-        link.href = tempCanvas.toDataURL('image/png', 1.0);
-        link.click();
+        // Download with proper format
+        try {
+            const link = document.createElement('a');
+            link.download = `photo-editor-${Date.now()}.png`;
+            link.href = tempCanvas.toDataURL('image/png', 1.0);
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error('Download error:', error);
+            alert('Download failed. Please try again.');
+        }
     }
     
     async share() {
         if (!this.image) {
-            alert('Please upload an image or create background first');
+            const lang = localStorage.getItem('language') || 'en';
+            let message = 'Please upload an image or create background first';
+            if (lang === 'ar') {
+                message = 'الرجاء رفع صورة أو إنشاء خلفية أولاً';
+            } else if (lang === 'fr') {
+                message = 'Veuillez télécharger une image ou créer un fond d\'abord';
+            }
+            alert(message);
             return;
         }
         
@@ -481,22 +514,28 @@ class CanvasEditor {
             tempCanvas.height = this.canvas.height;
             const tempCtx = tempCanvas.getContext('2d');
             
-            // Draw image
+            // Draw base image/background
             tempCtx.drawImage(this.canvas, 0, 0);
             
             // Draw text if exists
             if (this.currentTextElement && this.textProps.content) {
-                const rect = this.canvas.getBoundingClientRect();
+                // Get actual position from the DOM element
+                const canvasRect = this.canvas.getBoundingClientRect();
                 const textRect = this.currentTextElement.getBoundingClientRect();
                 
-                const x = (textRect.left + textRect.width / 2 - rect.left);
-                const y = (textRect.top + textRect.height / 2 - rect.top);
+                // Calculate scale factor for canvas coordinates
+                const scaleX = this.canvas.width / canvasRect.width;
+                const scaleY = this.canvas.height / canvasRect.height;
+                
+                // Get center position of text relative to canvas
+                const x = ((textRect.left - canvasRect.left) + textRect.width / 2) * scaleX;
+                const y = ((textRect.top - canvasRect.top) + textRect.height / 2) * scaleY;
                 
                 tempCtx.font = `${this.textProps.size}px "${this.textProps.font}"`;
                 tempCtx.textAlign = 'center';
                 tempCtx.textBaseline = 'middle';
                 
-                // Background
+                // Draw text background if exists
                 if (this.textProps.bgOpacity > 0) {
                     const metrics = tempCtx.measureText(this.textProps.content);
                     const pad = 20;
@@ -507,10 +546,15 @@ class CanvasEditor {
                     const b = parseInt(hex.slice(5, 7), 16);
                     
                     tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                    tempCtx.fillRect(x - metrics.width / 2 - pad, y - this.textProps.size / 2 - pad, 
-                                    metrics.width + pad * 2, this.textProps.size + pad * 2);
+                    tempCtx.fillRect(
+                        x - metrics.width / 2 - pad, 
+                        y - this.textProps.size / 2 - pad, 
+                        metrics.width + pad * 2, 
+                        this.textProps.size + pad * 2
+                    );
                 }
                 
+                // Draw shadow if exists
                 if (this.textProps.shadowBlur > 0) {
                     tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
                     tempCtx.shadowBlur = this.textProps.shadowBlur;
@@ -518,34 +562,48 @@ class CanvasEditor {
                     tempCtx.shadowOffsetY = 4;
                 }
                 
+                // Draw stroke if exists
                 if (this.textProps.strokeWidth > 0) {
                     tempCtx.strokeStyle = this.textProps.strokeColor;
-                    tempCtx.lineWidth = this.textProps.strokeWidth;
+                    tempCtx.lineWidth = this.textProps.strokeWidth * 2; // Double for better visibility
                     tempCtx.strokeText(this.textProps.content, x, y);
                 }
                 
+                // Draw fill text
                 tempCtx.fillStyle = this.textProps.color;
                 tempCtx.fillText(this.textProps.content, x, y);
             }
             
-            const blob = await new Promise(resolve => {
-                tempCanvas.toBlob(resolve, 'image/png', 1.0);
-            });
-            
-            const file = new File([blob], `edited-${Date.now()}.png`, { type: 'image/png' });
-            
-            if (navigator.share && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'Edited Image'
+            // Try Web Share API first (works on mobile and some desktop browsers)
+            if (navigator.share && navigator.canShare) {
+                const blob = await new Promise(resolve => {
+                    tempCanvas.toBlob(resolve, 'image/png', 1.0);
                 });
-            } else {
-                alert('Sharing not supported. Downloading instead.');
-                this.download();
+                
+                const file = new File([blob], `edited-${Date.now()}.png`, { type: 'image/png' });
+                
+                // Check if we can share files
+                if (navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Edited Image',
+                        text: 'Check out my edited image!'
+                    });
+                    return;
+                }
             }
+            
+            // Fallback: Just download the image
+            const link = document.createElement('a');
+            link.download = `edited-${Date.now()}.png`;
+            link.href = tempCanvas.toDataURL('image/png', 1.0);
+            link.click();
+            
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error('Share error:', error);
+                // Final fallback: download
+                this.download();
             }
         }
     }
