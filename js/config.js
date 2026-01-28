@@ -1,14 +1,6 @@
 const PEXELS_API_KEY = '8wFvB5Xc4LSTsiuQVpFoyyqHpdrEi7GVgQR24HiI1sBsK2SAeOPew98m';
 
 const CATEGORIES = [
-    { name: 'Mobile wallpaper', query: 'Mobile wallpaper' },
-    { name: 'Samsung wallpaper', query: 'Samsung wallpaper' },
-    { name: '4K wallpaper', query: '4K wallpaper' },
-    { name: 'Lock screen', query: 'Lock screen wallpaper' },
-    { name: 'Galaxy', query: 'Galaxy wallpaper' },
-    { name: 'Best HD', query: 'Best HD wallpapers' },
-    { name: 'Cool', query: 'Cool wallpapers' },
-    { name: 'Phone BG', query: 'Phone Backgrounds' },
     { name: 'Cars', query: 'Cars' },
     { name: 'Lions', query: 'Lions' },
     { name: 'Sky', query: 'Sky' },
@@ -17,7 +9,6 @@ const CATEGORIES = [
     { name: 'Airplane', query: 'Airplane' },
     { name: 'Shore', query: 'Shore' },
     { name: 'Flower', query: 'Flower' },
-    { name: 'Roads', query: 'Roads' },
     { name: 'Buildings', query: 'Buildings' },
     { name: 'Vegetables', query: 'Vegetables' },
     { name: 'Fruits', query: 'Fruits' },
@@ -25,14 +16,9 @@ const CATEGORIES = [
     { name: 'Children', query: 'Children' },
     { name: 'Food', query: 'Food' },
     { name: 'Motorcycles', query: 'Motorcycles' },
-    { name: 'Free Works', query: 'Free Works Photos' },
-    { name: 'Desert', query: 'Desert pictures' },
     { name: 'Snow', query: 'Snow Photos' },
-    { name: 'Nature', query: 'Nature Images' },
     { name: 'Switzerland', query: 'Free Switzerland Photos' },
-    { name: 'Dogs', query: 'Dog images' },
-    { name: 'Birds', query: 'Birds Images' },
-    { name: 'Lake', query: 'Lake Photos' }
+    { name: 'Birds', query: 'Birds Images' }
 ];
 
 const COLORS = [
