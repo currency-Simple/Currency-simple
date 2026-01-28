@@ -24,8 +24,17 @@ class App {
         });
         
         document.getElementById('resetBtn').addEventListener('click', () => {
-            if (window.canvasEditor) {
-                if (confirm('Are you sure you want to reset all edits?')) {
+            if (window.canvasEditor && window.canvasEditor.image) {
+                const lang = localStorage.getItem('language') || 'en';
+                let message = 'Are you sure you want to reset all edits?';
+                
+                if (lang === 'ar') {
+                    message = 'هل أنت متأكد من إعادة تعيين جميع التعديلات؟';
+                } else if (lang === 'fr') {
+                    message = 'Êtes-vous sûr de vouloir réinitialiser toutes les modifications?';
+                }
+                
+                if (confirm(message)) {
                     window.canvasEditor.reset();
                 }
             }
