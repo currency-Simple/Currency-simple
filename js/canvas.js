@@ -28,9 +28,7 @@ class CanvasEditor {
         
         // Image filters
         this.filters = {
-            blurValue: 0,
-            borderWidth: 0,
-            borderColor: '#FFFFFF'
+            blurValue: 0
         };
         
         this.init();
@@ -179,15 +177,7 @@ class CanvasEditor {
                 this.ctx.filter = 'none';
             }
             
-            // Draw image with border
-            if (this.filters.borderWidth > 0) {
-                const bw = this.filters.borderWidth;
-                this.ctx.fillStyle = this.filters.borderColor;
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                this.ctx.drawImage(this.image, bw, bw, this.canvas.width - bw * 2, this.canvas.height - bw * 2);
-            } else {
-                this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
-            }
+            this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
         }
         
         this.ctx.restore();
@@ -212,6 +202,11 @@ class CanvasEditor {
             this.currentTextElement.remove();
         }
         
+        // Remove old transform box
+        if (this.transformBox) {
+            this.transformBox.remove();
+        }
+        
         // Create new draggable text element
         const textEl = document.createElement('div');
         textEl.className = 'draggable-text';
@@ -223,8 +218,11 @@ class CanvasEditor {
         this.canvasWrapper.appendChild(textEl);
         this.currentTextElement = textEl;
         
-        // Make it draggable
-        this.makeDraggable(textEl);
+        // Create transform box
+        this.createTransformBox(textEl);
+        
+        // Make it draggable and transformable
+        this.makeTransformable(textEl);
     }
     
     applyTextStyle(element) {
@@ -267,67 +265,263 @@ class CanvasEditor {
         this.applyTextStyle(this.currentTextElement);
     }
     
-    makeDraggable(element) {
+    createTransformBox(textElement) {
+        // Create transform box
+        const box = document.createElement('div');
+        box.className = 'text-transform-box';
+        
+        // Create rotation line
+        const rotateLine = document.createElement('div');
+        rotateLine.className = 'rotate-line';
+        box.appendChild(rotateLine);
+        
+        // Create handles
+        const handles = [
+            { class: 'handle-tl', type: 'corner' },
+            { class: 'handle-tr', type: 'corner' },
+            { class: 'handle-bl', type: 'corner' },
+            { class: 'handle-br', type: 'corner' },
+            { class: 'handle-t', type: 'edge' },
+            { class: 'handle-b', type: 'edge' },
+            { class: 'handle-l', type: 'edge' },
+            { class: 'handle-r', type: 'edge' },
+            { class: 'handle-rotate', type: 'rotate' }
+        ];
+        
+        handles.forEach(h => {
+            const handle = document.createElement('div');
+            handle.className = `transform-handle ${h.class}`;
+            handle.dataset.type = h.type;
+            box.appendChild(handle);
+        });
+        
+        this.canvasWrapper.appendChild(box);
+        this.transformBox = box;
+        this.updateTransformBox(textElement);
+    }
+    
+    updateTransformBox(textElement) {
+        if (!this.transformBox) return;
+        
+        const rect = textElement.getBoundingClientRect();
+        const containerRect = this.canvasWrapper.getBoundingClientRect();
+        
+        this.transformBox.style.left = (rect.left - containerRect.left) + 'px';
+        this.transformBox.style.top = (rect.top - containerRect.top) + 'px';
+        this.transformBox.style.width = rect.width + 'px';
+        this.transformBox.style.height = rect.height + 'px';
+    }
+    
+    makeTransformable(element) {
         let isDragging = false;
-        let currentX, currentY;
-        let initialX, initialY;
-        let xOffset = 0;
-        let yOffset = 0;
+        let isResizing = false;
+        let isRotating = false;
+        let currentHandle = null;
         
-        // Mouse events
-        element.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', dragEnd);
+        let startX, startY;
+        let startWidth, startHeight;
+        let startRotation = 0;
+        let currentRotation = 0;
+        let elementX = 0, elementY = 0;
         
-        // Touch events
-        element.addEventListener('touchstart', dragStart, { passive: false });
-        document.addEventListener('touchmove', drag, { passive: false });
-        document.addEventListener('touchend', dragEnd);
-        
-        function dragStart(e) {
-            if (e.type === 'touchstart') {
-                initialX = e.touches[0].clientX - xOffset;
-                initialY = e.touches[0].clientY - yOffset;
-            } else {
-                initialX = e.clientX - xOffset;
-                initialY = e.clientY - yOffset;
-            }
+        // Parse transform
+        const getTransform = () => {
+            const transform = element.style.transform || '';
+            const translateMatch = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+            const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
+            const scaleMatch = transform.match(/scale\(([^)]+)\)/);
             
-            if (e.target === element) {
-                isDragging = true;
-                element.classList.add('active');
-            }
-        }
+            return {
+                x: translateMatch ? parseFloat(translateMatch[1]) : 0,
+                y: translateMatch ? parseFloat(translateMatch[2]) : 0,
+                rotation: rotateMatch ? parseFloat(rotateMatch[1]) : 0,
+                scale: scaleMatch ? parseFloat(scaleMatch[1]) : 1
+            };
+        };
         
-        function drag(e) {
-            if (isDragging) {
-                e.preventDefault();
+        const setTransform = (x, y, rotation, scale = 1) => {
+            element.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
+            this.updateTransformBox(element);
+        };
+        
+        // Click on text to show transform box
+        element.addEventListener('mousedown', (e) => {
+            if (e.target === element) {
+                this.transformBox.classList.add('active');
+                element.classList.add('active');
                 
-                if (e.type === 'touchmove') {
-                    currentX = e.touches[0].clientX - initialX;
-                    currentY = e.touches[0].clientY - initialY;
+                isDragging = true;
+                const transform = getTransform();
+                elementX = transform.x;
+                elementY = transform.y;
+                currentRotation = transform.rotation;
+                startX = e.clientX;
+                startY = e.clientY;
+                e.preventDefault();
+            }
+        });
+        
+        element.addEventListener('touchstart', (e) => {
+            if (e.target === element) {
+                this.transformBox.classList.add('active');
+                element.classList.add('active');
+                
+                isDragging = true;
+                const transform = getTransform();
+                elementX = transform.x;
+                elementY = transform.y;
+                currentRotation = transform.rotation;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Handle resize and rotate
+        this.transformBox.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('transform-handle')) {
+                const type = e.target.dataset.type;
+                currentHandle = e.target;
+                
+                if (type === 'rotate') {
+                    isRotating = true;
+                    const rect = element.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    startRotation = Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180 / Math.PI;
+                    currentRotation = getTransform().rotation;
                 } else {
-                    currentX = e.clientX - initialX;
-                    currentY = e.clientY - initialY;
+                    isResizing = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startWidth = element.offsetWidth;
+                    startHeight = element.offsetHeight;
+                }
+                e.preventDefault();
+            }
+        });
+        
+        this.transformBox.addEventListener('touchstart', (e) => {
+            if (e.target.classList.contains('transform-handle')) {
+                const type = e.target.dataset.type;
+                currentHandle = e.target;
+                
+                if (type === 'rotate') {
+                    isRotating = true;
+                    const rect = element.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    const touch = e.touches[0];
+                    startRotation = Math.atan2(touch.clientY - centerY, touch.clientX - centerX) * 180 / Math.PI;
+                    currentRotation = getTransform().rotation;
+                } else {
+                    isResizing = true;
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    startWidth = element.offsetWidth;
+                    startHeight = element.offsetHeight;
+                }
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Mouse move
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && !isResizing && !isRotating) {
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                setTransform(elementX + deltaX, elementY + deltaY, currentRotation);
+            } else if (isResizing && currentHandle) {
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                const handleClass = currentHandle.className;
+                
+                if (handleClass.includes('handle-br') || handleClass.includes('handle-tr')) {
+                    element.style.width = Math.max(100, startWidth + deltaX) + 'px';
+                }
+                if (handleClass.includes('handle-br') || handleClass.includes('handle-bl')) {
+                    element.style.height = Math.max(50, startHeight + deltaY) + 'px';
+                }
+                if (handleClass.includes('handle-r')) {
+                    element.style.width = Math.max(100, startWidth + deltaX) + 'px';
+                }
+                if (handleClass.includes('handle-b')) {
+                    element.style.height = Math.max(50, startHeight + deltaY) + 'px';
                 }
                 
-                xOffset = currentX;
-                yOffset = currentY;
+                this.updateTransformBox(element);
+            } else if (isRotating) {
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180 / Math.PI;
+                const rotation = currentRotation + (angle - startRotation);
                 
-                setTranslate(currentX, currentY, element);
+                const transform = getTransform();
+                setTransform(transform.x, transform.y, rotation);
             }
-        }
+        });
         
-        function dragEnd() {
-            initialX = currentX;
-            initialY = currentY;
+        // Touch move
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging && !isResizing && !isRotating) {
+                const touch = e.touches[0];
+                const deltaX = touch.clientX - startX;
+                const deltaY = touch.clientY - startY;
+                setTransform(elementX + deltaX, elementY + deltaY, currentRotation);
+            } else if (isResizing && currentHandle) {
+                const touch = e.touches[0];
+                const deltaX = touch.clientX - startX;
+                const deltaY = touch.clientY - startY;
+                
+                const handleClass = currentHandle.className;
+                
+                if (handleClass.includes('handle-br') || handleClass.includes('handle-tr')) {
+                    element.style.width = Math.max(100, startWidth + deltaX) + 'px';
+                }
+                if (handleClass.includes('handle-br') || handleClass.includes('handle-bl')) {
+                    element.style.height = Math.max(50, startHeight + deltaY) + 'px';
+                }
+                if (handleClass.includes('handle-r')) {
+                    element.style.width = Math.max(100, startWidth + deltaX) + 'px';
+                }
+                if (handleClass.includes('handle-b')) {
+                    element.style.height = Math.max(50, startHeight + deltaY) + 'px';
+                }
+                
+                this.updateTransformBox(element);
+            } else if (isRotating) {
+                const touch = e.touches[0];
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const angle = Math.atan2(touch.clientY - centerY, touch.clientX - centerX) * 180 / Math.PI;
+                const rotation = currentRotation + (angle - startRotation);
+                
+                const transform = getTransform();
+                setTransform(transform.x, transform.y, rotation);
+            }
+        }, { passive: false });
+        
+        // Mouse/touch up
+        const endInteraction = () => {
             isDragging = false;
-            element.classList.remove('active');
-        }
+            isResizing = false;
+            isRotating = false;
+            currentHandle = null;
+        };
         
-        function setTranslate(xPos, yPos, el) {
-            el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
-        }
+        document.addEventListener('mouseup', endInteraction);
+        document.addEventListener('touchend', endInteraction);
+        
+        // Click outside to deselect
+        document.addEventListener('click', (e) => {
+            if (!element.contains(e.target) && !this.transformBox.contains(e.target)) {
+                this.transformBox.classList.remove('active');
+                element.classList.remove('active');
+            }
+        });
     }
     
     updateTextProp(prop, value) {
@@ -362,9 +556,7 @@ class CanvasEditor {
         
         // إعادة تعيين الفلاتر
         this.filters = {
-            blurValue: 0,
-            borderWidth: 0,
-            borderColor: '#FFFFFF'
+            blurValue: 0
         };
         
         // إعادة رسم الصورة الأصلية
@@ -392,9 +584,6 @@ class CanvasEditor {
             
             document.getElementById('imageBlur').value = 0;
             document.getElementById('blurValue').textContent = 0;
-            
-            document.getElementById('borderWidth').value = 0;
-            document.getElementById('borderWidthValue').textContent = 0;
         }
     }
     
@@ -434,6 +623,18 @@ class CanvasEditor {
             const x = ((textRect.left - canvasRect.left) + textRect.width / 2) * scaleX;
             const y = ((textRect.top - canvasRect.top) + textRect.height / 2) * scaleY;
             
+            // Get rotation from transform
+            const transform = this.currentTextElement.style.transform || '';
+            const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
+            const rotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
+            
+            // Save context
+            tempCtx.save();
+            
+            // Move to text position and rotate
+            tempCtx.translate(x, y);
+            tempCtx.rotate(rotation * Math.PI / 180);
+            
             // Apply text styling
             tempCtx.font = `${this.textProps.size}px "${this.textProps.font}"`;
             tempCtx.textAlign = 'center';
@@ -451,8 +652,8 @@ class CanvasEditor {
                 
                 tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
                 tempCtx.fillRect(
-                    x - metrics.width / 2 - pad, 
-                    y - this.textProps.size / 2 - pad, 
+                    -metrics.width / 2 - pad, 
+                    -this.textProps.size / 2 - pad, 
                     metrics.width + pad * 2, 
                     this.textProps.size + pad * 2
                 );
@@ -469,13 +670,16 @@ class CanvasEditor {
             // Draw stroke if exists
             if (this.textProps.strokeWidth > 0) {
                 tempCtx.strokeStyle = this.textProps.strokeColor;
-                tempCtx.lineWidth = this.textProps.strokeWidth * 2; // Double for better visibility
-                tempCtx.strokeText(this.textProps.content, x, y);
+                tempCtx.lineWidth = this.textProps.strokeWidth * 2;
+                tempCtx.strokeText(this.textProps.content, 0, 0);
             }
             
             // Draw fill text
             tempCtx.fillStyle = this.textProps.color;
-            tempCtx.fillText(this.textProps.content, x, y);
+            tempCtx.fillText(this.textProps.content, 0, 0);
+            
+            // Restore context
+            tempCtx.restore();
         }
         
         // Download with proper format
@@ -531,6 +735,18 @@ class CanvasEditor {
                 const x = ((textRect.left - canvasRect.left) + textRect.width / 2) * scaleX;
                 const y = ((textRect.top - canvasRect.top) + textRect.height / 2) * scaleY;
                 
+                // Get rotation from transform
+                const transform = this.currentTextElement.style.transform || '';
+                const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
+                const rotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
+                
+                // Save context
+                tempCtx.save();
+                
+                // Move to text position and rotate
+                tempCtx.translate(x, y);
+                tempCtx.rotate(rotation * Math.PI / 180);
+                
                 tempCtx.font = `${this.textProps.size}px "${this.textProps.font}"`;
                 tempCtx.textAlign = 'center';
                 tempCtx.textBaseline = 'middle';
@@ -547,8 +763,8 @@ class CanvasEditor {
                     
                     tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
                     tempCtx.fillRect(
-                        x - metrics.width / 2 - pad, 
-                        y - this.textProps.size / 2 - pad, 
+                        -metrics.width / 2 - pad, 
+                        -this.textProps.size / 2 - pad, 
                         metrics.width + pad * 2, 
                         this.textProps.size + pad * 2
                     );
@@ -565,13 +781,16 @@ class CanvasEditor {
                 // Draw stroke if exists
                 if (this.textProps.strokeWidth > 0) {
                     tempCtx.strokeStyle = this.textProps.strokeColor;
-                    tempCtx.lineWidth = this.textProps.strokeWidth * 2; // Double for better visibility
-                    tempCtx.strokeText(this.textProps.content, x, y);
+                    tempCtx.lineWidth = this.textProps.strokeWidth * 2;
+                    tempCtx.strokeText(this.textProps.content, 0, 0);
                 }
                 
                 // Draw fill text
                 tempCtx.fillStyle = this.textProps.color;
-                tempCtx.fillText(this.textProps.content, x, y);
+                tempCtx.fillText(this.textProps.content, 0, 0);
+                
+                // Restore context
+                tempCtx.restore();
             }
             
             // Try Web Share API first (works on mobile and some desktop browsers)
@@ -580,7 +799,7 @@ class CanvasEditor {
                     tempCanvas.toBlob(resolve, 'image/png', 1.0);
                 });
                 
-                const file = new File([blob], `edited-${Date.now()}.png`, { type: 'image/png' });
+                const file = new File([blob], `photo-editor-${Date.now()}.png`, { type: 'image/png' });
                 
                 // Check if we can share files
                 if (navigator.canShare({ files: [file] })) {
@@ -595,7 +814,7 @@ class CanvasEditor {
             
             // Fallback: Just download the image
             const link = document.createElement('a');
-            link.download = `edited-${Date.now()}.png`;
+            link.download = `photo-editor-${Date.now()}.png`;
             link.href = tempCanvas.toDataURL('image/png', 1.0);
             link.click();
             
