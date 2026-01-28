@@ -32,9 +32,6 @@ class EditorUI {
         this.imageBlur = document.getElementById('imageBlur');
         this.blurValue = document.getElementById('blurValue');
         
-        this.borderWidth = document.getElementById('borderWidth');
-        this.borderWidthValue = document.getElementById('borderWidthValue');
-        
         // زر إنشاء الخلفية
         this.createBackgroundBtn = document.getElementById('createBackgroundBtn');
     }
@@ -110,13 +107,6 @@ class EditorUI {
             this.blurValue.textContent = value;
             window.canvasEditor.updateFilter('blurValue', value);
         });
-        
-        // Border
-        this.borderWidth.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            this.borderWidthValue.textContent = value;
-            window.canvasEditor.updateFilter('borderWidth', value);
-        });
     }
     
     switchTool(tool) {
@@ -146,10 +136,6 @@ class EditorUI {
         
         this.createColorScroll('bgColorScroll', (color) => {
             window.canvasEditor.updateTextProp('bgColor', color);
-        });
-        
-        this.createColorScroll('borderColorScroll', (color) => {
-            window.canvasEditor.updateFilter('borderColor', color);
         });
         
         // Background creation color scroll
