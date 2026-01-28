@@ -93,27 +93,26 @@ body {
     box-shadow: 0 2px 8px var(--glow-color);
 }
 
-/* Pinterest-style Categories Grid - 2 columns */
+/* Pinterest-style Categories Grid - 2 columns with flexbox */
 .categories-grid {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 8px;
-    column-count: 2;
-    column-gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     padding-bottom: 80px;
+    align-content: flex-start;
 }
 
 .category-card {
-    display: inline-block;
-    width: 100%;
-    margin-bottom: 8px;
+    width: calc(50% - 4px);
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
     position: relative;
     background: var(--bg-secondary);
-    break-inside: avoid;
 }
 
 .category-card img {
@@ -145,26 +144,25 @@ body {
     opacity: 0.8;
 }
 
-/* Pinterest-style Gallery Grid - Masonry Layout */
+/* Pinterest-style Gallery Grid - Flexbox Layout */
 .gallery-grid {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 8px;
-    column-count: 2;
-    column-gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     padding-bottom: 80px;
+    align-content: flex-start;
 }
 
 .gallery-item {
-    display: inline-block;
-    width: 100%;
-    margin-bottom: 8px;
+    width: calc(50% - 4px);
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
     background: var(--bg-secondary);
-    break-inside: avoid;
     transition: transform 0.2s;
 }
 
@@ -188,8 +186,6 @@ body {
     justify-content: center;
     align-items: center;
     padding: 40px;
-    break-inside: avoid;
-    column-span: all;
 }
 
 .loading.hidden {
@@ -690,25 +686,31 @@ body {
 
 /* Responsive - 3 columns for tablets */
 @media (min-width: 768px) {
-    .categories-grid,
-    .gallery-grid {
-        column-count: 3;
+    .category-card {
+        width: calc(33.333% - 5.33px);
+    }
+    .gallery-item {
+        width: calc(33.333% - 5.33px);
     }
 }
 
 /* Responsive - 4 columns for desktop */
 @media (min-width: 1024px) {
-    .categories-grid,
-    .gallery-grid {
-        column-count: 4;
+    .category-card {
+        width: calc(25% - 6px);
+    }
+    .gallery-item {
+        width: calc(25% - 6px);
     }
 }
 
 /* Responsive - 5 columns for large desktop */
 @media (min-width: 1440px) {
-    .categories-grid,
-    .gallery-grid {
-        column-count: 5;
+    .category-card {
+        width: calc(20% - 6.4px);
+    }
+    .gallery-item {
+        width: calc(20% - 6.4px);
     }
 }
 
