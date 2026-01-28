@@ -84,13 +84,11 @@ body {
     cursor: pointer;
     color: var(--text-primary);
     flex-shrink: 0;
-    box-shadow: 0 4px 12px var(--glow-color);
     transition: all 0.3s ease;
 }
 
 .back-btn:active {
     transform: scale(0.9);
-    box-shadow: 0 2px 8px var(--glow-color);
 }
 
 /* Pinterest-style Categories Grid - 2 columns with flexbox */
@@ -226,19 +224,16 @@ body {
     justify-content: center;
     cursor: pointer;
     color: var(--text-primary);
-    box-shadow: 0 4px 12px var(--glow-color);
     transition: all 0.3s ease;
 }
 
 .action-btn:active {
     transform: scale(0.9);
-    box-shadow: 0 2px 8px var(--glow-color);
 }
 
 .action-btn.primary {
     background: var(--accent);
     color: var(--bg-primary);
-    box-shadow: 0 4px 12px var(--glow-color);
 }
 
 .action-right {
@@ -286,8 +281,72 @@ body {
 }
 
 .draggable-text.active {
-    outline: 2px dashed rgba(255, 255, 255, 0.5);
+    outline: 2px dashed rgba(255, 255, 255, 0.8);
     outline-offset: 4px;
+}
+
+/* مربع التحكم بالنص - مثل PicsArt */
+.text-transform-box {
+    position: absolute;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    display: none;
+}
+
+.text-transform-box.active {
+    display: block;
+}
+
+/* زوايا التحكم */
+.transform-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 2px solid #2196F3;
+    border-radius: 50%;
+    pointer-events: auto;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* الزوايا الأربع */
+.handle-tl { top: -10px; left: -10px; cursor: nwse-resize; }
+.handle-tr { top: -10px; right: -10px; cursor: nesw-resize; }
+.handle-bl { bottom: -10px; left: -10px; cursor: nesw-resize; }
+.handle-br { bottom: -10px; right: -10px; cursor: nwse-resize; }
+
+/* مقابض الدوران */
+.handle-rotate {
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #4CAF50;
+    border-color: #4CAF50;
+    cursor: grab;
+}
+
+.handle-rotate:active {
+    cursor: grabbing;
+}
+
+/* مقابض التمديد */
+.handle-t { top: -10px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.handle-b { bottom: -10px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.handle-l { left: -10px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+.handle-r { right: -10px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+
+/* خط الدوران */
+.rotate-line {
+    position: absolute;
+    width: 2px;
+    height: 30px;
+    background: #4CAF50;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
 }
 
 .tools-drawer {
@@ -413,13 +472,11 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 4px 12px var(--glow-color);
     transition: all 0.3s ease;
 }
 
 .create-bg-btn:active {
     transform: scale(0.98);
-    box-shadow: 0 2px 8px var(--glow-color);
 }
 
 .create-bg-btn .material-icons {
@@ -588,7 +645,6 @@ body {
     cursor: pointer;
     color: var(--text-primary);
     font-size: 13px;
-    box-shadow: 0 3px 8px var(--glow-color);
     transition: all 0.3s ease;
 }
 
@@ -603,14 +659,12 @@ body {
 .theme-btn:active,
 .lang-btn:active {
     transform: scale(0.95);
-    box-shadow: 0 2px 6px var(--glow-color);
 }
 
 .theme-btn.active,
 .lang-btn.active {
     border-color: var(--accent);
     background: var(--bg-secondary);
-    box-shadow: 0 4px 10px var(--glow-color);
 }
 
 .setting-link {
@@ -623,7 +677,6 @@ body {
     margin-bottom: 8px;
     text-decoration: none;
     color: var(--text-primary);
-    box-shadow: 0 3px 8px var(--glow-color);
     transition: all 0.3s ease;
 }
 
@@ -637,7 +690,6 @@ body {
 
 .setting-link:active {
     opacity: 0.8;
-    box-shadow: 0 2px 6px var(--glow-color);
 }
 
 .bottom-nav {
@@ -667,7 +719,6 @@ body {
     font-size: 10px;
     cursor: pointer;
     flex: 1;
-    box-shadow: 0 -2px 6px var(--glow-color);
     transition: all 0.3s ease;
 }
 
@@ -681,7 +732,6 @@ body {
 
 .nav-btn.active {
     color: var(--text-primary);
-    box-shadow: 0 -3px 8px var(--glow-color);
 }
 
 /* Responsive - 3 columns for tablets */
