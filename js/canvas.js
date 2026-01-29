@@ -9,15 +9,12 @@ class CanvasEditor {
         this.currentTextElement = null;
         this.selectedBgColor = '#FFFFFF';
         
-        // تخزين موضع وسحابة النص الحالية
-        this.textElementData = {
-            x: 0,
-            y: 0,
-            offsetX: 0,
-            offsetY: 0,
-            width: 0,
-            height: 0,
-            transform: ''
+        // لتخزين موقع النص بدقة
+        this.textTransform = {
+            translateX: 0,
+            translateY: 0,
+            elementWidth: 0,
+            elementHeight: 0
         };
         
         this.textProps = {
@@ -29,7 +26,9 @@ class CanvasEditor {
             strokeColor: '#FFFFFF',
             shadowBlur: 0,
             bgOpacity: 0,
-            bgColor: '#000000'
+            bgColor: '#000000',
+            textAlign: 'center',
+            lineHeight: 1.3
         };
         
         this.filters = {
@@ -45,6 +44,13 @@ class CanvasEditor {
         this.canvasWrapper.className = 'canvas-wrapper';
         container.appendChild(this.canvasWrapper);
         this.canvasWrapper.appendChild(this.canvas);
+        
+        // إضافة حدث لتحديث موقع النص عند تغيير الحجم
+        window.addEventListener('resize', () => {
+            if (this.currentTextElement) {
+                this.updateTextElementPosition();
+            }
+        });
     }
     
     createBackground(color) {
@@ -79,7 +85,6 @@ class CanvasEditor {
         }
         
         this.adjustTextColorForBackground(color);
-        this.render();
     }
     
     adjustTextColorForBackground(bgColor) {
@@ -135,37 +140,12 @@ class CanvasEditor {
                     this.currentTextElement = null;
                 }
                 
-                this.render();
                 resolve();
             };
             
             this.imageObj.onerror = reject;
             this.imageObj.src = url;
         });
-    }
-    
-    render() {
-        if (!this.image) return;
-        
-        // مسح canvas
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.save();
-        
-        // رسم الصورة أو الخلفية
-        if (this.image.isBackground) {
-            this.ctx.fillStyle = this.image.color;
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        } else {
-            if (this.filters.blurValue > 0) {
-                this.ctx.filter = `blur(${this.filters.blurValue}px)`;
-            } else {
-                this.ctx.filter = 'none';
-            }
-            
-            this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
-        }
-        
-        this.ctx.restore();
     }
     
     updateText(content) {
@@ -188,35 +168,44 @@ class CanvasEditor {
         
         const textEl = document.createElement('div');
         textEl.className = 'draggable-text';
+        textEl.style.position = 'absolute';
+        
+        // البدء من مركز الصورة
         textEl.style.left = '50%';
         textEl.style.top = '50%';
         textEl.style.transform = 'translate(-50%, -50%)';
         
-        // حفظ التحويل الابتدائي
-        this.textElementData.transform = 'translate(-50%, -50%)';
-        this.textElementData.offsetX = 0;
-        this.textElementData.offsetY = 0;
+        this.textTransform.translateX = 0;
+        this.textTransform.translateY = 0;
         
         this.applyTextStyle(textEl);
         this.canvasWrapper.appendChild(textEl);
         this.currentTextElement = textEl;
         
-        // تحديث بيانات العنصر
-        this.updateTextElementData();
+        // تحديث أبعاد العنصر
+        setTimeout(() => {
+            this.updateTextElementMetrics();
+        }, 50);
         
         this.makeDraggable(textEl);
     }
     
     applyTextStyle(element) {
+        // تعيين النص مع الحفاظ على الأسطر
         element.textContent = this.textProps.content;
         element.style.fontFamily = `"${this.textProps.font}"`;
         element.style.fontSize = `${this.textProps.size}px`;
         element.style.color = this.textProps.color;
-        element.style.whiteSpace = 'pre-wrap'; // الحفاظ على السطور
-        element.style.wordWrap = 'break-word'; // تفعيل التفاف النص
-        element.style.textAlign = 'center'; // محاذاة النص
-        element.style.lineHeight = '1.3'; // ارتفاع السطر
+        element.style.whiteSpace = 'pre-wrap'; // هذا يحافظ على فواصل الأسطر
+        element.style.wordWrap = 'break-word';
+        element.style.textAlign = this.textProps.textAlign;
+        element.style.lineHeight = this.textProps.lineHeight.toString();
+        element.style.width = 'auto';
+        element.style.maxWidth = '90%';
+        element.style.minWidth = '100px';
+        element.style.padding = '10px';
         
+        // الحدود (Stroke)
         if (this.textProps.strokeWidth > 0) {
             element.style.webkitTextStroke = `${this.textProps.strokeWidth}px ${this.textProps.strokeColor}`;
             element.style.textStroke = `${this.textProps.strokeWidth}px ${this.textProps.strokeColor}`;
@@ -225,12 +214,14 @@ class CanvasEditor {
             element.style.textStroke = '';
         }
         
+        // الظل
         if (this.textProps.shadowBlur > 0) {
             element.style.textShadow = `4px 4px ${this.textProps.shadowBlur}px rgba(0, 0, 0, 0.8)`;
         } else {
             element.style.textShadow = '';
         }
         
+        // خلفية النص
         if (this.textProps.bgOpacity > 0) {
             const hex = this.textProps.bgColor;
             const r = parseInt(hex.slice(1, 3), 16);
@@ -238,11 +229,9 @@ class CanvasEditor {
             const b = parseInt(hex.slice(5, 7), 16);
             const opacity = this.textProps.bgOpacity / 100;
             element.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-            element.style.padding = '10px'; // إضافة padding للخلفية
-            element.style.borderRadius = '8px'; // زوايا دائرية
+            element.style.borderRadius = '8px';
         } else {
             element.style.backgroundColor = 'transparent';
-            element.style.padding = '0';
         }
     }
     
@@ -251,28 +240,30 @@ class CanvasEditor {
         
         this.applyTextStyle(this.currentTextElement);
         
-        // تحديث بيانات العنصر بعد تغيير النص
+        // تحديث الأبعاد بعد تغيير النص
         setTimeout(() => {
-            this.updateTextElementData();
-        }, 10);
+            this.updateTextElementMetrics();
+        }, 50);
     }
     
-    updateTextElementData() {
+    updateTextElementMetrics() {
         if (!this.currentTextElement) return;
         
         const rect = this.currentTextElement.getBoundingClientRect();
-        const canvasRect = this.canvas.getBoundingClientRect();
+        this.textTransform.elementWidth = rect.width;
+        this.textTransform.elementHeight = rect.height;
+    }
+    
+    updateTextElementPosition() {
+        if (!this.currentTextElement) return;
         
-        this.textElementData.width = rect.width;
-        this.textElementData.height = rect.height;
-        this.textElementData.x = rect.left - canvasRect.left + rect.width / 2;
-        this.textElementData.y = rect.top - canvasRect.top + rect.height / 2;
+        this.currentTextElement.style.transform = `translate(calc(-50% + ${this.textTransform.translateX}px), calc(-50% + ${this.textTransform.translateY}px))`;
     }
     
     makeDraggable(element) {
         let isDragging = false;
         let startX, startY;
-        let startOffsetX, startOffsetY;
+        let startTranslateX, startTranslateY;
         
         const dragStart = (e) => {
             e.preventDefault();
@@ -286,9 +277,8 @@ class CanvasEditor {
                 startY = e.clientY;
             }
             
-            // حفظ الإزاحة الحالية
-            startOffsetX = this.textElementData.offsetX;
-            startOffsetY = this.textElementData.offsetY;
+            startTranslateX = this.textTransform.translateX;
+            startTranslateY = this.textTransform.translateY;
             
             element.classList.add('active');
         };
@@ -309,16 +299,10 @@ class CanvasEditor {
             const deltaX = currentX - startX;
             const deltaY = currentY - startY;
             
-            // تحديث الإزاحة
-            this.textElementData.offsetX = startOffsetX + deltaX;
-            this.textElementData.offsetY = startOffsetY + deltaY;
+            this.textTransform.translateX = startTranslateX + deltaX;
+            this.textTransform.translateY = startTranslateY + deltaY;
             
-            // تطبيق التحويل
-            element.style.transform = `translate(calc(-50% + ${this.textElementData.offsetX}px), calc(-50% + ${this.textElementData.offsetY}px))`;
-            this.textElementData.transform = element.style.transform;
-            
-            // تحديث موقع العنصر
-            this.updateTextElementData();
+            this.updateTextElementPosition();
         };
         
         const dragEnd = () => {
@@ -345,7 +329,6 @@ class CanvasEditor {
     
     updateFilter(prop, value) {
         this.filters[prop] = value;
-        this.render();
     }
     
     reset() {
@@ -363,26 +346,21 @@ class CanvasEditor {
             strokeColor: '#FFFFFF',
             shadowBlur: 0,
             bgOpacity: 0,
-            bgColor: '#000000'
+            bgColor: '#000000',
+            textAlign: 'center',
+            lineHeight: 1.3
         };
         
-        this.textElementData = {
-            x: 0,
-            y: 0,
-            offsetX: 0,
-            offsetY: 0,
-            width: 0,
-            height: 0,
-            transform: ''
+        this.textTransform = {
+            translateX: 0,
+            translateY: 0,
+            elementWidth: 0,
+            elementHeight: 0
         };
         
         this.filters = {
             blurValue: 0
         };
-        
-        if (this.image) {
-            this.render();
-        }
         
         if (window.editorUI) {
             document.getElementById('textInput').value = '';
@@ -413,75 +391,57 @@ class CanvasEditor {
         }
         
         try {
-            // إنشاء canvas جديد للتنزيل
+            // إنشاء canvas للتنزيل
             const downloadCanvas = document.createElement('canvas');
             const ctx = downloadCanvas.getContext('2d');
             
-            // تحديد أبعاد الصورة النهائية - نفس أبعاد canvas العرض
-            if (this.image.isBackground) {
-                downloadCanvas.width = this.canvas.width;
-                downloadCanvas.height = this.canvas.height;
-            } else {
-                // استخدام أبعاد canvas العرض للحفاظ على نفس الحجم
-                downloadCanvas.width = this.canvas.width;
-                downloadCanvas.height = this.canvas.height;
-            }
+            // استخدام أبعاد canvas العرض
+            downloadCanvas.width = this.canvas.width;
+            downloadCanvas.height = this.canvas.height;
             
-            // مسح canvas
+            // رسم الخلفية أو الصورة
             ctx.clearRect(0, 0, downloadCanvas.width, downloadCanvas.height);
             
-            // رسم الصورة أو الخلفية بنفس الحجم
             if (this.image.isBackground) {
                 ctx.fillStyle = this.image.color;
                 ctx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
             } else {
-                // تطبيق فلتر Blur إذا كان موجوداً
                 if (this.filters.blurValue > 0) {
                     ctx.filter = `blur(${this.filters.blurValue}px)`;
                 }
                 
-                // رسم الصورة بنفس الحجم المعروض
                 ctx.drawImage(this.image, 0, 0, downloadCanvas.width, downloadCanvas.height);
                 ctx.filter = 'none';
             }
             
-            // رسم النص إذا كان موجوداً
+            // إذا كان هناك نص، نرسمه
             if (this.textProps.content && this.textProps.content.trim() !== '' && this.currentTextElement) {
                 ctx.save();
                 
                 // حساب موضع النص بدقة
-                let textX, textY;
+                const canvasRect = this.canvas.getBoundingClientRect();
+                const textRect = this.currentTextElement.getBoundingClientRect();
                 
-                if (this.currentTextElement) {
-                    const elementRect = this.currentTextElement.getBoundingClientRect();
-                    const canvasRect = this.canvas.getBoundingClientRect();
-                    
-                    // تحويل الموقع النسبي من الشاشة إلى canvas التنزيل
-                    const relativeX = elementRect.left - canvasRect.left;
-                    const relativeY = elementRect.top - canvasRect.top;
-                    
-                    // حساب النسبة بين canvas العرض وcanvas التنزيل (يجب أن تكون 1:1)
-                    const scaleX = downloadCanvas.width / canvasRect.width;
-                    const scaleY = downloadCanvas.height / canvasRect.height;
-                    
-                    // حساب مركز النص
-                    textX = (relativeX + elementRect.width / 2) * scaleX;
-                    textY = (relativeY + elementRect.height / 2) * scaleY;
-                    
-                    // إذا كان هناك إزاحة من التحويل، نضيفها
-                    if (this.textElementData.offsetX !== 0 || this.textElementData.offsetY !== 0) {
-                        textX += this.textElementData.offsetX * scaleX;
-                        textY += this.textElementData.offsetY * scaleY;
-                    }
-                } else {
-                    textX = downloadCanvas.width / 2;
-                    textY = downloadCanvas.height / 2;
-                }
+                // حساب النسبة بين canvas والعرض الفعلي
+                const scaleX = downloadCanvas.width / canvasRect.width;
+                const scaleY = downloadCanvas.height / canvasRect.height;
                 
-                // إعداد حجم الخط
-                const fontSize = this.textProps.size * (downloadCanvas.width / this.canvas.width);
+                // حساب مركز النص مع الأخذ في الاعتبار الإزاحة
+                const centerX = canvasRect.width / 2;
+                const centerY = canvasRect.height / 2;
                 
-                // إعداد خصائص النص
+                // حساب موقع النص النهائي
+                let finalX = centerX + this.textTransform.translateX;
+                let finalY = centerY + this.textTransform.translateY;
+                
+                // تحويل إلى إحداثيات canvas التنزيل
+                finalX *= scaleX;
+                finalY *= scaleY;
+                
+                // حجم الخط بعد التحجيم
+                const fontSize = this.textProps.size * scaleX;
+                
+                // إعداد الخط
                 ctx.font = `${fontSize}px "${this.textProps.font}"`;
                 ctx.fillStyle = this.textProps.color;
                 ctx.textAlign = 'center';
@@ -490,30 +450,27 @@ class CanvasEditor {
                 // تطبيق الظل
                 if (this.textProps.shadowBlur > 0) {
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                    ctx.shadowBlur = this.textProps.shadowBlur * (downloadCanvas.width / this.canvas.width);
-                    ctx.shadowOffsetX = 4 * (downloadCanvas.width / this.canvas.width);
-                    ctx.shadowOffsetY = 4 * (downloadCanvas.width / this.canvas.width);
+                    ctx.shadowBlur = this.textProps.shadowBlur * scaleX;
+                    ctx.shadowOffsetX = 4 * scaleX;
+                    ctx.shadowOffsetY = 4 * scaleY;
                 }
                 
-                // تقسيم النص إلى أسطر (نفس التقسيم المعروض)
+                // تقسيم النص إلى أسطر - هذا هو المفتاح!
                 const lines = this.textProps.content.split('\n');
-                const lineHeight = fontSize * 1.3;
-                const totalHeight = lines.length * lineHeight;
+                const lineHeight = fontSize * this.textProps.lineHeight;
                 
-                // حساب عرض كل سطر وأقصى عرض
+                // حساب أبعاد النص الكلية
                 let maxLineWidth = 0;
-                const lineWidths = [];
-                
                 lines.forEach(line => {
                     const metrics = ctx.measureText(line);
-                    const lineWidth = metrics.width;
-                    lineWidths.push(lineWidth);
-                    if (lineWidth > maxLineWidth) {
-                        maxLineWidth = lineWidth;
+                    if (metrics.width > maxLineWidth) {
+                        maxLineWidth = metrics.width;
                     }
                 });
                 
-                // رسم خلفية النص إذا كانت موجودة
+                const totalHeight = lines.length * lineHeight;
+                
+                // رسم خلفية النص
                 if (this.textProps.bgOpacity > 0) {
                     const hex = this.textProps.bgColor;
                     const r = parseInt(hex.slice(1, 3), 16);
@@ -524,30 +481,28 @@ class CanvasEditor {
                     ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
                     
                     // إضافة padding
-                    const padding = 10 * (downloadCanvas.width / this.canvas.width);
+                    const padding = 10 * scaleX;
                     ctx.fillRect(
-                        textX - maxLineWidth/2 - padding,
-                        textY - totalHeight/2 - padding,
+                        finalX - maxLineWidth/2 - padding,
+                        finalY - totalHeight/2 - padding,
                         maxLineWidth + padding * 2,
                         totalHeight + padding * 2
                     );
                 }
                 
                 // رسم كل سطر من النص
-                let currentY = textY - totalHeight / 2 + lineHeight / 2;
+                let currentY = finalY - totalHeight/2 + lineHeight/2;
                 
                 lines.forEach((line, index) => {
-                    const lineX = textX;
-                    
                     // رسم الحدود (Stroke)
                     if (this.textProps.strokeWidth > 0) {
                         ctx.strokeStyle = this.textProps.strokeColor;
-                        ctx.lineWidth = this.textProps.strokeWidth * 2 * (downloadCanvas.width / this.canvas.width);
-                        ctx.strokeText(line, lineX, currentY);
+                        ctx.lineWidth = this.textProps.strokeWidth * 2 * scaleX;
+                        ctx.strokeText(line, finalX, currentY);
                     }
                     
                     // رسم النص
-                    ctx.fillText(line, lineX, currentY);
+                    ctx.fillText(line, finalX, currentY);
                     
                     // الانتقال للسطر التالي
                     currentY += lineHeight;
@@ -559,11 +514,13 @@ class CanvasEditor {
             // تحميل الصورة
             const link = document.createElement('a');
             link.download = `photo-editor-${Date.now()}.png`;
-            link.href = downloadCanvas.toDataURL('image/png', 1.0); // جودة 100%
+            link.href = downloadCanvas.toDataURL('image/png', 1.0);
             
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
             
         } catch (error) {
             console.error('Download error:', error);
