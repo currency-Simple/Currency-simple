@@ -1,4 +1,4 @@
-// Canvas Editor with Background Creation
+// canvas.js محدث
 class CanvasEditor {
     constructor() {
         this.canvas = document.getElementById('canvas');
@@ -7,13 +7,9 @@ class CanvasEditor {
         this.image = null;
         this.imageObj = new Image();
         
-        // Current text element
         this.currentTextElement = null;
-        
-        // Selected background color for creation
         this.selectedBgColor = '#FFFFFF';
         
-        // Text settings (default)
         this.textProps = {
             content: '',
             font: 'Abeezee',
@@ -26,7 +22,6 @@ class CanvasEditor {
             bgColor: '#000000'
         };
         
-        // Image filters
         this.filters = {
             blurValue: 0
         };
@@ -35,28 +30,22 @@ class CanvasEditor {
     }
     
     init() {
-        // Create canvas wrapper
         const container = document.querySelector('.canvas-container');
         this.canvasWrapper = document.createElement('div');
         this.canvasWrapper.className = 'canvas-wrapper';
-        
-        // Move canvas into wrapper
         container.appendChild(this.canvasWrapper);
         this.canvasWrapper.appendChild(this.canvas);
     }
     
-    // إنشاء خلفية بحجم 3:5
     createBackground(color) {
         this.selectedBgColor = color;
         
-        // حساب الأبعاد بنسبة 3:5
         const maxWidth = window.innerWidth - 32;
         const maxHeight = window.innerHeight - 300;
         
-        let width = 600;  // 3 * 200
-        let height = 1000; // 5 * 200
+        let width = 600;
+        let height = 1000;
         
-        // تصغير إذا كان أكبر من الشاشة
         if (width > maxWidth) {
             width = maxWidth;
             height = width * (5/3);
@@ -69,43 +58,32 @@ class CanvasEditor {
         this.canvas.width = width;
         this.canvas.height = height;
         
-        // رسم الخلفية
         this.ctx.fillStyle = color;
         this.ctx.fillRect(0, 0, width, height);
         
-        // حفظ كصورة داخلية
         this.image = { isBackground: true, color: color, width: width, height: height };
         
-        // إزالة النص القديم
         if (this.currentTextElement) {
             this.currentTextElement.remove();
             this.currentTextElement = null;
         }
         
-        // تغيير لون النص الافتراضي حسب الخلفية
         this.adjustTextColorForBackground(color);
-        
         this.render();
     }
     
-    // تعديل لون النص حسب الخلفية
     adjustTextColorForBackground(bgColor) {
-        // تحويل hex إلى RGB
         const r = parseInt(bgColor.slice(1, 3), 16);
         const g = parseInt(bgColor.slice(3, 5), 16);
         const b = parseInt(bgColor.slice(5, 7), 16);
-        
-        // حساب السطوع
         const brightness = (r * 299 + g * 587 + b * 114) / 1000;
         
-        // إذا كانت الخلفية فاتحة، استخدم نص غامق
         if (brightness > 128) {
             this.textProps.color = '#000000';
         } else {
             this.textProps.color = '#FFFFFF';
         }
         
-        // تحديث واجهة المستخدم
         if (window.editorUI) {
             window.editorUI.updateColorUI();
         }
@@ -142,7 +120,6 @@ class CanvasEditor {
                 this.ctx.imageSmoothingEnabled = true;
                 this.ctx.imageSmoothingQuality = 'high';
                 
-                // Remove old text element
                 if (this.currentTextElement) {
                     this.currentTextElement.remove();
                     this.currentTextElement = null;
@@ -163,14 +140,10 @@ class CanvasEditor {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.save();
         
-        // رسم الخلفية أو الصورة
         if (this.image.isBackground) {
-            // خلفية ملونة
             this.ctx.fillStyle = this.image.color;
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         } else {
-            // صورة عادية
-            // Blur filter
             if (this.filters.blurValue > 0) {
                 this.ctx.filter = `blur(${this.filters.blurValue}px)`;
             } else {
@@ -197,12 +170,10 @@ class CanvasEditor {
     }
     
     createTextElement() {
-        // Remove old element
         if (this.currentTextElement) {
             this.currentTextElement.remove();
         }
         
-        // Create new draggable text element
         const textEl = document.createElement('div');
         textEl.className = 'draggable-text';
         textEl.style.left = '50%';
@@ -213,7 +184,6 @@ class CanvasEditor {
         this.canvasWrapper.appendChild(textEl);
         this.currentTextElement = textEl;
         
-        // Make it draggable only
         this.makeDraggable(textEl);
     }
     
@@ -223,7 +193,6 @@ class CanvasEditor {
         element.style.fontSize = `${this.textProps.size}px`;
         element.style.color = this.textProps.color;
         
-        // Stroke
         if (this.textProps.strokeWidth > 0) {
             element.style.webkitTextStroke = `${this.textProps.strokeWidth}px ${this.textProps.strokeColor}`;
             element.style.textStroke = `${this.textProps.strokeWidth}px ${this.textProps.strokeColor}`;
@@ -232,14 +201,12 @@ class CanvasEditor {
             element.style.textStroke = '';
         }
         
-        // Shadow
         if (this.textProps.shadowBlur > 0) {
             element.style.textShadow = `4px 4px ${this.textProps.shadowBlur}px rgba(0, 0, 0, 0.8)`;
         } else {
             element.style.textShadow = '';
         }
         
-        // Background
         if (this.textProps.bgOpacity > 0) {
             const hex = this.textProps.bgColor;
             const r = parseInt(hex.slice(1, 3), 16);
@@ -264,12 +231,10 @@ class CanvasEditor {
         let xOffset = 0;
         let yOffset = 0;
         
-        // Mouse events
         element.addEventListener('mousedown', dragStart);
         document.addEventListener('mousemove', drag);
         document.addEventListener('mouseup', dragEnd);
         
-        // Touch events
         element.addEventListener('touchstart', dragStart, { passive: false });
         document.addEventListener('touchmove', drag, { passive: false });
         document.addEventListener('touchend', dragEnd);
@@ -331,13 +296,11 @@ class CanvasEditor {
     }
     
     reset() {
-        // إعادة تعيين كل شيء
         if (this.currentTextElement) {
             this.currentTextElement.remove();
             this.currentTextElement = null;
         }
         
-        // إعادة تعيين النص
         this.textProps = {
             content: '',
             font: 'Abeezee',
@@ -350,34 +313,24 @@ class CanvasEditor {
             bgColor: '#000000'
         };
         
-        // إعادة تعيين الفلاتر
         this.filters = {
             blurValue: 0
         };
         
-        // إعادة رسم الصورة الأصلية
         if (this.image) {
             this.render();
         }
         
-        // إعادة تعيين واجهة المستخدم
         if (window.editorUI) {
-            // Text input
             document.getElementById('textInput').value = '';
-            
-            // Sliders
             document.getElementById('fontSize').value = 48;
             document.getElementById('fontSizeValue').textContent = 48;
-            
             document.getElementById('strokeWidth').value = 0;
             document.getElementById('strokeWidthValue').textContent = 0;
-            
             document.getElementById('shadowBlur').value = 0;
             document.getElementById('shadowBlurValue').textContent = 0;
-            
             document.getElementById('bgOpacity').value = 0;
             document.getElementById('bgOpacityValue').textContent = 0;
-            
             document.getElementById('imageBlur').value = 0;
             document.getElementById('blurValue').textContent = 0;
         }
@@ -397,45 +350,77 @@ class CanvasEditor {
         }
         
         try {
-            // Simple approach: capture canvas + text overlay exactly as shown
-            const tempCanvas = document.createElement('canvas');
-            const canvasRect = this.canvas.getBoundingClientRect();
+            // إنشاء canvas جديد بدقة عالية
+            const outputCanvas = document.createElement('canvas');
+            const ctx = outputCanvas.getContext('2d');
             
-            tempCanvas.width = this.canvas.width;
-            tempCanvas.height = this.canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            
-            // Draw background image
-            tempCtx.drawImage(this.canvas, 0, 0);
-            
-            // If text element exists, draw it exactly as displayed
-            if (this.currentTextElement) {
-                const textRect = this.currentTextElement.getBoundingClientRect();
-                const computedStyle = window.getComputedStyle(this.currentTextElement);
+            // تعيين الأبعاد الأصلية للصورة
+            if (this.image.isBackground) {
+                outputCanvas.width = this.canvas.width;
+                outputCanvas.height = this.canvas.height;
                 
-                // Scale factor
-                const scaleX = this.canvas.width / canvasRect.width;
-                const scaleY = this.canvas.height / canvasRect.height;
+                // رسم الخلفية
+                ctx.fillStyle = this.image.color;
+                ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+            } else {
+                // استخدام الأبعاد الأصلية للصورة لجودة أفضل
+                outputCanvas.width = this.image.width;
+                outputCanvas.height = this.image.height;
                 
-                // Position
+                // رسم الصورة الأصلية
+                ctx.drawImage(this.image, 0, 0, outputCanvas.width, outputCanvas.height);
+            }
+            
+            // تطبيق الفلاتر
+            if (this.filters.blurValue > 0) {
+                ctx.filter = `blur(${this.filters.blurValue}px)`;
+                // إعادة رسم الصورة مع الفلتر
+                if (this.image.isBackground) {
+                    ctx.fillStyle = this.image.color;
+                    ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+                } else {
+                    ctx.drawImage(this.image, 0, 0, outputCanvas.width, outputCanvas.height);
+                }
+                ctx.filter = 'none';
+            }
+            
+            // إذا كان هناك نص، نرسمه مباشرة على Canvas
+            if (this.currentTextElement && this.textProps.content) {
+                const textEl = this.currentTextElement;
+                const computedStyle = window.getComputedStyle(textEl);
+                const textRect = textEl.getBoundingClientRect();
+                const canvasRect = this.canvas.getBoundingClientRect();
+                
+                // حساب موضع النص نسبةً للصورة
+                const scaleX = outputCanvas.width / canvasRect.width;
+                const scaleY = outputCanvas.height / canvasRect.height;
+                
                 const x = (textRect.left - canvasRect.left) * scaleX;
                 const y = (textRect.top - canvasRect.top) * scaleY;
                 const width = textRect.width * scaleX;
                 const height = textRect.height * scaleY;
                 
-                // Get all computed styles
-                const fontSize = parseFloat(computedStyle.fontSize) * scaleX;
-                const fontFamily = computedStyle.fontFamily;
-                const color = computedStyle.color;
-                const textAlign = computedStyle.textAlign;
-                const lineHeight = parseFloat(computedStyle.lineHeight) * scaleY;
+                // الحصول على التحويل الحالي للنص
+                const transform = textEl.style.transform || '';
+                const translateMatch = transform.match(/translate\(calc\(-50% \+ (-?\d+(\.\d+)?)px\), calc\(-50% \+ (-?\d+(\.\d+)?)px\)\)/);
                 
-                // Get text content
-                const text = this.currentTextElement.textContent;
+                let finalX = x;
+                let finalY = y;
                 
-                tempCtx.save();
+                if (translateMatch) {
+                    const offsetX = parseFloat(translateMatch[1]) * scaleX;
+                    const offsetY = parseFloat(translateMatch[3]) * scaleY;
+                    finalX = (canvasRect.width / 2 + offsetX - width / 2) * scaleX;
+                    finalY = (canvasRect.height / 2 + offsetY - height / 2) * scaleY;
+                } else {
+                    finalX = (canvasRect.width / 2 - width / 2) * scaleX;
+                    finalY = (canvasRect.height / 2 - height / 2) * scaleY;
+                }
                 
-                // Draw background if exists
+                // حفظ حالة canvas
+                ctx.save();
+                
+                // رسم خلفية النص
                 if (this.textProps.bgOpacity > 0) {
                     const hex = this.textProps.bgColor;
                     const r = parseInt(hex.slice(1, 3), 16);
@@ -443,53 +428,55 @@ class CanvasEditor {
                     const b = parseInt(hex.slice(5, 7), 16);
                     const opacity = this.textProps.bgOpacity / 100;
                     
-                    tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                    tempCtx.fillRect(x, y, width, height);
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                    ctx.fillRect(finalX, finalY, width, height);
                 }
                 
-                // Set text style
-                tempCtx.font = `${fontSize}px ${fontFamily}`;
-                tempCtx.fillStyle = color;
-                tempCtx.textAlign = textAlign;
-                tempCtx.textBaseline = 'top';
+                // إعداد خصائص النص
+                const fontSize = this.textProps.size * scaleX;
+                ctx.font = `${fontSize}px "${this.textProps.font}"`;
+                ctx.fillStyle = this.textProps.color;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
                 
-                // Draw shadow if exists
+                // تطبيق الظل
                 if (this.textProps.shadowBlur > 0) {
-                    tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                    tempCtx.shadowBlur = this.textProps.shadowBlur * scaleX;
-                    tempCtx.shadowOffsetX = 4 * scaleX;
-                    tempCtx.shadowOffsetY = 4 * scaleY;
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                    ctx.shadowBlur = this.textProps.shadowBlur * scaleX;
+                    ctx.shadowOffsetX = 4 * scaleX;
+                    ctx.shadowOffsetY = 4 * scaleY;
                 }
                 
-                // Split into lines and draw
-                const lines = text.split('\n');
-                let currentY = y + 10 * scaleY;
+                // تقسيم النص إلى أسطر
+                const lines = this.textProps.content.split('\n');
+                const lineHeight = fontSize * 1.3;
+                const totalHeight = lines.length * lineHeight;
+                let currentY = finalY + (height - totalHeight) / 2 + lineHeight / 2;
                 
+                // رسم كل سطر
                 lines.forEach(line => {
-                    let lineX = x + 10 * scaleX;
-                    if (textAlign === 'center') {
-                        lineX = x + width / 2;
-                    }
+                    const lineX = finalX + width / 2;
                     
-                    // Draw stroke if exists
+                    // رسم الحدود (Stroke)
                     if (this.textProps.strokeWidth > 0) {
-                        tempCtx.strokeStyle = this.textProps.strokeColor;
-                        tempCtx.lineWidth = this.textProps.strokeWidth * 2 * scaleX;
-                        tempCtx.strokeText(line, lineX, currentY);
+                        ctx.strokeStyle = this.textProps.strokeColor;
+                        ctx.lineWidth = this.textProps.strokeWidth * 2 * scaleX;
+                        ctx.strokeText(line, lineX, currentY);
                     }
                     
-                    // Draw text
-                    tempCtx.fillText(line, lineX, currentY);
+                    // رسم النص
+                    ctx.fillText(line, lineX, currentY);
                     currentY += lineHeight;
                 });
                 
-                tempCtx.restore();
+                // استعادة حالة canvas
+                ctx.restore();
             }
             
-            // Download
+            // تحميل الصورة
             const link = document.createElement('a');
             link.download = `photo-editor-${Date.now()}.png`;
-            link.href = tempCanvas.toDataURL('image/png', 1.0);
+            link.href = outputCanvas.toDataURL('image/png', 1.0); // جودة 100%
             
             document.body.appendChild(link);
             link.click();
@@ -497,7 +484,14 @@ class CanvasEditor {
             
         } catch (error) {
             console.error('Download error:', error);
-            alert('Download failed. Please try again.');
+            const lang = localStorage.getItem('language') || 'en';
+            let message = 'Download failed. Please try again.';
+            if (lang === 'ar') {
+                message = 'فشل التحميل. الرجاء المحاولة مرة أخرى.';
+            } else if (lang === 'fr') {
+                message = 'Le téléchargement a échoué. Veuillez réessayer.';
+            }
+            alert(message);
         }
     }
     
@@ -508,47 +502,70 @@ class CanvasEditor {
             if (lang === 'ar') {
                 message = 'الرجاء رفع صورة أو إنشاء خلفية أولاً';
             } else if (lang === 'fr') {
-                message = 'Veuillez télécharger une image أو créer un fond d\'abord';
+                message = 'Veuillez télécharger une image ou créer un fond d\'abord';
             }
             alert(message);
             return;
         }
         
         try {
-            // Use same approach as download
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = this.canvas.width;
-            tempCanvas.height = this.canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
+            // نفس منطق التنزيل ولكن للمشاركة
+            const outputCanvas = document.createElement('canvas');
+            const ctx = outputCanvas.getContext('2d');
             
-            // Draw the base image/background
-            tempCtx.drawImage(this.canvas, 0, 0);
+            if (this.image.isBackground) {
+                outputCanvas.width = this.canvas.width;
+                outputCanvas.height = this.canvas.height;
+                ctx.fillStyle = this.image.color;
+                ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+            } else {
+                outputCanvas.width = this.image.width;
+                outputCanvas.height = this.image.height;
+                ctx.drawImage(this.image, 0, 0, outputCanvas.width, outputCanvas.height);
+            }
             
-            // If text exists, capture it from DOM
+            if (this.filters.blurValue > 0) {
+                ctx.filter = `blur(${this.filters.blurValue}px)`;
+                if (this.image.isBackground) {
+                    ctx.fillStyle = this.image.color;
+                    ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+                } else {
+                    ctx.drawImage(this.image, 0, 0, outputCanvas.width, outputCanvas.height);
+                }
+                ctx.filter = 'none';
+            }
+            
             if (this.currentTextElement && this.textProps.content) {
+                const textEl = this.currentTextElement;
+                const computedStyle = window.getComputedStyle(textEl);
+                const textRect = textEl.getBoundingClientRect();
                 const canvasRect = this.canvas.getBoundingClientRect();
-                const textRect = this.currentTextElement.getBoundingClientRect();
-                const computedStyle = window.getComputedStyle(this.currentTextElement);
                 
-                const scaleX = this.canvas.width / canvasRect.width;
-                const scaleY = this.canvas.height / canvasRect.height;
+                const scaleX = outputCanvas.width / canvasRect.width;
+                const scaleY = outputCanvas.height / canvasRect.height;
                 
                 const x = (textRect.left - canvasRect.left) * scaleX;
                 const y = (textRect.top - canvasRect.top) * scaleY;
                 const width = textRect.width * scaleX;
                 const height = textRect.height * scaleY;
                 
-                const transform = this.currentTextElement.style.transform || '';
-                const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
-                const rotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
+                const transform = textEl.style.transform || '';
+                const translateMatch = transform.match(/translate\(calc\(-50% \+ (-?\d+(\.\d+)?)px\), calc\(-50% \+ (-?\d+(\.\d+)?)px\)\)/);
                 
-                tempCtx.save();
+                let finalX = x;
+                let finalY = y;
                 
-                const centerX = x + width / 2;
-                const centerY = y + height / 2;
-                tempCtx.translate(centerX, centerY);
-                tempCtx.rotate(rotation * Math.PI / 180);
-                tempCtx.translate(-centerX, -centerY);
+                if (translateMatch) {
+                    const offsetX = parseFloat(translateMatch[1]) * scaleX;
+                    const offsetY = parseFloat(translateMatch[3]) * scaleY;
+                    finalX = (canvasRect.width / 2 + offsetX - width / 2) * scaleX;
+                    finalY = (canvasRect.height / 2 + offsetY - height / 2) * scaleY;
+                } else {
+                    finalX = (canvasRect.width / 2 - width / 2) * scaleX;
+                    finalY = (canvasRect.height / 2 - height / 2) * scaleY;
+                }
+                
+                ctx.save();
                 
                 if (this.textProps.bgOpacity > 0) {
                     const hex = this.textProps.bgColor;
@@ -557,50 +574,48 @@ class CanvasEditor {
                     const b = parseInt(hex.slice(5, 7), 16);
                     const opacity = this.textProps.bgOpacity / 100;
                     
-                    tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                    tempCtx.fillRect(x, y, width, height);
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                    ctx.fillRect(finalX, finalY, width, height);
+                }
+                
+                const fontSize = this.textProps.size * scaleX;
+                ctx.font = `${fontSize}px "${this.textProps.font}"`;
+                ctx.fillStyle = this.textProps.color;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                if (this.textProps.shadowBlur > 0) {
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                    ctx.shadowBlur = this.textProps.shadowBlur * scaleX;
+                    ctx.shadowOffsetX = 4 * scaleX;
+                    ctx.shadowOffsetY = 4 * scaleY;
                 }
                 
                 const lines = this.textProps.content.split('\n');
-                const fontSize = this.textProps.size;
                 const lineHeight = fontSize * 1.3;
-                
-                tempCtx.font = `${fontSize}px "${this.textProps.font}"`;
-                tempCtx.textAlign = computedStyle.textAlign || 'center';
-                tempCtx.textBaseline = 'middle';
-                
-                if (this.textProps.shadowBlur > 0) {
-                    tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                    tempCtx.shadowBlur = this.textProps.shadowBlur;
-                    tempCtx.shadowOffsetX = 4;
-                    tempCtx.shadowOffsetY = 4;
-                }
-                
-                const totalTextHeight = lines.length * lineHeight;
-                let currentY = y + (height - totalTextHeight) / 2 + lineHeight / 2;
+                const totalHeight = lines.length * lineHeight;
+                let currentY = finalY + (height - totalHeight) / 2 + lineHeight / 2;
                 
                 lines.forEach(line => {
-                    const lineX = tempCtx.textAlign === 'center' ? x + width / 2 : x + 10;
+                    const lineX = finalX + width / 2;
                     
                     if (this.textProps.strokeWidth > 0) {
-                        tempCtx.strokeStyle = this.textProps.strokeColor;
-                        tempCtx.lineWidth = this.textProps.strokeWidth * 2;
-                        tempCtx.strokeText(line, lineX, currentY);
+                        ctx.strokeStyle = this.textProps.strokeColor;
+                        ctx.lineWidth = this.textProps.strokeWidth * 2 * scaleX;
+                        ctx.strokeText(line, lineX, currentY);
                     }
                     
-                    tempCtx.fillStyle = this.textProps.color;
-                    tempCtx.fillText(line, lineX, currentY);
-                    
+                    ctx.fillText(line, lineX, currentY);
                     currentY += lineHeight;
                 });
                 
-                tempCtx.restore();
+                ctx.restore();
             }
             
-            // Try Web Share API
+            // محاولة استخدام Web Share API
             if (navigator.share && navigator.canShare) {
                 const blob = await new Promise(resolve => {
-                    tempCanvas.toBlob(resolve, 'image/png', 1.0);
+                    outputCanvas.toBlob(resolve, 'image/png', 1.0);
                 });
                 
                 const file = new File([blob], `photo-editor-${Date.now()}.png`, { type: 'image/png' });
@@ -615,11 +630,8 @@ class CanvasEditor {
                 }
             }
             
-            // Fallback: download
-            const link = document.createElement('a');
-            link.download = `photo-editor-${Date.now()}.png`;
-            link.href = tempCanvas.toDataURL('image/png', 1.0);
-            link.click();
+            // إذا فشل المشاركة، نستخدم التنزيل
+            this.download();
             
         } catch (error) {
             if (error.name !== 'AbortError') {
