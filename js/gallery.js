@@ -1,3 +1,4 @@
+// gallery.js محدث
 class GalleryManager {
     constructor() {
         this.categoriesGrid = document.getElementById('categoriesGrid');
@@ -23,7 +24,6 @@ class GalleryManager {
     }
     
     async loadCategories() {
-        // لا نحذف المحتوى الموجود، فقط نتحقق إذا كان فارغاً
         if (this.categoriesGrid.children.length === 0) {
             for (const category of CATEGORIES) {
                 const card = await this.createCategoryCard(category);
@@ -37,8 +37,9 @@ class GalleryManager {
         card.className = 'category-card';
         
         try {
+            // استعلام للحصول على الصورة الثانية (الصفحة 1، الصورة 2)
             const response = await fetch(
-                `https://api.pexels.com/v1/search?query=${encodeURIComponent(category.query)}&per_page=1&orientation=portrait`,
+                `https://api.pexels.com/v1/search?query=${encodeURIComponent(category.query)}&per_page=2&orientation=portrait&page=1`,
                 {
                     headers: {
                         'Authorization': PEXELS_API_KEY
@@ -47,7 +48,14 @@ class GalleryManager {
             );
             
             const data = await response.json();
-            const imageUrl = data.photos[0]?.src.medium || '';
+            
+            // استخدام الصورة الثانية إن وجدت، وإلا استخدم الأولى
+            let imageUrl = '';
+            if (data.photos && data.photos.length >= 2) {
+                imageUrl = data.photos[1]?.src.medium || data.photos[0]?.src.medium || '';
+            } else if (data.photos && data.photos.length === 1) {
+                imageUrl = data.photos[0]?.src.medium || '';
+            }
             
             card.innerHTML = `
                 <img src="${imageUrl}" alt="${category.name}" loading="lazy">
@@ -56,8 +64,10 @@ class GalleryManager {
                 </div>
             `;
         } catch (error) {
+            console.log(`Error loading image for ${category.name}:`, error);
+            // استخدام صورة بديلة عند الخطأ
             card.innerHTML = `
-                <div class="overlay" style="background: var(--bg-tertiary); min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                <div style="min-height: 150px; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center; border-radius: 12px;">
                     <span class="category-name">${category.name}</span>
                 </div>
             `;
@@ -77,38 +87,29 @@ class GalleryManager {
         this.photosBuffer = [];
         this.galleryTitle.textContent = category.name;
         
-        // مسح كل شيء
         this.galleryGrid.innerHTML = '';
         
-        // إضافة Loading indicator
         this.loadingElement = document.createElement('div');
         this.loadingElement.className = 'loading';
         this.loadingElement.innerHTML = '<div class="spinner"></div>';
         this.galleryGrid.appendChild(this.loadingElement);
         
-        // الانتقال للصفحة
         window.app.switchPage('gallery');
         
-        // تحميل أول دفعة
         this.loadPhotos();
-        
-        // إعداد Infinite Scroll
         this.setupInfiniteScroll();
     }
     
     setupInfiniteScroll() {
-        // إزالة المستمع القديم إن وجد
         if (this.scrollHandler) {
             this.galleryGrid.removeEventListener('scroll', this.scrollHandler);
         }
         
-        // إضافة مستمع جديد - Pinterest style
         this.scrollHandler = () => {
             const scrollTop = this.galleryGrid.scrollTop;
             const scrollHeight = this.galleryGrid.scrollHeight;
             const clientHeight = this.galleryGrid.clientHeight;
             
-            // عندما يصل المستخدم لـ 400px من النهاية - تحميل مبكر للسلاسة
             if (scrollTop + clientHeight >= scrollHeight - 400) {
                 if (!this.isLoading && this.hasMorePhotos) {
                     this.loadMorePhotos();
@@ -126,7 +127,6 @@ class GalleryManager {
         this.showLoading();
         
         try {
-            // تحميل 15 صورة في كل مرة لتجربة Pinterest السلسة
             const response = await fetch(
                 `https://api.pexels.com/v1/search?query=${encodeURIComponent(this.currentCategory.query)}&per_page=15&page=${this.currentPage}&orientation=portrait`,
                 {
@@ -150,7 +150,6 @@ class GalleryManager {
             } else {
                 this.displayPhotos(data.photos);
                 
-                // إذا كانت أقل من 15 صورة، معناها انتهت الصور
                 if (data.photos.length < 15) {
                     this.hasMorePhotos = false;
                 }
@@ -174,12 +173,9 @@ class GalleryManager {
     }
     
     displayPhotos(photos) {
-        // Pinterest-style: إضافة الصور مباشرة قبل عنصر Loading
         photos.forEach(photo => {
             const item = document.createElement('div');
             item.className = 'gallery-item';
-            
-            // استخدام الصورة الأصلية بدون تحديد الارتفاع
             item.innerHTML = `<img src="${photo.src.large}" alt="${photo.alt || ''}" loading="lazy">`;
             
             item.addEventListener('click', () => {
@@ -190,7 +186,6 @@ class GalleryManager {
                 }
             });
             
-            // إضافة الصورة قبل عنصر Loading
             this.galleryGrid.insertBefore(item, this.loadingElement);
         });
     }
