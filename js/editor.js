@@ -2,6 +2,7 @@ class EditorUI {
     constructor() {
         this.currentTool = 'text';
         this.selectedBgColor = '#FFFFFF';
+        this.selectedRatio = '9:16';
         this.initElements();
         this.initTools();
         this.initControls();
@@ -32,13 +33,11 @@ class EditorUI {
         this.imageBlur = document.getElementById('imageBlur');
         this.blurValue = document.getElementById('blurValue');
         
-        // أزرار التنسيق الجديدة
         this.boldBtn = document.getElementById('boldBtn');
         this.italicBtn = document.getElementById('italicBtn');
-        this.flipHBtn = document.getElementById('flipHBtn');
-        this.flipVBtn = document.getElementById('flipVBtn');
         
         this.createBackgroundBtn = document.getElementById('createBackgroundBtn');
+        this.sizeBtns = document.querySelectorAll('.size-btn');
     }
     
     initTools() {
@@ -58,9 +57,18 @@ class EditorUI {
             }
         });
         
+        // Size buttons
+        this.sizeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.sizeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.selectedRatio = btn.dataset.ratio;
+            });
+        });
+        
         // Create Background Button
         this.createBackgroundBtn.addEventListener('click', () => {
-            window.canvasEditor.createBackground(this.selectedBgColor);
+            window.canvasEditor.createBackground(this.selectedBgColor, this.selectedRatio);
         });
         
         // Tool buttons
@@ -124,18 +132,6 @@ class EditorUI {
             const isActive = this.italicBtn.classList.toggle('active');
             window.canvasEditor.updateTextProp('isItalic', isActive);
         });
-        
-        // Flip Horizontal
-        this.flipHBtn.addEventListener('click', () => {
-            const isActive = this.flipHBtn.classList.toggle('active');
-            window.canvasEditor.updateTextProp('flipH', isActive);
-        });
-        
-        // Flip Vertical
-        this.flipVBtn.addEventListener('click', () => {
-            const isActive = this.flipVBtn.classList.toggle('active');
-            window.canvasEditor.updateTextProp('flipV', isActive);
-        });
     }
     
     switchTool(tool) {
@@ -151,10 +147,8 @@ class EditorUI {
     }
     
     createScrolls() {
-        // Fonts scroll
         this.createFontScroll();
         
-        // Color scrolls
         this.createColorScroll('colorScroll', (color) => {
             window.canvasEditor.updateTextProp('color', color);
         });
@@ -167,7 +161,6 @@ class EditorUI {
             window.canvasEditor.updateTextProp('bgColor', color);
         });
         
-        // Background creation color scroll
         this.createBgCreationColorScroll();
     }
     
