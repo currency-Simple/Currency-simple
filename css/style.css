@@ -91,7 +91,6 @@ body {
     transform: scale(0.9);
 }
 
-/* Pinterest-style Categories Grid - 2 columns with flexbox */
 .categories-grid {
     flex: 1;
     overflow-y: auto;
@@ -142,7 +141,6 @@ body {
     opacity: 0.8;
 }
 
-/* Pinterest-style Gallery Grid - Flexbox Layout */
 .gallery-grid {
     flex: 1;
     overflow-y: auto;
@@ -241,7 +239,6 @@ body {
     gap: 8px;
 }
 
-/* المحرر - الصورة تلتصق بالأعلى */
 .canvas-container {
     flex: 1;
     display: flex;
@@ -286,42 +283,36 @@ body {
     outline-offset: 4px;
 }
 
-/* مقبض تغيير العرض */
-.resize-handle {
+/* مقبض واحد أسفل النص لتغيير العرض */
+.resize-handle-bottom {
     position: absolute;
-    width: 8px;
-    height: 30px;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 12px;
     background: rgba(255, 255, 255, 0.9);
-    border-radius: 4px;
-    cursor: ew-resize;
-    top: 50%;
-    transform: translateY(-50%);
+    border-radius: 6px;
+    cursor: ns-resize;
     display: none;
     z-index: 10;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.resize-handle::before {
-    content: '⋮⋮';
+.resize-handle-bottom::before {
+    content: '⋮';
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) rotate(90deg);
     color: #333;
-    font-size: 10px;
-    letter-spacing: -2px;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 2px;
 }
 
-.draggable-text.active .resize-handle {
+.draggable-text.active .resize-handle-bottom {
     display: block;
-}
-
-.resize-handle.left {
-    left: -12px;
-}
-
-.resize-handle.right {
-    right: -12px;
 }
 
 .tools-drawer {
@@ -432,7 +423,36 @@ body {
     opacity: 0.8;
 }
 
-/* زر إنشاء خلفية */
+/* أزرار اختيار الحجم */
+.size-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.size-btn {
+    flex: 1;
+    min-width: 60px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.size-btn:active {
+    transform: scale(0.95);
+}
+
+.size-btn.active {
+    border-color: var(--accent);
+    background: var(--bg-secondary);
+}
+
 .create-bg-btn {
     width: 100%;
     padding: 20px;
@@ -448,6 +468,7 @@ body {
     justify-content: center;
     gap: 8px;
     transition: all 0.3s ease;
+    margin-top: 16px;
 }
 
 .create-bg-btn:active {
@@ -458,7 +479,6 @@ body {
     font-size: 24px;
 }
 
-/* أزرار تنسيق النص */
 .style-buttons {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -744,7 +764,6 @@ body {
     color: var(--text-primary);
 }
 
-/* Responsive - 3 columns for tablets */
 @media (min-width: 768px) {
     .category-card {
         width: calc(33.333% - 5.33px);
@@ -754,7 +773,6 @@ body {
     }
 }
 
-/* Responsive - 4 columns for desktop */
 @media (min-width: 1024px) {
     .category-card {
         width: calc(25% - 6px);
@@ -764,7 +782,6 @@ body {
     }
 }
 
-/* Responsive - 5 columns for large desktop */
 @media (min-width: 1440px) {
     .category-card {
         width: calc(20% - 6.4px);
