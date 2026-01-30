@@ -47,15 +47,12 @@ class CanvasEditor {
         const maxWidth = window.innerWidth - 32;
         const maxHeight = window.innerHeight - 300;
         
-        // حساب الأبعاد حسب النسبة
         let width, height;
         const [w, h] = ratio.split(':').map(Number);
         
-        // البدء بعرض أساسي
         width = 600;
         height = (width * h) / w;
         
-        // التأكد من أن الأبعاد تناسب الشاشة
         if (width > maxWidth) {
             width = maxWidth;
             height = (width * h) / w;
@@ -194,21 +191,34 @@ class CanvasEditor {
         textEl.style.wordWrap = 'break-word';
         textEl.style.maxWidth = this.textProps.maxWidth + 'px';
         
-        // إضافة مقبض واحد أسفل النص
-        const bottomHandle = document.createElement('div');
-        bottomHandle.className = 'resize-handle-bottom';
-        textEl.appendChild(bottomHandle);
+        // مربع تحكم مع مقابض في الزوايا
+        const resizeBox = document.createElement('div');
+        resizeBox.className = 'resize-box';
+        
+        const handleNW = document.createElement('div');
+        handleNW.className = 'resize-handle nw';
+        const handleNE = document.createElement('div');
+        handleNE.className = 'resize-handle ne';
+        const handleSW = document.createElement('div');
+        handleSW.className = 'resize-handle sw';
+        const handleSE = document.createElement('div');
+        handleSE.className = 'resize-handle se';
+        
+        resizeBox.appendChild(handleNW);
+        resizeBox.appendChild(handleNE);
+        resizeBox.appendChild(handleSW);
+        resizeBox.appendChild(handleSE);
+        textEl.appendChild(resizeBox);
         
         this.applyTextStyle(textEl);
         this.canvasWrapper.appendChild(textEl);
         this.currentTextElement = textEl;
         
         this.makeDraggable(textEl);
-        this.makeResizable(textEl, bottomHandle);
+        this.makeResizable(textEl, resizeBox);
     }
     
     applyTextStyle(element) {
-        // إزالة النص القديم
         element.childNodes.forEach(node => {
             if (node.nodeType === Node.TEXT_NODE) {
                 element.removeChild(node);
@@ -257,6 +267,18 @@ class CanvasEditor {
             element.style.backgroundColor = 'transparent';
             element.style.padding = '10px 0';
         }
+        
+        // تحديث مربع التحكم
+        const resizeBox = element.querySelector('.resize-box');
+        if (resizeBox) {
+            setTimeout(() => {
+                const rect = element.getBoundingClientRect();
+                resizeBox.style.width = rect.width + 'px';
+                resizeBox.style.height = rect.height + 'px';
+                resizeBox.style.left = '0';
+                resizeBox.style.top = '0';
+            }, 10);
+        }
     }
     
     updateTextElement() {
@@ -280,7 +302,7 @@ class CanvasEditor {
         document.addEventListener('touchend', dragEnd);
         
         function dragStart(e) {
-            if (e.target.classList.contains('resize-handle-bottom')) {
+            if (e.target.classList.contains('resize-handle') || e.target.classList.contains('resize-box')) {
                 return;
             }
             
@@ -329,53 +351,70 @@ class CanvasEditor {
         }
     }
     
-    makeResizable(element, bottomHandle) {
+    makeResizable(element, resizeBox) {
+        const handles = resizeBox.querySelectorAll('.resize-handle');
         let isResizing = false;
-        let startX = 0;
-        let startWidth = 0;
+        let startX, startY, startWidth, startHeight, currentHandle;
         
-        const startResize = (e) => {
+        handles.forEach(handle => {
+            handle.addEventListener('mousedown', startResize);
+            handle.addEventListener('touchstart', startResize, { passive: false });
+        });
+        
+        function startResize(e) {
             isResizing = true;
+            currentHandle = e.target;
             startX = e.clientX || e.touches[0].clientX;
+            startY = e.clientY || e.touches[0].clientY;
             startWidth = element.offsetWidth;
+            startHeight = element.offsetHeight;
             element.classList.add('active');
             e.stopPropagation();
             e.preventDefault();
-        };
-        
-        const resize = (e) => {
-            if (!isResizing) return;
-            
-            e.preventDefault();
-            const currentX = e.clientX || e.touches[0].clientX;
-            const diff = currentX - startX;
-            
-            // السحب الأفقي يؤثر على العرض
-            let newWidth = startWidth + diff;
-            
-            // الحد الأدنى والأقصى للعرض
-            const canvas = document.getElementById('canvas');
-            newWidth = Math.max(100, Math.min(newWidth, canvas.width - 40));
-            
-            this.textProps.maxWidth = newWidth;
-            element.style.maxWidth = newWidth + 'px';
-        };
-        
-        const stopResize = () => {
-            if (isResizing) {
-                isResizing = false;
-                element.classList.remove('active');
-            }
-        };
-        
-        bottomHandle.addEventListener('mousedown', startResize);
-        bottomHandle.addEventListener('touchstart', startResize, { passive: false });
+        }
         
         document.addEventListener('mousemove', resize);
         document.addEventListener('touchmove', resize, { passive: false });
-        
         document.addEventListener('mouseup', stopResize);
         document.addEventListener('touchend', stopResize);
+        
+        function resize(e) {
+            if (!isResizing) return;
+            e.preventDefault();
+            
+            const currentX = e.clientX || e.touches[0].clientX;
+            const currentY = e.clientY || e.touches[0].clientY;
+            const diffX = currentX - startX;
+            const diffY = currentY - startY;
+            
+            let newWidth = startWidth;
+            
+            if (currentHandle.classList.contains('ne') || currentHandle.classList.contains('se')) {
+                newWidth = startWidth + diffX;
+            } else if (currentHandle.classList.contains('nw') || currentHandle.classList.contains('sw')) {
+                newWidth = startWidth - diffX;
+            }
+            
+            const canvas = document.getElementById('canvas');
+            newWidth = Math.max(100, Math.min(newWidth, canvas.width - 40));
+            
+            window.canvasEditor.textProps.maxWidth = newWidth;
+            element.style.maxWidth = newWidth + 'px';
+            
+            setTimeout(() => {
+                const rect = element.getBoundingClientRect();
+                resizeBox.style.width = rect.width + 'px';
+                resizeBox.style.height = rect.height + 'px';
+            }, 0);
+        }
+        
+        function stopResize() {
+            if (isResizing) {
+                isResizing = false;
+                currentHandle = null;
+                element.classList.remove('active');
+            }
+        }
     }
     
     updateTextProp(prop, value) {
@@ -456,7 +495,8 @@ class CanvasEditor {
                 this.currentTextElement.classList.remove('active');
             }
             
-            // التقاط بجودة عالية (scale: 3) مع الحفاظ على موضع النص
+            const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+            
             const canvas = await html2canvas(this.canvasWrapper, {
                 backgroundColor: null,
                 scale: 3,
@@ -465,12 +505,14 @@ class CanvasEditor {
                 logging: false,
                 imageTimeout: 0,
                 removeContainer: false,
-                windowWidth: this.canvasWrapper.offsetWidth,
-                windowHeight: this.canvasWrapper.offsetHeight,
+                width: wrapperRect.width,
+                height: wrapperRect.height,
+                windowWidth: wrapperRect.width,
+                windowHeight: wrapperRect.height,
                 x: 0,
                 y: 0,
                 scrollX: 0,
-                scrollY: 0
+                scrollY: -window.scrollY
             });
             
             if (hadActiveClass && this.currentTextElement) {
@@ -527,6 +569,8 @@ class CanvasEditor {
                 this.currentTextElement.classList.remove('active');
             }
             
+            const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+            
             const canvas = await html2canvas(this.canvasWrapper, {
                 backgroundColor: null,
                 scale: 3,
@@ -535,12 +579,14 @@ class CanvasEditor {
                 logging: false,
                 imageTimeout: 0,
                 removeContainer: false,
-                windowWidth: this.canvasWrapper.offsetWidth,
-                windowHeight: this.canvasWrapper.offsetHeight,
+                width: wrapperRect.width,
+                height: wrapperRect.height,
+                windowWidth: wrapperRect.width,
+                windowHeight: wrapperRect.height,
                 x: 0,
                 y: 0,
                 scrollX: 0,
-                scrollY: 0
+                scrollY: -window.scrollY
             });
             
             if (hadActiveClass && this.currentTextElement) {
