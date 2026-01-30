@@ -100,6 +100,10 @@
                     <span class="material-icons">font_download</span>
                     <span data-translate="tool-font">Fonts</span>
                 </button>
+                <button class="tool-btn" data-tool="style">
+                    <span class="material-icons">format_bold</span>
+                    <span data-translate="tool-style">Text Style</span>
+                </button>
                 <button class="tool-btn" data-tool="size">
                     <span class="material-icons">format_size</span>
                     <span data-translate="tool-size">Font Size</span>
@@ -150,6 +154,28 @@
 
                 <div class="tool-panel" id="fontPanel">
                     <div class="horizontal-scroll" id="fontScroll"></div>
+                </div>
+
+                <div class="tool-panel" id="stylePanel">
+                    <h3 style="margin-bottom: 12px; color: var(--text-secondary); font-size: 14px;" data-translate="style-title">Text Style</h3>
+                    <div class="style-buttons">
+                        <button class="style-toggle-btn" id="boldBtn">
+                            <span class="material-icons">format_bold</span>
+                            <span data-translate="style-bold">Bold</span>
+                        </button>
+                        <button class="style-toggle-btn" id="italicBtn">
+                            <span class="material-icons">format_italic</span>
+                            <span data-translate="style-italic">Italic</span>
+                        </button>
+                        <button class="style-toggle-btn" id="flipHBtn">
+                            <span class="material-icons">flip</span>
+                            <span data-translate="style-flip-h">Flip H</span>
+                        </button>
+                        <button class="style-toggle-btn" id="flipVBtn">
+                            <span class="material-icons" style="transform: rotate(90deg);">flip</span>
+                            <span data-translate="style-flip-v">Flip V</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="tool-panel" id="sizePanel">
