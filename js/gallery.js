@@ -1,4 +1,3 @@
-// gallery.js محدث
 class GalleryManager {
     constructor() {
         this.categoriesGrid = document.getElementById('categoriesGrid');
@@ -67,8 +66,8 @@ class GalleryManager {
             console.log(`Error loading image for ${category.name}:`, error);
             // استخدام صورة بديلة عند الخطأ
             card.innerHTML = `
-                <div style="min-height: 150px; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center; border-radius: 12px;">
-                    <span class="category-name">${category.name}</span>
+                <div style="min-height: 100px; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+                    <span class="category-name" style="position: static; text-shadow: none; color: var(--text-primary);">${category.name}</span>
                 </div>
             `;
         }
@@ -127,8 +126,9 @@ class GalleryManager {
         this.showLoading();
         
         try {
+            // تحميل 20 صورة في كل مرة (مناسب لعرض 5 في السطر)
             const response = await fetch(
-                `https://api.pexels.com/v1/search?query=${encodeURIComponent(this.currentCategory.query)}&per_page=15&page=${this.currentPage}&orientation=portrait`,
+                `https://api.pexels.com/v1/search?query=${encodeURIComponent(this.currentCategory.query)}&per_page=20&page=${this.currentPage}&orientation=portrait`,
                 {
                     headers: {
                         'Authorization': PEXELS_API_KEY
@@ -150,7 +150,7 @@ class GalleryManager {
             } else {
                 this.displayPhotos(data.photos);
                 
-                if (data.photos.length < 15) {
+                if (data.photos.length < 20) {
                     this.hasMorePhotos = false;
                 }
             }
