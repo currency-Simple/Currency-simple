@@ -19,16 +19,16 @@
         <div class="categories-grid" id="categoriesGrid"></div>
         <div class="bottom-nav">
             <button class="nav-btn active" data-page="categories">
-                <span class="material-icons">grid_view</span>
                 <span data-translate="nav-categories">Categories</span>
+                <span class="material-icons">grid_view</span>
             </button>
             <button class="nav-btn" data-page="editor">
-                <span class="material-icons">edit</span>
                 <span data-translate="nav-editor">Editor</span>
+                <span class="material-icons">edit</span>
             </button>
             <button class="nav-btn" data-page="settings">
-                <span class="material-icons">settings</span>
                 <span data-translate="nav-settings">Settings</span>
+                <span class="material-icons">settings</span>
             </button>
         </div>
     </div>
@@ -47,16 +47,16 @@
         </div>
         <div class="bottom-nav">
             <button class="nav-btn" data-page="categories">
-                <span class="material-icons">grid_view</span>
                 <span data-translate="nav-categories">Categories</span>
+                <span class="material-icons">grid_view</span>
             </button>
             <button class="nav-btn" data-page="editor">
-                <span class="material-icons">edit</span>
                 <span data-translate="nav-editor">Editor</span>
+                <span class="material-icons">edit</span>
             </button>
             <button class="nav-btn" data-page="settings">
-                <span class="material-icons">settings</span>
                 <span data-translate="nav-settings">Settings</span>
+                <span class="material-icons">settings</span>
             </button>
         </div>
     </div>
@@ -83,52 +83,6 @@
         </div>
         <div class="tools-drawer" id="toolsDrawer">
             <div class="drawer-handle"></div>
-            <div class="tools-menu" id="toolsMenu">
-                <button class="tool-btn" data-tool="upload">
-                    <span class="material-icons">add_photo_alternate</span>
-                    <span data-translate="tool-upload">Upload Image</span>
-                </button>
-                <button class="tool-btn" data-tool="background">
-                    <span class="material-icons">wallpaper</span>
-                    <span data-translate="tool-background-create">Background</span>
-                </button>
-                <button class="tool-btn active" data-tool="text">
-                    <span class="material-icons">title</span>
-                    <span data-translate="tool-text">Add Text</span>
-                </button>
-                <button class="tool-btn" data-tool="font">
-                    <span class="material-icons">font_download</span>
-                    <span data-translate="tool-font">Fonts</span>
-                </button>
-                <button class="tool-btn" data-tool="style">
-                    <span class="material-icons">format_bold</span>
-                    <span data-translate="tool-style">Text Style</span>
-                </button>
-                <button class="tool-btn" data-tool="size">
-                    <span class="material-icons">format_size</span>
-                    <span data-translate="tool-size">Font Size</span>
-                </button>
-                <button class="tool-btn" data-tool="color">
-                    <span class="material-icons">palette</span>
-                    <span data-translate="tool-color">Color</span>
-                </button>
-                <button class="tool-btn" data-tool="stroke">
-                    <span class="material-icons">border_color</span>
-                    <span data-translate="tool-stroke">Stroke</span>
-                </button>
-                <button class="tool-btn" data-tool="shadow">
-                    <span class="material-icons">blur_on</span>
-                    <span data-translate="tool-shadow">Shadow</span>
-                </button>
-                <button class="tool-btn" data-tool="textbg">
-                    <span class="material-icons">layers</span>
-                    <span data-translate="tool-bg">Text BG</span>
-                </button>
-                <button class="tool-btn" data-tool="blur">
-                    <span class="material-icons">blur_circular</span>
-                    <span data-translate="tool-blur">Blur</span>
-                </button>
-            </div>
             <div class="tool-panels">
                 <div class="tool-panel" id="uploadPanel">
                     <input type="file" id="imageUpload" accept="image/*" style="display: none;">
@@ -146,6 +100,7 @@
                         <button class="size-btn" data-ratio="1:1">1:1</button>
                         <button class="size-btn" data-ratio="5:7">5:7</button>
                         <button class="size-btn" data-ratio="4:5">4:5</button>
+                        <button class="size-btn" data-ratio="3:5">3:5</button>
                         <button class="size-btn" data-ratio="2:3">2:3</button>
                     </div>
                     <p style="margin-bottom: 12px; margin-top: 16px; color: var(--text-secondary); font-size: 12px;" data-translate="bg-color-label">Select Color:</p>
@@ -224,19 +179,65 @@
                     <input type="range" id="imageBlur" min="0" max="20" value="5" class="slider">
                 </div>
             </div>
+            <div class="tools-menu" id="toolsMenu">
+                <button class="tool-btn" data-tool="upload">
+                    <span data-translate="tool-upload">Upload Image</span>
+                    <span class="material-icons">add_photo_alternate</span>
+                </button>
+                <button class="tool-btn" data-tool="background">
+                    <span data-translate="tool-background-create">Background</span>
+                    <span class="material-icons">wallpaper</span>
+                </button>
+                <button class="tool-btn active" data-tool="text">
+                    <span data-translate="tool-text">Add Text</span>
+                    <span class="material-icons">title</span>
+                </button>
+                <button class="tool-btn" data-tool="font">
+                    <span data-translate="tool-font">Fonts</span>
+                    <span class="material-icons">font_download</span>
+                </button>
+                <button class="tool-btn" data-tool="style">
+                    <span data-translate="tool-style">Text Style</span>
+                    <span class="material-icons">format_bold</span>
+                </button>
+                <button class="tool-btn" data-tool="size">
+                    <span data-translate="tool-size">Font Size</span>
+                    <span class="material-icons">format_size</span>
+                </button>
+                <button class="tool-btn" data-tool="color">
+                    <span data-translate="tool-color">Color</span>
+                    <span class="material-icons">palette</span>
+                </button>
+                <button class="tool-btn" data-tool="stroke">
+                    <span data-translate="tool-stroke">Stroke</span>
+                    <span class="material-icons">border_color</span>
+                </button>
+                <button class="tool-btn" data-tool="shadow">
+                    <span data-translate="tool-shadow">Shadow</span>
+                    <span class="material-icons">blur_on</span>
+                </button>
+                <button class="tool-btn" data-tool="textbg">
+                    <span data-translate="tool-bg">Text BG</span>
+                    <span class="material-icons">layers</span>
+                </button>
+                <button class="tool-btn" data-tool="blur">
+                    <span data-translate="tool-blur">Blur</span>
+                    <span class="material-icons">blur_circular</span>
+                </button>
+            </div>
         </div>
         <div class="bottom-nav">
             <button class="nav-btn" data-page="categories">
-                <span class="material-icons">grid_view</span>
                 <span data-translate="nav-categories">Categories</span>
+                <span class="material-icons">grid_view</span>
             </button>
             <button class="nav-btn active" data-page="editor">
-                <span class="material-icons">edit</span>
                 <span data-translate="nav-editor">Editor</span>
+                <span class="material-icons">edit</span>
             </button>
             <button class="nav-btn" data-page="settings">
-                <span class="material-icons">settings</span>
                 <span data-translate="nav-settings">Settings</span>
+                <span class="material-icons">settings</span>
             </button>
         </div>
     </div>
@@ -311,16 +312,16 @@
         </div>
         <div class="bottom-nav">
             <button class="nav-btn" data-page="categories">
-                <span class="material-icons">grid_view</span>
                 <span data-translate="nav-categories">Categories</span>
+                <span class="material-icons">grid_view</span>
             </button>
             <button class="nav-btn" data-page="editor">
-                <span class="material-icons">edit</span>
                 <span data-translate="nav-editor">Editor</span>
+                <span class="material-icons">edit</span>
             </button>
             <button class="nav-btn active" data-page="settings">
-                <span class="material-icons">settings</span>
                 <span data-translate="nav-settings">Settings</span>
+                <span class="material-icons">settings</span>
             </button>
         </div>
     </div>
