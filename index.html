@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=abeezee:400,400i|abhaya-libre:600,800|aboreto:400|abril-fatface:400|abyssinica-sil:400|aclonica:400|acme:400|advent-pro:700i,800i,900i|aguafina-script:400|akaya-telivigala:400|akronim:400|aladin:400|aldrich:400|alegreya:600i,700,900,900i|alegreya-sc:500,500i,800,900i|alex-brush:400|alfa-slab-one:400|allan:400,700|almendra:400i,700i|almendra-sc:400|alumni-sans:100,200,500i,800i|alumni-sans-inline-one:400,400i|amatic-sc:700|amita:700|arbutus:400|architects-daughter:400|are-you-serious:400|aref-ruqaa:400,700|asset:400|astloch:400,700|atomic-age:400|aubrey:400|audiowide:400|bahiana:400|bakbak-one:400|ballet:400|bangers:400|barriecito:400|beau-rivage:400|berkshire-swash:400|beth-ellen:400|bhutuka-expanded-one:400|big-shoulders-display:100,400,800,900|bigelow-rules:400|biorhyme-expanded:200,700,800|black-and-white-picture:400|bonbon:400|bowlby-one-sc:400|bruno-ace:400|bungee:400|bungee-inline:400|bungee-outline:400|bungee-shade:400|bungee-tint:400|butcherman:400|caesar-dressing:400|castoro-titling:400|chathura:300,800|cinzel:500,900|cute-font:400|damion:400|diplomata:400|dokdo:400|dorsa:400|dr-sugiyama:400|eagle-lake:400|edu-qld-beginner:400,700|erica-one:400|fascinate:400|faster-one:400|fleur-de-leah:400|ga-maamli:400|gajraj-one:400|great-vibes:400|hanalei:400|homemade-apple:400|honk:400|ibm-plex-sans-arabic:400,700|jacquard-12-charted:400|jacquard-24-charted:400|jacquarda-bastarda-9:400|jersey-25-charted:400|jomhuria:400|kablammo:400|kalnia-glaze:300,700|kumar-one-outline:400|libre-barcode-39-text:400|limelight:400|major-mono-display:400|moirai-one:400|monofett:400|monoton:400|mrs-sheppards:400|nosifer:400|noto-kufi-arabic:400,800,900|palette-mosaic:400|rock-salt:400|rubik-beastly:400|rubik-broken-fax:400|rubik-gemstones:400|rubik-glitch-pop:400|rubik-puddles:400|sancreek:400|sixtyfour:400|sonsie-one:400" rel="stylesheet" />
     
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body data-theme="dark">
     <div id="categoriesPage" class="page active">
@@ -81,6 +81,20 @@
         <div class="canvas-container">
             <canvas id="canvas"></canvas>
         </div>
+        
+        <!-- Text Control Box -->
+        <div class="text-control-box" id="textControlBox">
+            <button class="control-btn" id="flipTextBtn" title="Flip Text">
+                <span class="material-icons">flip</span>
+            </button>
+            <button class="control-btn" id="duplicateTextBtn" title="Duplicate Text">
+                <span class="material-icons">content_copy</span>
+            </button>
+            <button class="control-btn" id="expandTextBtn" title="Expand/Shrink Text">
+                <span class="material-icons">unfold_more</span>
+            </button>
+        </div>
+        
         <div class="tools-drawer" id="toolsDrawer">
             <div class="drawer-handle"></div>
             <div class="tool-panels">
@@ -326,11 +340,11 @@
         </div>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/translations.js"></script>
-    <script src="js/gallery.js"></script>
-    <script src="js/canvas.js"></script>
-    <script src="js/editor.js"></script>
-    <script src="js/main.js"></script>
+    <script src="config.js"></script>
+    <script src="translations.js"></script>
+    <script src="gallery.js"></script>
+    <script src="canvas.js"></script>
+    <script src="editor.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
