@@ -140,7 +140,15 @@
 
                 <div class="tool-panel" id="backgroundPanel">
                     <h3 style="margin-bottom: 12px; color: var(--text-secondary); font-size: 14px;" data-translate="bg-title">Create Background</h3>
-                    <p style="margin-bottom: 16px; color: var(--text-secondary); font-size: 12px;" data-translate="bg-subtitle">Select a color to create 3:5 background</p>
+                    <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 12px;" data-translate="bg-size-label">Select Size:</p>
+                    <div class="size-options">
+                        <button class="size-btn active" data-ratio="9:16">9:16</button>
+                        <button class="size-btn" data-ratio="1:1">1:1</button>
+                        <button class="size-btn" data-ratio="5:7">5:7</button>
+                        <button class="size-btn" data-ratio="4:5">4:5</button>
+                        <button class="size-btn" data-ratio="2:3">2:3</button>
+                    </div>
+                    <p style="margin-bottom: 12px; margin-top: 16px; color: var(--text-secondary); font-size: 12px;" data-translate="bg-color-label">Select Color:</p>
                     <div class="horizontal-scroll" id="bgCreateColorScroll"></div>
                     <button class="create-bg-btn" id="createBackgroundBtn">
                         <span class="material-icons">add</span>
@@ -166,14 +174,6 @@
                         <button class="style-toggle-btn" id="italicBtn">
                             <span class="material-icons">format_italic</span>
                             <span data-translate="style-italic">Italic</span>
-                        </button>
-                        <button class="style-toggle-btn" id="flipHBtn">
-                            <span class="material-icons">flip</span>
-                            <span data-translate="style-flip-h">Flip H</span>
-                        </button>
-                        <button class="style-toggle-btn" id="flipVBtn">
-                            <span class="material-icons" style="transform: rotate(90deg);">flip</span>
-                            <span data-translate="style-flip-v">Flip V</span>
                         </button>
                     </div>
                 </div>
