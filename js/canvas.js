@@ -22,7 +22,8 @@ class CanvasEditor {
             bgColor: '#000000',
             isBold: false,
             isItalic: false,
-            maxWidth: 400
+            maxWidth: 400,
+            isFlipped: false
         };
         
         this.filters = {
@@ -38,6 +39,18 @@ class CanvasEditor {
         this.canvasWrapper.className = 'canvas-wrapper';
         container.appendChild(this.canvasWrapper);
         this.canvasWrapper.appendChild(this.canvas);
+        
+        // إخفاء مربع التحكم عند النقر خارج النص
+        document.addEventListener('click', (e) => {
+            const controlBox = document.getElementById('textControlBox');
+            const isTextElement = e.target.classList.contains('draggable-text') || 
+                                 e.target.closest('.draggable-text');
+            const isControlBox = e.target.closest('.text-control-box');
+            
+            if (!isTextElement && !isControlBox && controlBox) {
+                controlBox.classList.remove('active');
+            }
+        });
     }
     
     createBackground(color, ratio) {
@@ -216,6 +229,143 @@ class CanvasEditor {
         
         this.makeDraggable(textEl);
         this.makeResizable(textEl, resizeBox);
+        this.addTextClickHandler(textEl);
+    }
+    
+    addTextClickHandler(element) {
+        element.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.showTextControlBox();
+        });
+    }
+    
+    showTextControlBox() {
+        const controlBox = document.getElementById('textControlBox');
+        if (controlBox) {
+            controlBox.classList.add('active');
+        }
+    }
+    
+    hideTextControlBox() {
+        const controlBox = document.getElementById('textControlBox');
+        if (controlBox) {
+            controlBox.classList.remove('active');
+        }
+    }
+    
+    flipText() {
+        if (!this.currentTextElement) return;
+        
+        this.textProps.isFlipped = !this.textProps.isFlipped;
+        
+        if (this.textProps.isFlipped) {
+            this.currentTextElement.style.transform += ' scaleX(-1)';
+        } else {
+            this.currentTextElement.style.transform = this.currentTextElement.style.transform.replace(' scaleX(-1)', '');
+        }
+    }
+    
+    duplicateText() {
+        if (!this.currentTextElement) return;
+        
+        const originalRect = this.currentTextElement.getBoundingClientRect();
+        const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+        
+        // حفظ النص الحالي
+        const currentContent = this.textProps.content;
+        
+        // إنشاء نص جديد بنفس الخصائص
+        const newTextEl = document.createElement('div');
+        newTextEl.className = 'draggable-text';
+        
+        // نسخ جميع الأنماط
+        newTextEl.style.cssText = this.currentTextElement.style.cssText;
+        
+        // تحديد موضع النص الجديد (إزاحة قليلة)
+        const offsetX = 20;
+        const offsetY = 20;
+        
+        const currentLeft = parseFloat(this.currentTextElement.style.left) || 50;
+        const currentTop = parseFloat(this.currentTextElement.style.top) || 50;
+        
+        newTextEl.style.left = (currentLeft + (offsetX / wrapperRect.width * 100)) + '%';
+        newTextEl.style.top = (currentTop + (offsetY / wrapperRect.height * 100)) + '%';
+        
+        // إنشاء مربع التحكم
+        const resizeBox = document.createElement('div');
+        resizeBox.className = 'resize-box';
+        
+        const handleNW = document.createElement('div');
+        handleNW.className = 'resize-handle nw';
+        const handleNE = document.createElement('div');
+        handleNE.className = 'resize-handle ne';
+        const handleSW = document.createElement('div');
+        handleSW.className = 'resize-handle sw';
+        const handleSE = document.createElement('div');
+        handleSE.className = 'resize-handle se';
+        
+        resizeBox.appendChild(handleNW);
+        resizeBox.appendChild(handleNE);
+        resizeBox.appendChild(handleSW);
+        resizeBox.appendChild(handleSE);
+        
+        // نسخ المحتوى النصي
+        const textNode = document.createTextNode(currentContent);
+        newTextEl.appendChild(textNode);
+        newTextEl.appendChild(resizeBox);
+        
+        this.canvasWrapper.appendChild(newTextEl);
+        
+        this.makeDraggable(newTextEl);
+        this.makeResizable(newTextEl, resizeBox);
+        this.addTextClickHandler(newTextEl);
+        
+        // تحديث النص الحالي
+        this.currentTextElement = newTextEl;
+    }
+    
+    expandText() {
+        if (!this.currentTextElement) return;
+        
+        // زيادة عرض النص بمقدار 50 بكسل
+        this.textProps.maxWidth += 50;
+        
+        // التأكد من عدم تجاوز عرض الكانفاس
+        const maxAllowed = this.canvas.width - 40;
+        if (this.textProps.maxWidth > maxAllowed) {
+            this.textProps.maxWidth = maxAllowed;
+        }
+        
+        this.currentTextElement.style.maxWidth = this.textProps.maxWidth + 'px';
+        this.updateResizeBox();
+    }
+    
+    shrinkText() {
+        if (!this.currentTextElement) return;
+        
+        // تقليل عرض النص بمقدار 50 بكسل
+        this.textProps.maxWidth -= 50;
+        
+        // التأكد من الحد الأدنى
+        if (this.textProps.maxWidth < 100) {
+            this.textProps.maxWidth = 100;
+        }
+        
+        this.currentTextElement.style.maxWidth = this.textProps.maxWidth + 'px';
+        this.updateResizeBox();
+    }
+    
+    updateResizeBox() {
+        if (!this.currentTextElement) return;
+        
+        const resizeBox = this.currentTextElement.querySelector('.resize-box');
+        if (resizeBox) {
+            setTimeout(() => {
+                const rect = this.currentTextElement.getBoundingClientRect();
+                resizeBox.style.width = rect.width + 'px';
+                resizeBox.style.height = rect.height + 'px';
+            }, 10);
+        }
     }
     
     applyTextStyle(element) {
@@ -347,7 +497,10 @@ class CanvasEditor {
         }
         
         function setTranslate(xPos, yPos, el) {
-            el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
+            const baseTransform = 'translate(-50%, -50%)';
+            const posTransform = `translate(${xPos}px, ${yPos}px)`;
+            const flipTransform = window.canvasEditor.textProps.isFlipped ? ' scaleX(-1)' : '';
+            el.style.transform = `${baseTransform} ${posTransform}${flipTransform}`;
         }
     }
     
@@ -445,7 +598,8 @@ class CanvasEditor {
             bgColor: '#000000',
             isBold: false,
             isItalic: false,
-            maxWidth: 400
+            maxWidth: 400,
+            isFlipped: false
         };
         
         this.filters = {
@@ -455,6 +609,8 @@ class CanvasEditor {
         if (this.image) {
             this.render();
         }
+        
+        this.hideTextControlBox();
         
         if (window.editorUI) {
             document.getElementById('textInput').value = '';
@@ -494,6 +650,9 @@ class CanvasEditor {
             if (hadActiveClass) {
                 this.currentTextElement.classList.remove('active');
             }
+            
+            // إخفاء مربع التحكم قبل التصدير
+            this.hideTextControlBox();
             
             const wrapperRect = this.canvasWrapper.getBoundingClientRect();
             
@@ -568,6 +727,9 @@ class CanvasEditor {
             if (hadActiveClass) {
                 this.currentTextElement.classList.remove('active');
             }
+            
+            // إخفاء مربع التحكم قبل التصدير
+            this.hideTextControlBox();
             
             const wrapperRect = this.canvasWrapper.getBoundingClientRect();
             
