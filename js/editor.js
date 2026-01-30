@@ -6,6 +6,7 @@ class EditorUI {
         this.initElements();
         this.initTools();
         this.initControls();
+        this.initTextControlBox();
         this.createScrolls();
     }
     
@@ -132,6 +133,38 @@ class EditorUI {
             const isActive = this.italicBtn.classList.toggle('active');
             window.canvasEditor.updateTextProp('isItalic', isActive);
         });
+    }
+    
+    initTextControlBox() {
+        const flipBtn = document.getElementById('flipTextBtn');
+        const duplicateBtn = document.getElementById('duplicateTextBtn');
+        const expandBtn = document.getElementById('expandTextBtn');
+        
+        if (flipBtn) {
+            flipBtn.addEventListener('click', () => {
+                window.canvasEditor.flipText();
+            });
+        }
+        
+        if (duplicateBtn) {
+            duplicateBtn.addEventListener('click', () => {
+                window.canvasEditor.duplicateText();
+            });
+        }
+        
+        if (expandBtn) {
+            let isExpanded = true;
+            expandBtn.addEventListener('click', () => {
+                if (isExpanded) {
+                    window.canvasEditor.shrinkText();
+                    expandBtn.querySelector('.material-icons').textContent = 'unfold_less';
+                } else {
+                    window.canvasEditor.expandText();
+                    expandBtn.querySelector('.material-icons').textContent = 'unfold_more';
+                }
+                isExpanded = !isExpanded;
+            });
+        }
     }
     
     switchTool(tool) {
