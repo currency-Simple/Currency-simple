@@ -357,150 +357,47 @@ class CanvasEditor {
         }
         
         try {
-            // 1. إنشاء canvas عالي الجودة
-            const tempCanvas = document.createElement('canvas');
+            // استخدام html2canvas لالتقاط الصورة كما تظهر بالضبط
+            const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
             
-            // تحديد الأبعاد
-            if (this.image.isBackground) {
-                tempCanvas.width = this.canvas.width;
-                tempCanvas.height = this.canvas.height;
-            } else {
-                // استخدام الأبعاد الأصلية للجودة
-                tempCanvas.width = this.image.naturalWidth || this.image.width;
-                tempCanvas.height = this.image.naturalHeight || this.image.height;
+            // إخفاء الحدود المنقطة مؤقتاً
+            const hadActiveClass = this.currentTextElement?.classList.contains('active');
+            if (hadActiveClass) {
+                this.currentTextElement.classList.remove('active');
             }
             
-            const tempCtx = tempCanvas.getContext('2d');
+            // التقاط الصورة بجودة عالية
+            const canvas = await html2canvas(this.canvasWrapper, {
+                backgroundColor: null,
+                scale: 2, // جودة عالية (2x)
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                imageTimeout: 0,
+                removeContainer: false
+            });
             
-            // تعيين جودة عالية
-            tempCtx.imageSmoothingEnabled = true;
-            tempCtx.imageSmoothingQuality = 'high';
-            tempCtx.textRendering = 'optimizeLegibility';
-            
-            // 2. رسم الخلفية أو الصورة
-            if (this.image.isBackground) {
-                tempCtx.fillStyle = this.image.color;
-                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            } else {
-                // حساب نسب التحجيم للجودة العالية
-                const scaleX = tempCanvas.width / this.image.width;
-                const scaleY = tempCanvas.height / this.image.height;
-                
-                // تطبيق الفلاتر
-                if (this.filters.blurValue > 0) {
-                    const scaledBlur = this.filters.blurValue * Math.max(scaleX, scaleY);
-                    tempCtx.filter = `blur(${scaledBlur}px)`;
-                }
-                
-                tempCtx.drawImage(this.image, 0, 0, tempCanvas.width, tempCanvas.height);
-                tempCtx.filter = 'none';
+            // إعادة الحدود إذا كانت موجودة
+            if (hadActiveClass && this.currentTextElement) {
+                this.currentTextElement.classList.add('active');
             }
             
-            // 3. رسم النص بنفس التنسيق الدقيق
-            if (this.currentTextElement && this.textProps.content) {
-                tempCtx.save();
+            // تحويل إلى blob وتنزيل
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                link.download = `edited-photo-${timestamp}.png`;
+                link.href = url;
                 
-                // حساب معامل التحجيم الدقيق
-                const canvasDisplayRect = this.canvas.getBoundingClientRect();
-                const textDisplayRect = this.currentTextElement.getBoundingClientRect();
+                document.body.appendChild(link);
+                link.click();
                 
-                // نسبة التحويل بين العرض المعروض والعرض الحقيقي
-                const scaleX = tempCanvas.width / canvasDisplayRect.width;
-                const scaleY = tempCanvas.height / canvasDisplayRect.height;
-                
-                // حساب موقع النص بدقة
-                const x = (textDisplayRect.left - canvasDisplayRect.left) * scaleX;
-                const y = (textDisplayRect.top - canvasDisplayRect.top) * scaleY;
-                const width = textDisplayRect.width * scaleX;
-                const height = textDisplayRect.height * scaleY;
-                
-                // الحصول على خصائص النص الحقيقية
-                const computedStyle = window.getComputedStyle(this.currentTextElement);
-                
-                // حجم الخط بعد التحجيم
-                const scaledFontSize = this.textProps.size * scaleX;
-                
-                // تعيين خصائص النص
-                tempCtx.font = `${scaledFontSize}px "${this.textProps.font}"`;
-                tempCtx.fillStyle = this.textProps.color;
-                tempCtx.textAlign = 'center';
-                tempCtx.textBaseline = 'middle';
-                tempCtx.lineJoin = 'round';
-                
-                // تطبيق خلفية النص إذا كانت موجودة
-                if (this.textProps.bgOpacity > 0) {
-                    const hex = this.textProps.bgColor;
-                    const r = parseInt(hex.slice(1, 3), 16);
-                    const g = parseInt(hex.slice(3, 5), 16);
-                    const b = parseInt(hex.slice(5, 7), 16);
-                    const opacity = this.textProps.bgOpacity / 100;
-                    
-                    tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                    tempCtx.fillRect(x, y, width, height);
-                    tempCtx.fillStyle = this.textProps.color;
-                }
-                
-                // تطبيق الظل
-                if (this.textProps.shadowBlur > 0) {
-                    const scaledShadowBlur = this.textProps.shadowBlur * scaleX;
-                    tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                    tempCtx.shadowBlur = scaledShadowBlur;
-                    tempCtx.shadowOffsetX = 4 * scaleX;
-                    tempCtx.shadowOffsetY = 4 * scaleY;
-                }
-                
-                // تطبيق Stroke (الحدود)
-                if (this.textProps.strokeWidth > 0) {
-                    const scaledStrokeWidth = this.textProps.strokeWidth * scaleX;
-                    tempCtx.strokeStyle = this.textProps.strokeColor;
-                    tempCtx.lineWidth = scaledStrokeWidth * 2;
-                    tempCtx.lineJoin = 'round';
-                }
-                
-                // تقسيم النص إلى أسطر (مثل ما يظهر في المحرر)
-                const lines = this.textProps.content.split('\n');
-                const lineHeight = scaledFontSize * 1.3;
-                
-                // حساب بداية الكتابة
-                let currentY = y + (height - (lines.length * lineHeight)) / 2 + lineHeight / 2;
-                
-                // رسم كل سطر
-                lines.forEach((line, index) => {
-                    if (line.trim() === '') return;
-                    
-                    const centerX = x + (width / 2);
-                    
-                    // رسم Stroke أولاً إذا كان موجوداً
-                    if (this.textProps.strokeWidth > 0) {
-                        tempCtx.strokeText(line, centerX, currentY);
-                    }
-                    
-                    // ثم رسم النص نفسه
-                    tempCtx.fillText(line, centerX, currentY);
-                    
-                    currentY += lineHeight;
-                });
-                
-                tempCtx.restore();
-            }
-            
-            // 4. تحميل الصورة بجودة عالية
-            const link = document.createElement('a');
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            link.download = `edited-photo-${timestamp}.png`;
-            
-            // استخدام جودة 1.0 (بدون ضغط)
-            link.href = tempCanvas.toDataURL('image/png', 1.0);
-            
-            // إضافة الرابط والنقر عليه
-            document.body.appendChild(link);
-            link.click();
-            
-            // تنظيف بعد ثانية
-            setTimeout(() => {
-                document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
-            }, 1000);
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 1000);
+            }, 'image/png', 1.0);
             
         } catch (error) {
             console.error('Download error:', error);
@@ -529,111 +426,32 @@ class CanvasEditor {
         }
         
         try {
-            // استخدام نفس منطق التنزيل للحصول على نفس الجودة
-            const tempCanvas = document.createElement('canvas');
+            // استخدام نفس طريقة التنزيل
+            const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
             
-            if (this.image.isBackground) {
-                tempCanvas.width = this.canvas.width;
-                tempCanvas.height = this.canvas.height;
-            } else {
-                tempCanvas.width = this.image.naturalWidth || this.image.width;
-                tempCanvas.height = this.image.naturalHeight || this.image.height;
+            const hadActiveClass = this.currentTextElement?.classList.contains('active');
+            if (hadActiveClass) {
+                this.currentTextElement.classList.remove('active');
             }
             
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.imageSmoothingEnabled = true;
-            tempCtx.imageSmoothingQuality = 'high';
-            tempCtx.textRendering = 'optimizeLegibility';
+            const canvas = await html2canvas(this.canvasWrapper, {
+                backgroundColor: null,
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                imageTimeout: 0,
+                removeContainer: false
+            });
             
-            if (this.image.isBackground) {
-                tempCtx.fillStyle = this.image.color;
-                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            } else {
-                const scaleX = tempCanvas.width / this.image.width;
-                const scaleY = tempCanvas.height / this.image.height;
-                
-                if (this.filters.blurValue > 0) {
-                    const scaledBlur = this.filters.blurValue * Math.max(scaleX, scaleY);
-                    tempCtx.filter = `blur(${scaledBlur}px)`;
-                }
-                
-                tempCtx.drawImage(this.image, 0, 0, tempCanvas.width, tempCanvas.height);
-                tempCtx.filter = 'none';
+            if (hadActiveClass && this.currentTextElement) {
+                this.currentTextElement.classList.add('active');
             }
             
-            if (this.currentTextElement && this.textProps.content) {
-                tempCtx.save();
-                
-                const canvasDisplayRect = this.canvas.getBoundingClientRect();
-                const textDisplayRect = this.currentTextElement.getBoundingClientRect();
-                
-                const scaleX = tempCanvas.width / canvasDisplayRect.width;
-                const scaleY = tempCanvas.height / canvasDisplayRect.height;
-                
-                const x = (textDisplayRect.left - canvasDisplayRect.left) * scaleX;
-                const y = (textDisplayRect.top - canvasDisplayRect.top) * scaleY;
-                const width = textDisplayRect.width * scaleX;
-                const height = textDisplayRect.height * scaleY;
-                
-                const scaledFontSize = this.textProps.size * scaleX;
-                
-                tempCtx.font = `${scaledFontSize}px "${this.textProps.font}"`;
-                tempCtx.fillStyle = this.textProps.color;
-                tempCtx.textAlign = 'center';
-                tempCtx.textBaseline = 'middle';
-                tempCtx.lineJoin = 'round';
-                
-                if (this.textProps.bgOpacity > 0) {
-                    const hex = this.textProps.bgColor;
-                    const r = parseInt(hex.slice(1, 3), 16);
-                    const g = parseInt(hex.slice(3, 5), 16);
-                    const b = parseInt(hex.slice(5, 7), 16);
-                    const opacity = this.textProps.bgOpacity / 100;
-                    
-                    tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                    tempCtx.fillRect(x, y, width, height);
-                    tempCtx.fillStyle = this.textProps.color;
-                }
-                
-                if (this.textProps.shadowBlur > 0) {
-                    const scaledShadowBlur = this.textProps.shadowBlur * scaleX;
-                    tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                    tempCtx.shadowBlur = scaledShadowBlur;
-                    tempCtx.shadowOffsetX = 4 * scaleX;
-                    tempCtx.shadowOffsetY = 4 * scaleY;
-                }
-                
-                if (this.textProps.strokeWidth > 0) {
-                    const scaledStrokeWidth = this.textProps.strokeWidth * scaleX;
-                    tempCtx.strokeStyle = this.textProps.strokeColor;
-                    tempCtx.lineWidth = scaledStrokeWidth * 2;
-                }
-                
-                const lines = this.textProps.content.split('\n');
-                const lineHeight = scaledFontSize * 1.3;
-                
-                let currentY = y + (height - (lines.length * lineHeight)) / 2 + lineHeight / 2;
-                
-                lines.forEach((line, index) => {
-                    if (line.trim() === '') return;
-                    
-                    const centerX = x + (width / 2);
-                    
-                    if (this.textProps.strokeWidth > 0) {
-                        tempCtx.strokeText(line, centerX, currentY);
-                    }
-                    
-                    tempCtx.fillText(line, centerX, currentY);
-                    
-                    currentY += lineHeight;
-                });
-                
-                tempCtx.restore();
-            }
-            
+            // محاولة المشاركة عبر Web Share API
             if (navigator.share && navigator.canShare) {
                 const blob = await new Promise(resolve => {
-                    tempCanvas.toBlob(resolve, 'image/png', 1.0);
+                    canvas.toBlob(resolve, 'image/png', 1.0);
                 });
                 
                 const file = new File([blob], `edited-photo-${Date.now()}.png`, { type: 'image/png' });
@@ -648,6 +466,7 @@ class CanvasEditor {
                 }
             }
             
+            // إذا فشلت المشاركة، استخدم التنزيل
             this.download();
             
         } catch (error) {
