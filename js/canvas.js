@@ -8,6 +8,7 @@ class CanvasEditor {
         
         this.currentTextElement = null;
         this.selectedBgColor = '#FFFFFF';
+        this.selectedRatio = '9:16';
         
         this.textProps = {
             content: '',
@@ -21,9 +22,7 @@ class CanvasEditor {
             bgColor: '#000000',
             isBold: false,
             isItalic: false,
-            flipH: false,
-            flipV: false,
-            maxWidth: 400 // عرض النص الافتراضي
+            maxWidth: 400
         };
         
         this.filters = {
@@ -41,22 +40,29 @@ class CanvasEditor {
         this.canvasWrapper.appendChild(this.canvas);
     }
     
-    createBackground(color) {
+    createBackground(color, ratio) {
         this.selectedBgColor = color;
+        this.selectedRatio = ratio;
         
         const maxWidth = window.innerWidth - 32;
         const maxHeight = window.innerHeight - 300;
         
-        let width = 600;
-        let height = 1000;
+        // حساب الأبعاد حسب النسبة
+        let width, height;
+        const [w, h] = ratio.split(':').map(Number);
         
+        // البدء بعرض أساسي
+        width = 600;
+        height = (width * h) / w;
+        
+        // التأكد من أن الأبعاد تناسب الشاشة
         if (width > maxWidth) {
             width = maxWidth;
-            height = width * (5/3);
+            height = (width * h) / w;
         }
         if (height > maxHeight) {
             height = maxHeight;
-            width = height * (3/5);
+            width = (height * w) / h;
         }
         
         this.canvas.width = width;
@@ -188,24 +194,21 @@ class CanvasEditor {
         textEl.style.wordWrap = 'break-word';
         textEl.style.maxWidth = this.textProps.maxWidth + 'px';
         
-        // إضافة مقابض التحكم في العرض
-        const leftHandle = document.createElement('div');
-        leftHandle.className = 'resize-handle left';
-        const rightHandle = document.createElement('div');
-        rightHandle.className = 'resize-handle right';
-        
-        textEl.appendChild(leftHandle);
-        textEl.appendChild(rightHandle);
+        // إضافة مقبض واحد أسفل النص
+        const bottomHandle = document.createElement('div');
+        bottomHandle.className = 'resize-handle-bottom';
+        textEl.appendChild(bottomHandle);
         
         this.applyTextStyle(textEl);
         this.canvasWrapper.appendChild(textEl);
         this.currentTextElement = textEl;
         
         this.makeDraggable(textEl);
-        this.makeResizable(textEl, leftHandle, rightHandle);
+        this.makeResizable(textEl, bottomHandle);
     }
     
     applyTextStyle(element) {
+        // إزالة النص القديم
         element.childNodes.forEach(node => {
             if (node.nodeType === Node.TEXT_NODE) {
                 element.removeChild(node);
@@ -226,24 +229,6 @@ class CanvasEditor {
         element.style.whiteSpace = 'pre-wrap';
         element.style.wordWrap = 'break-word';
         element.style.maxWidth = this.textProps.maxWidth + 'px';
-        
-        // تطبيق القلب
-        let transforms = [];
-        if (this.textProps.flipH) {
-            transforms.push('scaleX(-1)');
-        }
-        if (this.textProps.flipV) {
-            transforms.push('scaleY(-1)');
-        }
-        
-        const currentTransform = element.style.transform || 'translate(-50%, -50%)';
-        const baseTransform = currentTransform.includes('translate') ? currentTransform.split(')')[0] + ')' : 'translate(-50%, -50%)';
-        
-        if (transforms.length > 0) {
-            element.style.transform = baseTransform + ' ' + transforms.join(' ');
-        } else {
-            element.style.transform = baseTransform;
-        }
         
         if (this.textProps.strokeWidth > 0) {
             element.style.webkitTextStroke = `${this.textProps.strokeWidth}px ${this.textProps.strokeColor}`;
@@ -295,8 +280,7 @@ class CanvasEditor {
         document.addEventListener('touchend', dragEnd);
         
         function dragStart(e) {
-            // تجاهل إذا كان الحدث من المقابض
-            if (e.target.classList.contains('resize-handle')) {
+            if (e.target.classList.contains('resize-handle-bottom')) {
                 return;
             }
             
@@ -341,30 +325,17 @@ class CanvasEditor {
         }
         
         function setTranslate(xPos, yPos, el) {
-            const currentTransform = el.style.transform || '';
-            let baseTransform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
-            
-            // الحفاظ على القلب
-            if (currentTransform.includes('scale')) {
-                const scaleMatch = currentTransform.match(/scale[XY]\([^)]+\)/g);
-                if (scaleMatch) {
-                    baseTransform += ' ' + scaleMatch.join(' ');
-                }
-            }
-            
-            el.style.transform = baseTransform;
+            el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
         }
     }
     
-    makeResizable(element, leftHandle, rightHandle) {
+    makeResizable(element, bottomHandle) {
         let isResizing = false;
         let startX = 0;
         let startWidth = 0;
-        let resizingSide = '';
         
-        const startResize = (e, side) => {
+        const startResize = (e) => {
             isResizing = true;
-            resizingSide = side;
             startX = e.clientX || e.touches[0].clientX;
             startWidth = element.offsetWidth;
             element.classList.add('active');
@@ -379,15 +350,12 @@ class CanvasEditor {
             const currentX = e.clientX || e.touches[0].clientX;
             const diff = currentX - startX;
             
-            let newWidth;
-            if (resizingSide === 'right') {
-                newWidth = startWidth + diff;
-            } else {
-                newWidth = startWidth - diff;
-            }
+            // السحب الأفقي يؤثر على العرض
+            let newWidth = startWidth + diff;
             
             // الحد الأدنى والأقصى للعرض
-            newWidth = Math.max(100, Math.min(newWidth, this.canvas.width - 40));
+            const canvas = document.getElementById('canvas');
+            newWidth = Math.max(100, Math.min(newWidth, canvas.width - 40));
             
             this.textProps.maxWidth = newWidth;
             element.style.maxWidth = newWidth + 'px';
@@ -396,16 +364,12 @@ class CanvasEditor {
         const stopResize = () => {
             if (isResizing) {
                 isResizing = false;
-                resizingSide = '';
                 element.classList.remove('active');
             }
         };
         
-        leftHandle.addEventListener('mousedown', (e) => startResize(e, 'left'));
-        leftHandle.addEventListener('touchstart', (e) => startResize(e, 'left'), { passive: false });
-        
-        rightHandle.addEventListener('mousedown', (e) => startResize(e, 'right'));
-        rightHandle.addEventListener('touchstart', (e) => startResize(e, 'right'), { passive: false });
+        bottomHandle.addEventListener('mousedown', startResize);
+        bottomHandle.addEventListener('touchstart', startResize, { passive: false });
         
         document.addEventListener('mousemove', resize);
         document.addEventListener('touchmove', resize, { passive: false });
@@ -442,8 +406,6 @@ class CanvasEditor {
             bgColor: '#000000',
             isBold: false,
             isItalic: false,
-            flipH: false,
-            flipV: false,
             maxWidth: 400
         };
         
@@ -468,11 +430,8 @@ class CanvasEditor {
             document.getElementById('imageBlur').value = 0;
             document.getElementById('blurValue').textContent = 0;
             
-            // إعادة تعيين أزرار التنسيق
             document.getElementById('boldBtn')?.classList.remove('active');
             document.getElementById('italicBtn')?.classList.remove('active');
-            document.getElementById('flipHBtn')?.classList.remove('active');
-            document.getElementById('flipVBtn')?.classList.remove('active');
         }
     }
     
@@ -490,34 +449,34 @@ class CanvasEditor {
         }
         
         try {
-            // استخدام html2canvas لالتقاط الصورة بأعلى جودة
             const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
             
-            // إخفاء الحدود والمقابض مؤقتاً
             const hadActiveClass = this.currentTextElement?.classList.contains('active');
             if (hadActiveClass) {
                 this.currentTextElement.classList.remove('active');
             }
             
-            // التقاط بجودة عالية جداً (scale: 4 للحصول على أعلى جودة)
+            // التقاط بجودة عالية (scale: 3) مع الحفاظ على موضع النص
             const canvas = await html2canvas(this.canvasWrapper, {
                 backgroundColor: null,
-                scale: 4, // جودة عالية جداً (4x)
+                scale: 3,
                 useCORS: true,
                 allowTaint: true,
                 logging: false,
                 imageTimeout: 0,
                 removeContainer: false,
-                windowWidth: this.canvasWrapper.scrollWidth,
-                windowHeight: this.canvasWrapper.scrollHeight
+                windowWidth: this.canvasWrapper.offsetWidth,
+                windowHeight: this.canvasWrapper.offsetHeight,
+                x: 0,
+                y: 0,
+                scrollX: 0,
+                scrollY: 0
             });
             
-            // إعادة الحدود إذا كانت موجودة
             if (hadActiveClass && this.currentTextElement) {
                 this.currentTextElement.classList.add('active');
             }
             
-            // تحويل إلى blob وتنزيل بجودة قصوى
             canvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
@@ -532,7 +491,7 @@ class CanvasEditor {
                     document.body.removeChild(link);
                     URL.revokeObjectURL(url);
                 }, 1000);
-            }, 'image/png', 1.0); // جودة 100%
+            }, 'image/png', 1.0);
             
         } catch (error) {
             console.error('Download error:', error);
@@ -570,14 +529,18 @@ class CanvasEditor {
             
             const canvas = await html2canvas(this.canvasWrapper, {
                 backgroundColor: null,
-                scale: 4,
+                scale: 3,
                 useCORS: true,
                 allowTaint: true,
                 logging: false,
                 imageTimeout: 0,
                 removeContainer: false,
-                windowWidth: this.canvasWrapper.scrollWidth,
-                windowHeight: this.canvasWrapper.scrollHeight
+                windowWidth: this.canvasWrapper.offsetWidth,
+                windowHeight: this.canvasWrapper.offsetHeight,
+                x: 0,
+                y: 0,
+                scrollX: 0,
+                scrollY: 0
             });
             
             if (hadActiveClass && this.currentTextElement) {
