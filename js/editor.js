@@ -32,7 +32,12 @@ class EditorUI {
         this.imageBlur = document.getElementById('imageBlur');
         this.blurValue = document.getElementById('blurValue');
         
-        // زر إنشاء الخلفية
+        // أزرار التنسيق الجديدة
+        this.boldBtn = document.getElementById('boldBtn');
+        this.italicBtn = document.getElementById('italicBtn');
+        this.flipHBtn = document.getElementById('flipHBtn');
+        this.flipVBtn = document.getElementById('flipVBtn');
+        
         this.createBackgroundBtn = document.getElementById('createBackgroundBtn');
     }
     
@@ -106,6 +111,30 @@ class EditorUI {
             const value = parseInt(e.target.value);
             this.blurValue.textContent = value;
             window.canvasEditor.updateFilter('blurValue', value);
+        });
+        
+        // Bold
+        this.boldBtn.addEventListener('click', () => {
+            const isActive = this.boldBtn.classList.toggle('active');
+            window.canvasEditor.updateTextProp('isBold', isActive);
+        });
+        
+        // Italic
+        this.italicBtn.addEventListener('click', () => {
+            const isActive = this.italicBtn.classList.toggle('active');
+            window.canvasEditor.updateTextProp('isItalic', isActive);
+        });
+        
+        // Flip Horizontal
+        this.flipHBtn.addEventListener('click', () => {
+            const isActive = this.flipHBtn.classList.toggle('active');
+            window.canvasEditor.updateTextProp('flipH', isActive);
+        });
+        
+        // Flip Vertical
+        this.flipVBtn.addEventListener('click', () => {
+            const isActive = this.flipVBtn.classList.toggle('active');
+            window.canvasEditor.updateTextProp('flipV', isActive);
         });
     }
     
@@ -186,7 +215,6 @@ class EditorUI {
             item.className = 'color-item';
             item.style.backgroundColor = color;
             
-            // أول لون يكون مختار افتراضياً
             if (color === '#FFFFFF') {
                 item.classList.add('active');
             }
@@ -201,7 +229,6 @@ class EditorUI {
     }
     
     updateColorUI() {
-        // تحديث واجهة اللون عند تغيير الخلفية
         const colorContainer = document.getElementById('colorScroll');
         if (colorContainer) {
             const currentColor = window.canvasEditor.textProps.color;
