@@ -18,7 +18,12 @@ class CanvasEditor {
             strokeColor: '#FFFFFF',
             shadowBlur: 0,
             bgOpacity: 0,
-            bgColor: '#000000'
+            bgColor: '#000000',
+            isBold: false,
+            isItalic: false,
+            flipH: false,
+            flipV: false,
+            maxWidth: 400 // عرض النص الافتراضي
         };
         
         this.filters = {
@@ -181,21 +186,64 @@ class CanvasEditor {
         textEl.style.transform = 'translate(-50%, -50%)';
         textEl.style.whiteSpace = 'pre-wrap';
         textEl.style.wordWrap = 'break-word';
+        textEl.style.maxWidth = this.textProps.maxWidth + 'px';
+        
+        // إضافة مقابض التحكم في العرض
+        const leftHandle = document.createElement('div');
+        leftHandle.className = 'resize-handle left';
+        const rightHandle = document.createElement('div');
+        rightHandle.className = 'resize-handle right';
+        
+        textEl.appendChild(leftHandle);
+        textEl.appendChild(rightHandle);
         
         this.applyTextStyle(textEl);
         this.canvasWrapper.appendChild(textEl);
         this.currentTextElement = textEl;
         
         this.makeDraggable(textEl);
+        this.makeResizable(textEl, leftHandle, rightHandle);
     }
     
     applyTextStyle(element) {
-        element.textContent = this.textProps.content;
+        element.childNodes.forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                element.removeChild(node);
+            }
+        });
+        
+        const textNode = document.createTextNode(this.textProps.content);
+        element.insertBefore(textNode, element.firstChild);
+        
+        let fontStyle = this.textProps.isItalic ? 'italic' : 'normal';
+        let fontWeight = this.textProps.isBold ? 'bold' : 'normal';
+        
         element.style.fontFamily = `"${this.textProps.font}", sans-serif`;
         element.style.fontSize = `${this.textProps.size}px`;
+        element.style.fontWeight = fontWeight;
+        element.style.fontStyle = fontStyle;
         element.style.color = this.textProps.color;
         element.style.whiteSpace = 'pre-wrap';
         element.style.wordWrap = 'break-word';
+        element.style.maxWidth = this.textProps.maxWidth + 'px';
+        
+        // تطبيق القلب
+        let transforms = [];
+        if (this.textProps.flipH) {
+            transforms.push('scaleX(-1)');
+        }
+        if (this.textProps.flipV) {
+            transforms.push('scaleY(-1)');
+        }
+        
+        const currentTransform = element.style.transform || 'translate(-50%, -50%)';
+        const baseTransform = currentTransform.includes('translate') ? currentTransform.split(')')[0] + ')' : 'translate(-50%, -50%)';
+        
+        if (transforms.length > 0) {
+            element.style.transform = baseTransform + ' ' + transforms.join(' ');
+        } else {
+            element.style.transform = baseTransform;
+        }
         
         if (this.textProps.strokeWidth > 0) {
             element.style.webkitTextStroke = `${this.textProps.strokeWidth}px ${this.textProps.strokeColor}`;
@@ -247,6 +295,11 @@ class CanvasEditor {
         document.addEventListener('touchend', dragEnd);
         
         function dragStart(e) {
+            // تجاهل إذا كان الحدث من المقابض
+            if (e.target.classList.contains('resize-handle')) {
+                return;
+            }
+            
             if (e.type === 'touchstart') {
                 initialX = e.touches[0].clientX - xOffset;
                 initialY = e.touches[0].clientY - yOffset;
@@ -255,7 +308,7 @@ class CanvasEditor {
                 initialY = e.clientY - yOffset;
             }
             
-            if (e.target === element) {
+            if (e.target === element || element.contains(e.target)) {
                 isDragging = true;
                 element.classList.add('active');
             }
@@ -288,8 +341,77 @@ class CanvasEditor {
         }
         
         function setTranslate(xPos, yPos, el) {
-            el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
+            const currentTransform = el.style.transform || '';
+            let baseTransform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
+            
+            // الحفاظ على القلب
+            if (currentTransform.includes('scale')) {
+                const scaleMatch = currentTransform.match(/scale[XY]\([^)]+\)/g);
+                if (scaleMatch) {
+                    baseTransform += ' ' + scaleMatch.join(' ');
+                }
+            }
+            
+            el.style.transform = baseTransform;
         }
+    }
+    
+    makeResizable(element, leftHandle, rightHandle) {
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+        let resizingSide = '';
+        
+        const startResize = (e, side) => {
+            isResizing = true;
+            resizingSide = side;
+            startX = e.clientX || e.touches[0].clientX;
+            startWidth = element.offsetWidth;
+            element.classList.add('active');
+            e.stopPropagation();
+            e.preventDefault();
+        };
+        
+        const resize = (e) => {
+            if (!isResizing) return;
+            
+            e.preventDefault();
+            const currentX = e.clientX || e.touches[0].clientX;
+            const diff = currentX - startX;
+            
+            let newWidth;
+            if (resizingSide === 'right') {
+                newWidth = startWidth + diff;
+            } else {
+                newWidth = startWidth - diff;
+            }
+            
+            // الحد الأدنى والأقصى للعرض
+            newWidth = Math.max(100, Math.min(newWidth, this.canvas.width - 40));
+            
+            this.textProps.maxWidth = newWidth;
+            element.style.maxWidth = newWidth + 'px';
+        };
+        
+        const stopResize = () => {
+            if (isResizing) {
+                isResizing = false;
+                resizingSide = '';
+                element.classList.remove('active');
+            }
+        };
+        
+        leftHandle.addEventListener('mousedown', (e) => startResize(e, 'left'));
+        leftHandle.addEventListener('touchstart', (e) => startResize(e, 'left'), { passive: false });
+        
+        rightHandle.addEventListener('mousedown', (e) => startResize(e, 'right'));
+        rightHandle.addEventListener('touchstart', (e) => startResize(e, 'right'), { passive: false });
+        
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('touchmove', resize, { passive: false });
+        
+        document.addEventListener('mouseup', stopResize);
+        document.addEventListener('touchend', stopResize);
     }
     
     updateTextProp(prop, value) {
@@ -317,7 +439,12 @@ class CanvasEditor {
             strokeColor: '#FFFFFF',
             shadowBlur: 0,
             bgOpacity: 0,
-            bgColor: '#000000'
+            bgColor: '#000000',
+            isBold: false,
+            isItalic: false,
+            flipH: false,
+            flipV: false,
+            maxWidth: 400
         };
         
         this.filters = {
@@ -340,6 +467,12 @@ class CanvasEditor {
             document.getElementById('bgOpacityValue').textContent = 0;
             document.getElementById('imageBlur').value = 0;
             document.getElementById('blurValue').textContent = 0;
+            
+            // إعادة تعيين أزرار التنسيق
+            document.getElementById('boldBtn')?.classList.remove('active');
+            document.getElementById('italicBtn')?.classList.remove('active');
+            document.getElementById('flipHBtn')?.classList.remove('active');
+            document.getElementById('flipVBtn')?.classList.remove('active');
         }
     }
     
@@ -357,24 +490,26 @@ class CanvasEditor {
         }
         
         try {
-            // استخدام html2canvas لالتقاط الصورة كما تظهر بالضبط
+            // استخدام html2canvas لالتقاط الصورة بأعلى جودة
             const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
             
-            // إخفاء الحدود المنقطة مؤقتاً
+            // إخفاء الحدود والمقابض مؤقتاً
             const hadActiveClass = this.currentTextElement?.classList.contains('active');
             if (hadActiveClass) {
                 this.currentTextElement.classList.remove('active');
             }
             
-            // التقاط الصورة بجودة عالية
+            // التقاط بجودة عالية جداً (scale: 4 للحصول على أعلى جودة)
             const canvas = await html2canvas(this.canvasWrapper, {
                 backgroundColor: null,
-                scale: 2, // جودة عالية (2x)
+                scale: 4, // جودة عالية جداً (4x)
                 useCORS: true,
                 allowTaint: true,
                 logging: false,
                 imageTimeout: 0,
-                removeContainer: false
+                removeContainer: false,
+                windowWidth: this.canvasWrapper.scrollWidth,
+                windowHeight: this.canvasWrapper.scrollHeight
             });
             
             // إعادة الحدود إذا كانت موجودة
@@ -382,7 +517,7 @@ class CanvasEditor {
                 this.currentTextElement.classList.add('active');
             }
             
-            // تحويل إلى blob وتنزيل
+            // تحويل إلى blob وتنزيل بجودة قصوى
             canvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
@@ -397,7 +532,7 @@ class CanvasEditor {
                     document.body.removeChild(link);
                     URL.revokeObjectURL(url);
                 }, 1000);
-            }, 'image/png', 1.0);
+            }, 'image/png', 1.0); // جودة 100%
             
         } catch (error) {
             console.error('Download error:', error);
@@ -426,7 +561,6 @@ class CanvasEditor {
         }
         
         try {
-            // استخدام نفس طريقة التنزيل
             const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
             
             const hadActiveClass = this.currentTextElement?.classList.contains('active');
@@ -436,19 +570,20 @@ class CanvasEditor {
             
             const canvas = await html2canvas(this.canvasWrapper, {
                 backgroundColor: null,
-                scale: 2,
+                scale: 4,
                 useCORS: true,
                 allowTaint: true,
                 logging: false,
                 imageTimeout: 0,
-                removeContainer: false
+                removeContainer: false,
+                windowWidth: this.canvasWrapper.scrollWidth,
+                windowHeight: this.canvasWrapper.scrollHeight
             });
             
             if (hadActiveClass && this.currentTextElement) {
                 this.currentTextElement.classList.add('active');
             }
             
-            // محاولة المشاركة عبر Web Share API
             if (navigator.share && navigator.canShare) {
                 const blob = await new Promise(resolve => {
                     canvas.toBlob(resolve, 'image/png', 1.0);
@@ -466,7 +601,6 @@ class CanvasEditor {
                 }
             }
             
-            // إذا فشلت المشاركة، استخدم التنزيل
             this.download();
             
         } catch (error) {
