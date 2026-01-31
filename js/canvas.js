@@ -9,7 +9,6 @@ class CanvasEditor {
         this.currentTextElement = null;
         this.selectedBgColor = '#FFFFFF';
         this.selectedRatio = '9:16';
-        this.textControlMenu = document.getElementById('textControlMenu');
         
         this.textProps = {
             content: '',
@@ -31,8 +30,10 @@ class CanvasEditor {
             blurValue: 0
         };
         
+        this.longPressTimer = null;
+        this.longPressDuration = 800; // 800ms للضغطة المطولة
+        
         this.init();
-        this.initTextControls();
     }
     
     init() {
@@ -41,138 +42,56 @@ class CanvasEditor {
         this.canvasWrapper.className = 'canvas-wrapper';
         container.appendChild(this.canvasWrapper);
         this.canvasWrapper.appendChild(this.canvas);
+        
+        this.initLongPress();
     }
     
-    initTextControls() {
-        // زر القلب
-        document.getElementById('flipTextBtn').addEventListener('click', () => {
-            this.flipText();
-            this.hideTextMenu();
+    initLongPress() {
+        // الضغط المطول على canvas-wrapper للحفظ
+        this.canvasWrapper.addEventListener('touchstart', (e) => {
+            if (!this.image) return;
+            
+            this.longPressTimer = setTimeout(() => {
+                this.download();
+            }, this.longPressDuration);
         });
         
-        // زر النسخ المزدوج
-        document.getElementById('duplicateTextBtn').addEventListener('click', () => {
-            this.duplicateText();
-            this.hideTextMenu();
-        });
-        
-        // زر ضبط العرض
-        document.getElementById('adjustWidthBtn').addEventListener('click', () => {
-            this.showWidthAdjuster();
-        });
-        
-        // إخفاء القائمة عند الضغط خارجها
-        document.addEventListener('click', (e) => {
-            if (!this.textControlMenu.contains(e.target) && 
-                !e.target.closest('.draggable-text')) {
-                this.hideTextMenu();
+        this.canvasWrapper.addEventListener('touchend', () => {
+            if (this.longPressTimer) {
+                clearTimeout(this.longPressTimer);
+                this.longPressTimer = null;
             }
         });
-    }
-    
-    showTextMenu(textElement) {
-        const rect = textElement.getBoundingClientRect();
-        const menuWidth = 230;
         
-        // وضع القائمة فوق النص
-        let top = rect.top - 80;
-        let left = rect.left + (rect.width / 2) - (menuWidth / 2);
+        this.canvasWrapper.addEventListener('touchmove', () => {
+            if (this.longPressTimer) {
+                clearTimeout(this.longPressTimer);
+                this.longPressTimer = null;
+            }
+        });
         
-        // التأكد من عدم الخروج من الشاشة
-        if (top < 60) top = rect.bottom + 10;
-        if (left < 10) left = 10;
-        if (left + menuWidth > window.innerWidth - 10) {
-            left = window.innerWidth - menuWidth - 10;
-        }
-        
-        this.textControlMenu.style.top = top + 'px';
-        this.textControlMenu.style.left = left + 'px';
-        this.textControlMenu.style.display = 'flex';
-    }
-    
-    hideTextMenu() {
-        this.textControlMenu.style.display = 'none';
-    }
-    
-    flipText() {
-        if (!this.currentTextElement) return;
-        this.textProps.flipV = !this.textProps.flipV;
-        this.updateTextElement();
-    }
-    
-    duplicateText() {
-        if (!this.currentTextElement || !this.textProps.content) return;
-        
-        // الحصول على الموضع الحالي
-        const currentTransform = this.currentTextElement.style.transform;
-        const match = currentTransform.match(/translate\(calc\(-50% \+ (-?\d+)px\), calc\(-50% \+ (-?\d+)px\)\)/);
-        
-        let offsetX = 0;
-        let offsetY = 0;
-        if (match) {
-            offsetX = parseInt(match[1]);
-            offsetY = parseInt(match[2]);
-        }
-        
-        // إنشاء نسخة مكررة
-        const clone = this.currentTextElement.cloneNode(true);
-        clone.style.transform = `translate(calc(-50% + ${offsetX + 20}px), calc(-50% + ${offsetY + 20}px))`;
-        this.canvasWrapper.appendChild(clone);
-        
-        // جعل النسخة قابلة للسحب
-        this.makeDraggable(clone);
-    }
-    
-    showWidthAdjuster() {
-        // تبديل حالة التعديل
-        if (this.currentTextElement.classList.contains('adjusting-width')) {
-            this.currentTextElement.classList.remove('adjusting-width');
-            this.hideTextMenu();
-        } else {
-            this.currentTextElement.classList.add('adjusting-width');
-            this.enableWidthAdjustment(this.currentTextElement);
-        }
-    }
-    
-    enableWidthAdjustment(element) {
-        let isAdjusting = false;
-        let startX = 0;
-        let startWidth = 0;
-        
-        const handleStart = (e) => {
-            isAdjusting = true;
-            startX = e.clientX || e.touches[0].clientX;
-            startWidth = element.offsetWidth;
-            e.stopPropagation();
-        };
-        
-        const handleMove = (e) => {
-            if (!isAdjusting) return;
-            e.preventDefault();
+        // للأجهزة التي تستخدم الماوس
+        this.canvasWrapper.addEventListener('mousedown', (e) => {
+            if (!this.image) return;
             
-            const currentX = e.clientX || e.touches[0].clientX;
-            const diff = currentX - startX;
-            let newWidth = startWidth + diff;
-            
-            newWidth = Math.max(50, Math.min(newWidth, this.canvas.width - 20));
-            
-            this.textProps.maxWidth = newWidth;
-            element.style.maxWidth = newWidth + 'px';
-        };
+            this.longPressTimer = setTimeout(() => {
+                this.download();
+            }, this.longPressDuration);
+        });
         
-        const handleEnd = () => {
-            isAdjusting = false;
-            element.classList.remove('adjusting-width');
-            this.hideTextMenu();
-        };
+        this.canvasWrapper.addEventListener('mouseup', () => {
+            if (this.longPressTimer) {
+                clearTimeout(this.longPressTimer);
+                this.longPressTimer = null;
+            }
+        });
         
-        element.addEventListener('mousedown', handleStart);
-        document.addEventListener('mousemove', handleMove);
-        document.addEventListener('mouseup', handleEnd);
-        
-        element.addEventListener('touchstart', handleStart, { passive: false });
-        document.addEventListener('touchmove', handleMove, { passive: false });
-        document.addEventListener('touchend', handleEnd);
+        this.canvasWrapper.addEventListener('mouseleave', () => {
+            if (this.longPressTimer) {
+                clearTimeout(this.longPressTimer);
+                this.longPressTimer = null;
+            }
+        });
     }
     
     createBackground(color, ratio) {
@@ -299,14 +218,29 @@ class CanvasEditor {
         this.ctx.restore();
     }
     
-    updateText(content) {
-        this.textProps.content = content;
+    // دالة لتقسيم النص إلى 4 كلمات في كل سطر
+    formatTextWithLineBreaks(text) {
+        const words = text.trim().split(/\s+/);
+        const lines = [];
         
-        if (content && !this.currentTextElement) {
+        for (let i = 0; i < words.length; i += 4) {
+            const line = words.slice(i, i + 4).join(' ');
+            lines.push(line);
+        }
+        
+        return lines.join('\n');
+    }
+    
+    updateText(content) {
+        // تطبيق التنسيق التلقائي: 4 كلمات في كل سطر
+        const formattedContent = this.formatTextWithLineBreaks(content);
+        this.textProps.content = formattedContent;
+        
+        if (formattedContent && !this.currentTextElement) {
             this.createTextElement();
         } else if (this.currentTextElement) {
             this.updateTextElement();
-        } else if (!content && this.currentTextElement) {
+        } else if (!formattedContent && this.currentTextElement) {
             this.currentTextElement.remove();
             this.currentTextElement = null;
         }
@@ -331,12 +265,6 @@ class CanvasEditor {
         this.currentTextElement = textEl;
         
         this.makeDraggable(textEl);
-        
-        // إظهار قائمة التحكم عند الضغط
-        textEl.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.showTextMenu(textEl);
-        });
     }
     
     applyTextStyle(element) {
@@ -361,7 +289,6 @@ class CanvasEditor {
         element.style.wordWrap = 'break-word';
         element.style.maxWidth = this.textProps.maxWidth + 'px';
         
-        // تطبيق القلب العمودي
         if (this.textProps.flipV) {
             const currentTransform = element.style.transform || 'translate(-50%, -50%)';
             if (!currentTransform.includes('scaleY')) {
@@ -508,8 +435,6 @@ class CanvasEditor {
             this.render();
         }
         
-        this.hideTextMenu();
-        
         if (window.editorUI) {
             document.getElementById('textInput').value = '';
             document.getElementById('fontSize').value = 48;
@@ -542,8 +467,6 @@ class CanvasEditor {
         }
         
         try {
-            this.hideTextMenu();
-            
             const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
             allTexts.forEach(text => text.classList.remove('active'));
             
@@ -608,74 +531,6 @@ class CanvasEditor {
                 message = 'Échec de l\'enregistrement de l\'image. Veuillez réessayer.';
             }
             alert(message);
-        }
-    }
-    
-    async share() {
-        if (!this.image) {
-            const lang = localStorage.getItem('language') || 'en';
-            let message = 'Please upload an image or create background first';
-            if (lang === 'ar') {
-                message = 'الرجاء رفع صورة أو إنشاء خلفية أولاً';
-            } else if (lang === 'fr') {
-                message = 'Veuillez télécharger une image ou créer un fond d\'abord';
-            }
-            alert(message);
-            return;
-        }
-        
-        try {
-            this.hideTextMenu();
-            
-            const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
-            allTexts.forEach(text => text.classList.remove('active'));
-            
-            const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
-            
-            const wrapperRect = this.canvasWrapper.getBoundingClientRect();
-            
-            const canvas = await html2canvas(this.canvasWrapper, {
-                backgroundColor: null,
-                scale: 3,
-                useCORS: true,
-                allowTaint: true,
-                logging: false,
-                imageTimeout: 0,
-                removeContainer: false,
-                width: wrapperRect.width,
-                height: wrapperRect.height,
-                windowWidth: wrapperRect.width,
-                windowHeight: wrapperRect.height,
-                x: 0,
-                y: 0,
-                scrollX: 0,
-                scrollY: -window.scrollY
-            });
-            
-            if (navigator.share && navigator.canShare) {
-                const blob = await new Promise(resolve => {
-                    canvas.toBlob(resolve, 'image/png', 1.0);
-                });
-                
-                const file = new File([blob], `edited-photo-${Date.now()}.png`, { type: 'image/png' });
-                
-                if (navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Edited Image',
-                        text: 'Check out my edited image!'
-                    });
-                    return;
-                }
-            }
-            
-            this.download();
-            
-        } catch (error) {
-            if (error.name !== 'AbortError') {
-                console.error('Share error:', error);
-                this.download();
-            }
         }
     }
 }
