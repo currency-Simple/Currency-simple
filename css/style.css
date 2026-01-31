@@ -91,33 +91,32 @@ body {
     transform: scale(0.9);
 }
 
-/* 5 columns layout for categories */
+/* 5 أعمدة للفئات والصور */
 .categories-grid {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    padding: 4px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
     padding-bottom: 80px;
     align-content: flex-start;
 }
 
 .category-card {
-    width: calc(20% - 4.8px); /* 5 columns */
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
     position: relative;
     background: var(--bg-secondary);
+    aspect-ratio: 3/4;
 }
 
 .category-card img {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
-    min-height: 100px;
     object-fit: cover;
 }
 
@@ -127,13 +126,13 @@ body {
     background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
     display: flex;
     align-items: flex-end;
-    padding: 8px;
+    padding: 6px;
     pointer-events: none;
 }
 
 .category-card .category-name {
     color: #fff;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
@@ -142,26 +141,25 @@ body {
     opacity: 0.8;
 }
 
-/* 5 columns layout for gallery */
 .gallery-grid {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    padding: 4px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
     padding-bottom: 80px;
     align-content: flex-start;
 }
 
 .gallery-item {
-    width: calc(20% - 4.8px); /* 5 columns */
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
     background: var(--bg-secondary);
     transition: transform 0.2s;
+    aspect-ratio: 3/4;
 }
 
 .gallery-item:hover {
@@ -170,8 +168,9 @@ body {
 
 .gallery-item img {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
+    object-fit: cover;
 }
 
 .gallery-item:active {
@@ -180,6 +179,7 @@ body {
 
 .loading {
     width: 100%;
+    grid-column: 1 / -1;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -285,80 +285,43 @@ body {
     outline-offset: 4px;
 }
 
-/* مربع تحكم مع مقابض في الزوايا */
-.resize-box {
-    position: absolute;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    display: none;
-    pointer-events: none;
-}
-
-.draggable-text.active .resize-box {
-    display: block;
-}
-
-.resize-handle {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid #333;
-    border-radius: 50%;
-    pointer-events: auto;
-}
-
-.resize-handle.nw { top: -10px; left: -10px; cursor: nwse-resize; }
-.resize-handle.ne { top: -10px; right: -10px; cursor: nesw-resize; }
-.resize-handle.sw { bottom: -10px; left: -10px; cursor: nesw-resize; }
-.resize-handle.se { bottom: -10px; right: -10px; cursor: nwse-resize; }
-
-/* Text Control Box */
-.text-control-box {
+/* قائمة تحكم النص المنبثقة */
+.text-control-menu {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 12px;
-    display: none;
-    flex-direction: row;
-    gap: 12px;
-    z-index: 1001;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.text-control-box.active {
+    padding: 8px;
     display: flex;
+    gap: 8px;
+    z-index: 2000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .control-btn {
-    width: 50px;
-    height: 50px;
-    background: var(--bg-tertiary);
-    border: 2px solid transparent;
-    border-radius: 10px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
+    gap: 4px;
+    padding: 12px 16px;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: 8px;
     color: var(--text-primary);
+    font-size: 11px;
+    cursor: pointer;
     transition: all 0.3s ease;
-}
-
-.control-btn:hover {
-    background: var(--accent);
-    color: var(--bg-primary);
-    border-color: var(--accent);
-}
-
-.control-btn:active {
-    transform: scale(0.95);
+    min-width: 70px;
 }
 
 .control-btn .material-icons {
     font-size: 24px;
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+    background: var(--accent);
+    color: var(--bg-primary);
 }
 
 .tools-drawer {
@@ -819,34 +782,6 @@ body {
 
 .nav-btn.active {
     color: var(--text-primary);
-}
-
-/* Responsive for larger screens */
-@media (min-width: 768px) {
-    .category-card {
-        width: calc(20% - 4.8px); /* Keep 5 columns on tablets */
-    }
-    .gallery-item {
-        width: calc(20% - 4.8px); /* Keep 5 columns on tablets */
-    }
-}
-
-@media (min-width: 1024px) {
-    .category-card {
-        width: calc(16.666% - 5px); /* 6 columns on desktop */
-    }
-    .gallery-item {
-        width: calc(16.666% - 5px); /* 6 columns on desktop */
-    }
-}
-
-@media (min-width: 1440px) {
-    .category-card {
-        width: calc(14.285% - 5.14px); /* 7 columns on large desktop */
-    }
-    .gallery-item {
-        width: calc(14.285% - 5.14px); /* 7 columns on large desktop */
-    }
 }
 
 ::-webkit-scrollbar {
