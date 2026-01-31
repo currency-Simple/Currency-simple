@@ -9,6 +9,7 @@ class CanvasEditor {
         this.currentTextElement = null;
         this.selectedBgColor = '#FFFFFF';
         this.selectedRatio = '9:16';
+        this.textControlMenu = document.getElementById('textControlMenu');
         
         this.textProps = {
             content: '',
@@ -23,7 +24,7 @@ class CanvasEditor {
             isBold: false,
             isItalic: false,
             maxWidth: 400,
-            isFlipped: false
+            flipV: false
         };
         
         this.filters = {
@@ -31,6 +32,7 @@ class CanvasEditor {
         };
         
         this.init();
+        this.initTextControls();
     }
     
     init() {
@@ -39,18 +41,138 @@ class CanvasEditor {
         this.canvasWrapper.className = 'canvas-wrapper';
         container.appendChild(this.canvasWrapper);
         this.canvasWrapper.appendChild(this.canvas);
+    }
+    
+    initTextControls() {
+        // زر القلب
+        document.getElementById('flipTextBtn').addEventListener('click', () => {
+            this.flipText();
+            this.hideTextMenu();
+        });
         
-        // إخفاء مربع التحكم عند النقر خارج النص
+        // زر النسخ المزدوج
+        document.getElementById('duplicateTextBtn').addEventListener('click', () => {
+            this.duplicateText();
+            this.hideTextMenu();
+        });
+        
+        // زر ضبط العرض
+        document.getElementById('adjustWidthBtn').addEventListener('click', () => {
+            this.showWidthAdjuster();
+        });
+        
+        // إخفاء القائمة عند الضغط خارجها
         document.addEventListener('click', (e) => {
-            const controlBox = document.getElementById('textControlBox');
-            const isTextElement = e.target.classList.contains('draggable-text') || 
-                                 e.target.closest('.draggable-text');
-            const isControlBox = e.target.closest('.text-control-box');
-            
-            if (!isTextElement && !isControlBox && controlBox) {
-                controlBox.classList.remove('active');
+            if (!this.textControlMenu.contains(e.target) && 
+                !e.target.closest('.draggable-text')) {
+                this.hideTextMenu();
             }
         });
+    }
+    
+    showTextMenu(textElement) {
+        const rect = textElement.getBoundingClientRect();
+        const menuWidth = 230;
+        
+        // وضع القائمة فوق النص
+        let top = rect.top - 80;
+        let left = rect.left + (rect.width / 2) - (menuWidth / 2);
+        
+        // التأكد من عدم الخروج من الشاشة
+        if (top < 60) top = rect.bottom + 10;
+        if (left < 10) left = 10;
+        if (left + menuWidth > window.innerWidth - 10) {
+            left = window.innerWidth - menuWidth - 10;
+        }
+        
+        this.textControlMenu.style.top = top + 'px';
+        this.textControlMenu.style.left = left + 'px';
+        this.textControlMenu.style.display = 'flex';
+    }
+    
+    hideTextMenu() {
+        this.textControlMenu.style.display = 'none';
+    }
+    
+    flipText() {
+        if (!this.currentTextElement) return;
+        this.textProps.flipV = !this.textProps.flipV;
+        this.updateTextElement();
+    }
+    
+    duplicateText() {
+        if (!this.currentTextElement || !this.textProps.content) return;
+        
+        // الحصول على الموضع الحالي
+        const currentTransform = this.currentTextElement.style.transform;
+        const match = currentTransform.match(/translate\(calc\(-50% \+ (-?\d+)px\), calc\(-50% \+ (-?\d+)px\)\)/);
+        
+        let offsetX = 0;
+        let offsetY = 0;
+        if (match) {
+            offsetX = parseInt(match[1]);
+            offsetY = parseInt(match[2]);
+        }
+        
+        // إنشاء نسخة مكررة
+        const clone = this.currentTextElement.cloneNode(true);
+        clone.style.transform = `translate(calc(-50% + ${offsetX + 20}px), calc(-50% + ${offsetY + 20}px))`;
+        this.canvasWrapper.appendChild(clone);
+        
+        // جعل النسخة قابلة للسحب
+        this.makeDraggable(clone);
+    }
+    
+    showWidthAdjuster() {
+        // تبديل حالة التعديل
+        if (this.currentTextElement.classList.contains('adjusting-width')) {
+            this.currentTextElement.classList.remove('adjusting-width');
+            this.hideTextMenu();
+        } else {
+            this.currentTextElement.classList.add('adjusting-width');
+            this.enableWidthAdjustment(this.currentTextElement);
+        }
+    }
+    
+    enableWidthAdjustment(element) {
+        let isAdjusting = false;
+        let startX = 0;
+        let startWidth = 0;
+        
+        const handleStart = (e) => {
+            isAdjusting = true;
+            startX = e.clientX || e.touches[0].clientX;
+            startWidth = element.offsetWidth;
+            e.stopPropagation();
+        };
+        
+        const handleMove = (e) => {
+            if (!isAdjusting) return;
+            e.preventDefault();
+            
+            const currentX = e.clientX || e.touches[0].clientX;
+            const diff = currentX - startX;
+            let newWidth = startWidth + diff;
+            
+            newWidth = Math.max(50, Math.min(newWidth, this.canvas.width - 20));
+            
+            this.textProps.maxWidth = newWidth;
+            element.style.maxWidth = newWidth + 'px';
+        };
+        
+        const handleEnd = () => {
+            isAdjusting = false;
+            element.classList.remove('adjusting-width');
+            this.hideTextMenu();
+        };
+        
+        element.addEventListener('mousedown', handleStart);
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('mouseup', handleEnd);
+        
+        element.addEventListener('touchstart', handleStart, { passive: false });
+        document.addEventListener('touchmove', handleMove, { passive: false });
+        document.addEventListener('touchend', handleEnd);
     }
     
     createBackground(color, ratio) {
@@ -204,168 +326,17 @@ class CanvasEditor {
         textEl.style.wordWrap = 'break-word';
         textEl.style.maxWidth = this.textProps.maxWidth + 'px';
         
-        // مربع تحكم مع مقابض في الزوايا
-        const resizeBox = document.createElement('div');
-        resizeBox.className = 'resize-box';
-        
-        const handleNW = document.createElement('div');
-        handleNW.className = 'resize-handle nw';
-        const handleNE = document.createElement('div');
-        handleNE.className = 'resize-handle ne';
-        const handleSW = document.createElement('div');
-        handleSW.className = 'resize-handle sw';
-        const handleSE = document.createElement('div');
-        handleSE.className = 'resize-handle se';
-        
-        resizeBox.appendChild(handleNW);
-        resizeBox.appendChild(handleNE);
-        resizeBox.appendChild(handleSW);
-        resizeBox.appendChild(handleSE);
-        textEl.appendChild(resizeBox);
-        
         this.applyTextStyle(textEl);
         this.canvasWrapper.appendChild(textEl);
         this.currentTextElement = textEl;
         
         this.makeDraggable(textEl);
-        this.makeResizable(textEl, resizeBox);
-        this.addTextClickHandler(textEl);
-    }
-    
-    addTextClickHandler(element) {
-        element.addEventListener('click', (e) => {
+        
+        // إظهار قائمة التحكم عند الضغط
+        textEl.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.showTextControlBox();
+            this.showTextMenu(textEl);
         });
-    }
-    
-    showTextControlBox() {
-        const controlBox = document.getElementById('textControlBox');
-        if (controlBox) {
-            controlBox.classList.add('active');
-        }
-    }
-    
-    hideTextControlBox() {
-        const controlBox = document.getElementById('textControlBox');
-        if (controlBox) {
-            controlBox.classList.remove('active');
-        }
-    }
-    
-    flipText() {
-        if (!this.currentTextElement) return;
-        
-        this.textProps.isFlipped = !this.textProps.isFlipped;
-        
-        if (this.textProps.isFlipped) {
-            this.currentTextElement.style.transform += ' scaleX(-1)';
-        } else {
-            this.currentTextElement.style.transform = this.currentTextElement.style.transform.replace(' scaleX(-1)', '');
-        }
-    }
-    
-    duplicateText() {
-        if (!this.currentTextElement) return;
-        
-        const originalRect = this.currentTextElement.getBoundingClientRect();
-        const wrapperRect = this.canvasWrapper.getBoundingClientRect();
-        
-        // حفظ النص الحالي
-        const currentContent = this.textProps.content;
-        
-        // إنشاء نص جديد بنفس الخصائص
-        const newTextEl = document.createElement('div');
-        newTextEl.className = 'draggable-text';
-        
-        // نسخ جميع الأنماط
-        newTextEl.style.cssText = this.currentTextElement.style.cssText;
-        
-        // تحديد موضع النص الجديد (إزاحة قليلة)
-        const offsetX = 20;
-        const offsetY = 20;
-        
-        const currentLeft = parseFloat(this.currentTextElement.style.left) || 50;
-        const currentTop = parseFloat(this.currentTextElement.style.top) || 50;
-        
-        newTextEl.style.left = (currentLeft + (offsetX / wrapperRect.width * 100)) + '%';
-        newTextEl.style.top = (currentTop + (offsetY / wrapperRect.height * 100)) + '%';
-        
-        // إنشاء مربع التحكم
-        const resizeBox = document.createElement('div');
-        resizeBox.className = 'resize-box';
-        
-        const handleNW = document.createElement('div');
-        handleNW.className = 'resize-handle nw';
-        const handleNE = document.createElement('div');
-        handleNE.className = 'resize-handle ne';
-        const handleSW = document.createElement('div');
-        handleSW.className = 'resize-handle sw';
-        const handleSE = document.createElement('div');
-        handleSE.className = 'resize-handle se';
-        
-        resizeBox.appendChild(handleNW);
-        resizeBox.appendChild(handleNE);
-        resizeBox.appendChild(handleSW);
-        resizeBox.appendChild(handleSE);
-        
-        // نسخ المحتوى النصي
-        const textNode = document.createTextNode(currentContent);
-        newTextEl.appendChild(textNode);
-        newTextEl.appendChild(resizeBox);
-        
-        this.canvasWrapper.appendChild(newTextEl);
-        
-        this.makeDraggable(newTextEl);
-        this.makeResizable(newTextEl, resizeBox);
-        this.addTextClickHandler(newTextEl);
-        
-        // تحديث النص الحالي
-        this.currentTextElement = newTextEl;
-    }
-    
-    expandText() {
-        if (!this.currentTextElement) return;
-        
-        // زيادة عرض النص بمقدار 50 بكسل
-        this.textProps.maxWidth += 50;
-        
-        // التأكد من عدم تجاوز عرض الكانفاس
-        const maxAllowed = this.canvas.width - 40;
-        if (this.textProps.maxWidth > maxAllowed) {
-            this.textProps.maxWidth = maxAllowed;
-        }
-        
-        this.currentTextElement.style.maxWidth = this.textProps.maxWidth + 'px';
-        this.updateResizeBox();
-    }
-    
-    shrinkText() {
-        if (!this.currentTextElement) return;
-        
-        // تقليل عرض النص بمقدار 50 بكسل
-        this.textProps.maxWidth -= 50;
-        
-        // التأكد من الحد الأدنى
-        if (this.textProps.maxWidth < 100) {
-            this.textProps.maxWidth = 100;
-        }
-        
-        this.currentTextElement.style.maxWidth = this.textProps.maxWidth + 'px';
-        this.updateResizeBox();
-    }
-    
-    updateResizeBox() {
-        if (!this.currentTextElement) return;
-        
-        const resizeBox = this.currentTextElement.querySelector('.resize-box');
-        if (resizeBox) {
-            setTimeout(() => {
-                const rect = this.currentTextElement.getBoundingClientRect();
-                resizeBox.style.width = rect.width + 'px';
-                resizeBox.style.height = rect.height + 'px';
-            }, 10);
-        }
     }
     
     applyTextStyle(element) {
@@ -389,6 +360,16 @@ class CanvasEditor {
         element.style.whiteSpace = 'pre-wrap';
         element.style.wordWrap = 'break-word';
         element.style.maxWidth = this.textProps.maxWidth + 'px';
+        
+        // تطبيق القلب العمودي
+        if (this.textProps.flipV) {
+            const currentTransform = element.style.transform || 'translate(-50%, -50%)';
+            if (!currentTransform.includes('scaleY')) {
+                element.style.transform = currentTransform + ' scaleY(-1)';
+            }
+        } else {
+            element.style.transform = element.style.transform.replace(' scaleY(-1)', '');
+        }
         
         if (this.textProps.strokeWidth > 0) {
             element.style.webkitTextStroke = `${this.textProps.strokeWidth}px ${this.textProps.strokeColor}`;
@@ -417,18 +398,6 @@ class CanvasEditor {
             element.style.backgroundColor = 'transparent';
             element.style.padding = '10px 0';
         }
-        
-        // تحديث مربع التحكم
-        const resizeBox = element.querySelector('.resize-box');
-        if (resizeBox) {
-            setTimeout(() => {
-                const rect = element.getBoundingClientRect();
-                resizeBox.style.width = rect.width + 'px';
-                resizeBox.style.height = rect.height + 'px';
-                resizeBox.style.left = '0';
-                resizeBox.style.top = '0';
-            }, 10);
-        }
     }
     
     updateTextElement() {
@@ -452,10 +421,6 @@ class CanvasEditor {
         document.addEventListener('touchend', dragEnd);
         
         function dragStart(e) {
-            if (e.target.classList.contains('resize-handle') || e.target.classList.contains('resize-box')) {
-                return;
-            }
-            
             if (e.type === 'touchstart') {
                 initialX = e.touches[0].clientX - xOffset;
                 initialY = e.touches[0].clientY - yOffset;
@@ -497,76 +462,9 @@ class CanvasEditor {
         }
         
         function setTranslate(xPos, yPos, el) {
-            const baseTransform = 'translate(-50%, -50%)';
-            const posTransform = `translate(${xPos}px, ${yPos}px)`;
-            const flipTransform = window.canvasEditor.textProps.isFlipped ? ' scaleX(-1)' : '';
-            el.style.transform = `${baseTransform} ${posTransform}${flipTransform}`;
-        }
-    }
-    
-    makeResizable(element, resizeBox) {
-        const handles = resizeBox.querySelectorAll('.resize-handle');
-        let isResizing = false;
-        let startX, startY, startWidth, startHeight, currentHandle;
-        
-        handles.forEach(handle => {
-            handle.addEventListener('mousedown', startResize);
-            handle.addEventListener('touchstart', startResize, { passive: false });
-        });
-        
-        function startResize(e) {
-            isResizing = true;
-            currentHandle = e.target;
-            startX = e.clientX || e.touches[0].clientX;
-            startY = e.clientY || e.touches[0].clientY;
-            startWidth = element.offsetWidth;
-            startHeight = element.offsetHeight;
-            element.classList.add('active');
-            e.stopPropagation();
-            e.preventDefault();
-        }
-        
-        document.addEventListener('mousemove', resize);
-        document.addEventListener('touchmove', resize, { passive: false });
-        document.addEventListener('mouseup', stopResize);
-        document.addEventListener('touchend', stopResize);
-        
-        function resize(e) {
-            if (!isResizing) return;
-            e.preventDefault();
-            
-            const currentX = e.clientX || e.touches[0].clientX;
-            const currentY = e.clientY || e.touches[0].clientY;
-            const diffX = currentX - startX;
-            const diffY = currentY - startY;
-            
-            let newWidth = startWidth;
-            
-            if (currentHandle.classList.contains('ne') || currentHandle.classList.contains('se')) {
-                newWidth = startWidth + diffX;
-            } else if (currentHandle.classList.contains('nw') || currentHandle.classList.contains('sw')) {
-                newWidth = startWidth - diffX;
-            }
-            
-            const canvas = document.getElementById('canvas');
-            newWidth = Math.max(100, Math.min(newWidth, canvas.width - 40));
-            
-            window.canvasEditor.textProps.maxWidth = newWidth;
-            element.style.maxWidth = newWidth + 'px';
-            
-            setTimeout(() => {
-                const rect = element.getBoundingClientRect();
-                resizeBox.style.width = rect.width + 'px';
-                resizeBox.style.height = rect.height + 'px';
-            }, 0);
-        }
-        
-        function stopResize() {
-            if (isResizing) {
-                isResizing = false;
-                currentHandle = null;
-                element.classList.remove('active');
-            }
+            const baseTransform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
+            const scaleTransform = el.style.transform.includes('scaleY') ? ' scaleY(-1)' : '';
+            el.style.transform = baseTransform + scaleTransform;
         }
     }
     
@@ -599,7 +497,7 @@ class CanvasEditor {
             isBold: false,
             isItalic: false,
             maxWidth: 400,
-            isFlipped: false
+            flipV: false
         };
         
         this.filters = {
@@ -610,7 +508,7 @@ class CanvasEditor {
             this.render();
         }
         
-        this.hideTextControlBox();
+        this.hideTextMenu();
         
         if (window.editorUI) {
             document.getElementById('textInput').value = '';
@@ -644,15 +542,12 @@ class CanvasEditor {
         }
         
         try {
+            this.hideTextMenu();
+            
+            const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
+            allTexts.forEach(text => text.classList.remove('active'));
+            
             const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
-            
-            const hadActiveClass = this.currentTextElement?.classList.contains('active');
-            if (hadActiveClass) {
-                this.currentTextElement.classList.remove('active');
-            }
-            
-            // إخفاء مربع التحكم قبل التصدير
-            this.hideTextControlBox();
             
             const wrapperRect = this.canvasWrapper.getBoundingClientRect();
             
@@ -674,24 +569,33 @@ class CanvasEditor {
                 scrollY: -window.scrollY
             });
             
-            if (hadActiveClass && this.currentTextElement) {
-                this.currentTextElement.classList.add('active');
-            }
-            
             canvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                link.download = `edited-photo-${timestamp}.png`;
-                link.href = url;
+                const filename = `edited-photo-${timestamp}.png`;
                 
-                document.body.appendChild(link);
-                link.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                }, 1000);
+                // محاولة استخدام Android WebView Interface
+                if (window.Android && window.Android.saveImage) {
+                    const reader = new FileReader();
+                    reader.onloadend = function() {
+                        const base64data = reader.result.split(',')[1];
+                        window.Android.saveImage(base64data, filename);
+                    };
+                    reader.readAsDataURL(blob);
+                } else {
+                    // التنزيل العادي للمتصفح
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = url;
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }, 1000);
+                }
             }, 'image/png', 1.0);
             
         } catch (error) {
@@ -721,15 +625,12 @@ class CanvasEditor {
         }
         
         try {
+            this.hideTextMenu();
+            
+            const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
+            allTexts.forEach(text => text.classList.remove('active'));
+            
             const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
-            
-            const hadActiveClass = this.currentTextElement?.classList.contains('active');
-            if (hadActiveClass) {
-                this.currentTextElement.classList.remove('active');
-            }
-            
-            // إخفاء مربع التحكم قبل التصدير
-            this.hideTextControlBox();
             
             const wrapperRect = this.canvasWrapper.getBoundingClientRect();
             
@@ -750,10 +651,6 @@ class CanvasEditor {
                 scrollX: 0,
                 scrollY: -window.scrollY
             });
-            
-            if (hadActiveClass && this.currentTextElement) {
-                this.currentTextElement.classList.add('active');
-            }
             
             if (navigator.share && navigator.canShare) {
                 const blob = await new Promise(resolve => {
