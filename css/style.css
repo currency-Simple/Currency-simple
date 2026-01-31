@@ -285,45 +285,6 @@ body {
     outline-offset: 4px;
 }
 
-/* قائمة تحكم النص المنبثقة */
-.text-control-menu {
-    position: fixed;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 8px;
-    display: flex;
-    gap: 8px;
-    z-index: 2000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.control-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 12px 16px;
-    background: var(--bg-tertiary);
-    border: none;
-    border-radius: 8px;
-    color: var(--text-primary);
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    min-width: 70px;
-}
-
-.control-btn .material-icons {
-    font-size: 24px;
-}
-
-.control-btn:active {
-    transform: scale(0.95);
-    background: var(--accent);
-    color: var(--bg-primary);
-}
-
 .tools-drawer {
     position: fixed;
     bottom: 60px;
