@@ -40,18 +40,6 @@ class App {
             }
         });
         
-        document.getElementById('downloadBtn').addEventListener('click', () => {
-            if (window.canvasEditor) {
-                window.canvasEditor.download();
-            }
-        });
-        
-        document.getElementById('shareBtn').addEventListener('click', () => {
-            if (window.canvasEditor) {
-                window.canvasEditor.share();
-            }
-        });
-        
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const theme = btn.dataset.theme;
