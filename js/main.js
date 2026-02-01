@@ -40,6 +40,12 @@ class App {
             }
         });
         
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            if (window.canvasEditor) {
+                window.canvasEditor.download();
+            }
+        });
+        
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const theme = btn.dataset.theme;
