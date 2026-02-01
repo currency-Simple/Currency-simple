@@ -453,6 +453,103 @@ class CanvasEditor {
         }
     }
     
+    async downloadDirectCanvas() {
+        // طريقة بديلة: رسم النص مباشرة على Canvas بدون استخدام html2canvas
+        try {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = this.canvas.width;
+            tempCanvas.height = this.canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // رسم الخلفية أو الصورة
+            if (this.image.isBackground) {
+                tempCtx.fillStyle = this.image.color;
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            } else {
+                if (this.filters.blurValue > 0) {
+                    tempCtx.filter = `blur(${this.filters.blurValue}px)`;
+                }
+                tempCtx.drawImage(this.image, 0, 0, tempCanvas.width, tempCanvas.height);
+                tempCtx.filter = 'none';
+            }
+            
+            // رسم النص إذا كان موجوداً
+            if (this.currentTextElement && this.textProps.content) {
+                const rect = this.currentTextElement.getBoundingClientRect();
+                const canvasRect = this.canvas.getBoundingClientRect();
+                
+                // حساب موضع النص النسبي
+                const x = (rect.left - canvasRect.left + rect.width / 2) * (this.canvas.width / canvasRect.width);
+                const y = (rect.top - canvasRect.top + rect.height / 2) * (this.canvas.height / canvasRect.height);
+                
+                // تطبيق خلفية النص
+                if (this.textProps.bgOpacity > 0) {
+                    const hex = this.textProps.bgColor;
+                    const r = parseInt(hex.slice(1, 3), 16);
+                    const g = parseInt(hex.slice(3, 5), 16);
+                    const b = parseInt(hex.slice(5, 7), 16);
+                    const opacity = this.textProps.bgOpacity / 100;
+                    
+                    tempCtx.save();
+                    tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                    
+                    const lines = this.textProps.content.split('\n');
+                    const fontSize = this.textProps.size * (this.canvas.width / canvasRect.width);
+                    tempCtx.font = `${this.textProps.isBold ? 'bold' : 'normal'} ${this.textProps.isItalic ? 'italic' : 'normal'} ${fontSize}px "${this.textProps.font}"`;
+                    
+                    const lineHeight = fontSize * 1.3;
+                    const maxWidth = Math.max(...lines.map(line => tempCtx.measureText(line).width));
+                    const totalHeight = lines.length * lineHeight;
+                    
+                    tempCtx.fillRect(x - maxWidth / 2 - 10, y - totalHeight / 2 - 10, maxWidth + 20, totalHeight + 20);
+                    tempCtx.restore();
+                }
+                
+                // رسم النص
+                tempCtx.save();
+                tempCtx.textAlign = 'center';
+                tempCtx.textBaseline = 'middle';
+                
+                const fontSize = this.textProps.size * (this.canvas.width / canvasRect.width);
+                tempCtx.font = `${this.textProps.isBold ? 'bold' : 'normal'} ${this.textProps.isItalic ? 'italic' : 'normal'} ${fontSize}px "${this.textProps.font}"`;
+                tempCtx.fillStyle = this.textProps.color;
+                
+                // تطبيق الحدود
+                if (this.textProps.strokeWidth > 0) {
+                    tempCtx.strokeStyle = this.textProps.strokeColor;
+                    tempCtx.lineWidth = this.textProps.strokeWidth * (this.canvas.width / canvasRect.width);
+                }
+                
+                // تطبيق الظل
+                if (this.textProps.shadowBlur > 0) {
+                    tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                    tempCtx.shadowBlur = this.textProps.shadowBlur;
+                    tempCtx.shadowOffsetX = 4;
+                    tempCtx.shadowOffsetY = 4;
+                }
+                
+                const lines = this.textProps.content.split('\n');
+                const lineHeight = fontSize * 1.3;
+                const startY = y - ((lines.length - 1) * lineHeight) / 2;
+                
+                lines.forEach((line, index) => {
+                    const lineY = startY + (index * lineHeight);
+                    if (this.textProps.strokeWidth > 0) {
+                        tempCtx.strokeText(line, x, lineY);
+                    }
+                    tempCtx.fillText(line, x, lineY);
+                });
+                
+                tempCtx.restore();
+            }
+            
+            return tempCanvas;
+        } catch (error) {
+            console.error('Direct canvas method failed:', error);
+            return null;
+        }
+    }
+    
     async download() {
         if (!this.image) {
             const lang = localStorage.getItem('language') || 'en';
@@ -466,50 +563,83 @@ class CanvasEditor {
             return;
         }
         
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0] + '-' + Date.now();
+        const filename = `edited-photo-${timestamp}.png`;
+        let finalCanvas = null;
+        
         try {
-            const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
-            allTexts.forEach(text => text.classList.remove('active'));
-            
-            const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
-            
-            const wrapperRect = this.canvasWrapper.getBoundingClientRect();
-            
-            const canvas = await html2canvas(this.canvasWrapper, {
-                backgroundColor: null,
-                scale: 3,
-                useCORS: true,
-                allowTaint: true,
-                logging: false,
-                imageTimeout: 0,
-                removeContainer: false,
-                width: wrapperRect.width,
-                height: wrapperRect.height,
-                windowWidth: wrapperRect.width,
-                windowHeight: wrapperRect.height,
-                x: 0,
-                y: 0,
-                scrollX: 0,
-                scrollY: -window.scrollY
-            });
-            
-            canvas.toBlob((blob) => {
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const filename = `edited-photo-${timestamp}.png`;
+            // طريقة 1: استخدام html2canvas (الأفضل للنصوص المعقدة)
+            try {
+                const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
+                allTexts.forEach(text => text.classList.remove('active'));
                 
-                // محاولة استخدام Android WebView Interface
-                if (window.Android && window.Android.saveImage) {
-                    const reader = new FileReader();
-                    reader.onloadend = function() {
-                        const base64data = reader.result.split(',')[1];
-                        window.Android.saveImage(base64data, filename);
-                    };
-                    reader.readAsDataURL(blob);
-                } else {
-                    // التنزيل العادي للمتصفح
+                const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
+                
+                const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+                
+                finalCanvas = await html2canvas(this.canvasWrapper, {
+                    backgroundColor: null,
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false,
+                    imageTimeout: 0,
+                    removeContainer: false,
+                    width: wrapperRect.width,
+                    height: wrapperRect.height,
+                    windowWidth: wrapperRect.width,
+                    windowHeight: wrapperRect.height,
+                    x: 0,
+                    y: 0,
+                    scrollX: 0,
+                    scrollY: -window.scrollY
+                });
+                
+                console.log('Using html2canvas method');
+            } catch (html2canvasError) {
+                console.warn('html2canvas failed, trying direct canvas method...', html2canvasError);
+                
+                // طريقة 2: رسم مباشر على Canvas
+                finalCanvas = await this.downloadDirectCanvas();
+                if (finalCanvas) {
+                    console.log('Using direct canvas method');
+                }
+            }
+            
+            if (!finalCanvas) {
+                throw new Error('Failed to create canvas');
+            }
+            
+            // محاولة التنزيل بطرق مختلفة
+            
+            // طريقة A: Android WebView Interface
+            if (window.Android && typeof window.Android.saveImage === 'function') {
+                try {
+                    const dataUrl = finalCanvas.toDataURL('image/png', 1.0);
+                    const base64data = dataUrl.split(',')[1];
+                    window.Android.saveImage(base64data, filename);
+                    console.log('Downloaded via Android Interface');
+                    return;
+                } catch (androidError) {
+                    console.warn('Android method failed, trying next method...', androidError);
+                }
+            }
+            
+            // طريقة B: استخدام Blob مع createObjectURL
+            try {
+                const blob = await new Promise((resolve, reject) => {
+                    finalCanvas.toBlob(blob => {
+                        if (blob) resolve(blob);
+                        else reject(new Error('Blob creation failed'));
+                    }, 'image/png', 1.0);
+                });
+                
+                if (blob) {
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.download = filename;
                     link.href = url;
+                    link.style.display = 'none';
                     
                     document.body.appendChild(link);
                     link.click();
@@ -518,17 +648,142 @@ class CanvasEditor {
                         document.body.removeChild(link);
                         URL.revokeObjectURL(url);
                     }, 1000);
+                    
+                    console.log('Downloaded via Blob method');
+                    return;
                 }
-            }, 'image/png', 1.0);
+            } catch (blobError) {
+                console.warn('Blob method failed, trying next method...', blobError);
+            }
+            
+            // طريقة C: استخدام toDataURL مباشرة
+            try {
+                const dataUrl = finalCanvas.toDataURL('image/png', 1.0);
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                link.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                }, 1000);
+                
+                console.log('Downloaded via DataURL method');
+                return;
+            } catch (dataUrlError) {
+                console.warn('DataURL method failed, trying next method...', dataUrlError);
+            }
+            
+            // طريقة D: فتح الصورة في نافذة جديدة للحفظ اليدوي
+            try {
+                const dataUrl = finalCanvas.toDataURL('image/png', 1.0);
+                const newWindow = window.open('', '_blank');
+                if (newWindow) {
+                    newWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>Download Image - ${filename}</title>
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <style>
+                                    body {
+                                        margin: 0;
+                                        padding: 20px;
+                                        background: #000;
+                                        display: flex;
+                                        flex-direction: column;
+                                        align-items: center;
+                                        justify-content: center;
+                                        min-height: 100vh;
+                                        font-family: Arial, sans-serif;
+                                    }
+                                    img {
+                                        max-width: 90%;
+                                        height: auto;
+                                        box-shadow: 0 4px 20px rgba(255,255,255,0.3);
+                                        margin-bottom: 20px;
+                                    }
+                                    .instructions {
+                                        color: white;
+                                        text-align: center;
+                                        margin: 20px 0;
+                                    }
+                                    .download-btn {
+                                        display: inline-block;
+                                        margin: 10px;
+                                        padding: 15px 30px;
+                                        background: #4CAF50;
+                                        color: white;
+                                        text-decoration: none;
+                                        border-radius: 5px;
+                                        font-size: 16px;
+                                        cursor: pointer;
+                                        border: none;
+                                    }
+                                    .download-btn:hover {
+                                        background: #45a049;
+                                    }
+                                </style>
+                            </head>
+                            <body>
+                                <img src="${dataUrl}" alt="Edited Image" id="downloadImage"/>
+                                <div class="instructions">
+                                    <p><strong>Method 1:</strong> Right-click on the image and select "Save Image As..."</p>
+                                    <p><strong>Method 2:</strong> Click the download button below</p>
+                                    <p><strong>Method 3:</strong> Long press the image (mobile) and save</p>
+                                </div>
+                                <a href="${dataUrl}" download="${filename}" class="download-btn">💾 Download Image</a>
+                                <button onclick="window.close()" class="download-btn" style="background: #f44336;">✖ Close</button>
+                            </body>
+                        </html>
+                    `);
+                    newWindow.document.close();
+                    console.log('Opened in new window for manual download');
+                    return;
+                }
+            } catch (windowError) {
+                console.warn('New window method failed...', windowError);
+            }
+            
+            // طريقة E: نسخ إلى الحافظة كخيار أخير
+            try {
+                const blob = await new Promise(resolve => {
+                    finalCanvas.toBlob(resolve, 'image/png', 1.0);
+                });
+                
+                if (navigator.clipboard && blob) {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]);
+                    
+                    const lang = localStorage.getItem('language') || 'en';
+                    let message = 'Image copied to clipboard! You can paste it anywhere.';
+                    if (lang === 'ar') {
+                        message = 'تم نسخ الصورة إلى الحافظة! يمكنك لصقها في أي مكان.';
+                    } else if (lang === 'fr') {
+                        message = 'Image copiée dans le presse-papiers! Vous pouvez la coller n\'importe où.';
+                    }
+                    alert(message);
+                    console.log('Copied to clipboard');
+                    return;
+                }
+            } catch (clipboardError) {
+                console.warn('Clipboard method failed...', clipboardError);
+            }
+            
+            // إذا فشلت جميع الطرق
+            throw new Error('All download methods failed');
             
         } catch (error) {
             console.error('Download error:', error);
             const lang = localStorage.getItem('language') || 'en';
-            let message = 'Failed to save image. Please try again.';
+            let message = 'Failed to save image. Please try:\n1. Take a screenshot\n2. Try a different browser\n3. Check browser permissions';
             if (lang === 'ar') {
-                message = 'فشل حفظ الصورة. الرجاء المحاولة مرة أخرى.';
+                message = 'فشل حفظ الصورة. يرجى المحاولة:\n1. أخذ لقطة شاشة\n2. تجربة متصفح آخر\n3. التحقق من أذونات المتصفح';
             } else if (lang === 'fr') {
-                message = 'Échec de l\'enregistrement de l\'image. Veuillez réessayer.';
+                message = 'Échec de l\'enregistrement. Veuillez essayer:\n1. Prendre une capture d\'écran\n2. Essayer un autre navigateur\n3. Vérifier les permissions';
             }
             alert(message);
         }
