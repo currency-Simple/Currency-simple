@@ -171,7 +171,7 @@ class EditorUI {
         FONTS.forEach(font => {
             const item = document.createElement('div');
             item.className = 'font-item';
-            item.style.fontFamily = `"${font}"`;
+            item.style.fontFamily = `"${font}", sans-serif`;
             item.textContent = font;
             item.addEventListener('click', () => {
                 container.querySelectorAll('.font-item').forEach(i => i.classList.remove('active'));
