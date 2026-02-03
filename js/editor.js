@@ -38,6 +38,10 @@ class EditorUI {
         
         this.createBackgroundBtn = document.getElementById('createBackgroundBtn');
         this.sizeBtns = document.querySelectorAll('.size-btn');
+        
+        // أزرار التدرج
+        this.textGradientBtn = document.getElementById('textGradientBtn');
+        this.bgGradientBtn = document.getElementById('bgGradientBtn');
     }
     
     initTools() {
@@ -78,6 +82,60 @@ class EditorUI {
                 this.switchTool(tool);
             });
         });
+        
+        // Text Gradient Button
+        if (this.textGradientBtn) {
+            this.textGradientBtn.addEventListener('click', () => {
+                const isActive = this.textGradientBtn.classList.toggle('active');
+                document.getElementById('textGradientColors').classList.toggle('active', isActive);
+                window.canvasEditor.textProps.gradientEnabled = isActive;
+                if (isActive) {
+                    this.updateTextGradient();
+                }
+                window.canvasEditor.updateTextElement();
+            });
+            
+            ['textGradient1', 'textGradient2', 'textGradient3'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('input', () => this.updateTextGradient());
+                }
+            });
+        }
+        
+        // Background Gradient Button
+        if (this.bgGradientBtn) {
+            this.bgGradientBtn.addEventListener('click', () => {
+                const isActive = this.bgGradientBtn.classList.toggle('active');
+                document.getElementById('bgGradientColors').classList.toggle('active', isActive);
+                window.canvasEditor.backgroundGradient.enabled = isActive;
+                if (isActive) {
+                    this.updateBgGradient();
+                }
+            });
+            
+            ['bgGradient1', 'bgGradient2', 'bgGradient3'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('input', () => this.updateBgGradient());
+                }
+            });
+        }
+    }
+    
+    updateTextGradient() {
+        const color1 = document.getElementById('textGradient1').value;
+        const color2 = document.getElementById('textGradient2').value;
+        const color3 = document.getElementById('textGradient3').value;
+        window.canvasEditor.textProps.gradientColors = [color1, color2, color3];
+        window.canvasEditor.updateTextElement();
+    }
+    
+    updateBgGradient() {
+        const color1 = document.getElementById('bgGradient1').value;
+        const color2 = document.getElementById('bgGradient2').value;
+        const color3 = document.getElementById('bgGradient3').value;
+        window.canvasEditor.backgroundGradient.colors = [color1, color2, color3];
     }
     
     initControls() {
