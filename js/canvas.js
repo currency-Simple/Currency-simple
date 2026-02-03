@@ -12,7 +12,7 @@ class CanvasEditor {
         
         this.textProps = {
             content: '',
-            font: 'Abeezee',
+            font: 'Almarai',
             size: 48,
             color: '#000000',
             strokeWidth: 0,
@@ -31,7 +31,7 @@ class CanvasEditor {
         };
         
         this.longPressTimer = null;
-        this.longPressDuration = 800; // 800ms للضغطة المطولة
+        this.longPressDuration = 800;
         
         this.init();
     }
@@ -47,7 +47,6 @@ class CanvasEditor {
     }
     
     initLongPress() {
-        // الضغط المطول على canvas-wrapper للحفظ
         this.canvasWrapper.addEventListener('touchstart', (e) => {
             if (!this.image) return;
             
@@ -70,7 +69,6 @@ class CanvasEditor {
             }
         });
         
-        // للأجهزة التي تستخدم الماوس
         this.canvasWrapper.addEventListener('mousedown', (e) => {
             if (!this.image) return;
             
@@ -98,23 +96,10 @@ class CanvasEditor {
         this.selectedBgColor = color;
         this.selectedRatio = ratio;
         
-        const maxWidth = window.innerWidth - 32;
-        const maxHeight = window.innerHeight - 300;
-        
-        let width, height;
+        // استخدام حجم أكبر للخلفيات
+        let width = 1080;
         const [w, h] = ratio.split(':').map(Number);
-        
-        width = 600;
-        height = (width * h) / w;
-        
-        if (width > maxWidth) {
-            width = maxWidth;
-            height = (width * h) / w;
-        }
-        if (height > maxHeight) {
-            height = maxHeight;
-            width = (height * w) / h;
-        }
+        let height = (width * h) / w;
         
         this.canvas.width = width;
         this.canvas.height = height;
@@ -158,14 +143,16 @@ class CanvasEditor {
             this.imageObj.onload = () => {
                 this.image = this.imageObj;
                 
-                const maxWidth = window.innerWidth - 32;
-                const maxHeight = window.innerHeight - 300;
-                
+                // عرض الصورة بحجمها الطبيعي بدون تصغير
                 let width = this.image.width;
                 let height = this.image.height;
-                const ratio = width / height;
+                
+                // فقط في حالة كانت الصورة أكبر من الشاشة بشكل مبالغ فيه
+                const maxWidth = window.innerWidth * 2;
+                const maxHeight = window.innerHeight * 2;
                 
                 if (width > maxWidth || height > maxHeight) {
+                    const ratio = width / height;
                     if (width > maxWidth) {
                         width = maxWidth;
                         height = width / ratio;
@@ -218,7 +205,6 @@ class CanvasEditor {
         this.ctx.restore();
     }
     
-    // دالة لتقسيم النص إلى 4 كلمات في كل سطر
     formatTextWithLineBreaks(text) {
         const words = text.trim().split(/\s+/);
         const lines = [];
@@ -232,7 +218,6 @@ class CanvasEditor {
     }
     
     updateText(content) {
-        // تطبيق التنسيق التلقائي: 4 كلمات في كل سطر
         const formattedContent = this.formatTextWithLineBreaks(content);
         this.textProps.content = formattedContent;
         
@@ -413,7 +398,7 @@ class CanvasEditor {
         
         this.textProps = {
             content: '',
-            font: 'Abeezee',
+            font: 'Almarai',
             size: 48,
             color: '#000000',
             strokeWidth: 0,
@@ -454,14 +439,12 @@ class CanvasEditor {
     }
     
     async downloadDirectCanvas() {
-        // طريقة بديلة: رسم النص مباشرة على Canvas بدون استخدام html2canvas
         try {
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = this.canvas.width;
             tempCanvas.height = this.canvas.height;
             const tempCtx = tempCanvas.getContext('2d');
             
-            // رسم الخلفية أو الصورة
             if (this.image.isBackground) {
                 tempCtx.fillStyle = this.image.color;
                 tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
@@ -473,16 +456,13 @@ class CanvasEditor {
                 tempCtx.filter = 'none';
             }
             
-            // رسم النص إذا كان موجوداً
             if (this.currentTextElement && this.textProps.content) {
                 const rect = this.currentTextElement.getBoundingClientRect();
                 const canvasRect = this.canvas.getBoundingClientRect();
                 
-                // حساب موضع النص النسبي
                 const x = (rect.left - canvasRect.left + rect.width / 2) * (this.canvas.width / canvasRect.width);
                 const y = (rect.top - canvasRect.top + rect.height / 2) * (this.canvas.height / canvasRect.height);
                 
-                // تطبيق خلفية النص
                 if (this.textProps.bgOpacity > 0) {
                     const hex = this.textProps.bgColor;
                     const r = parseInt(hex.slice(1, 3), 16);
@@ -505,7 +485,6 @@ class CanvasEditor {
                     tempCtx.restore();
                 }
                 
-                // رسم النص
                 tempCtx.save();
                 tempCtx.textAlign = 'center';
                 tempCtx.textBaseline = 'middle';
@@ -514,13 +493,11 @@ class CanvasEditor {
                 tempCtx.font = `${this.textProps.isBold ? 'bold' : 'normal'} ${this.textProps.isItalic ? 'italic' : 'normal'} ${fontSize}px "${this.textProps.font}"`;
                 tempCtx.fillStyle = this.textProps.color;
                 
-                // تطبيق الحدود
                 if (this.textProps.strokeWidth > 0) {
                     tempCtx.strokeStyle = this.textProps.strokeColor;
                     tempCtx.lineWidth = this.textProps.strokeWidth * (this.canvas.width / canvasRect.width);
                 }
                 
-                // تطبيق الظل
                 if (this.textProps.shadowBlur > 0) {
                     tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
                     tempCtx.shadowBlur = this.textProps.shadowBlur;
@@ -568,7 +545,6 @@ class CanvasEditor {
         let finalCanvas = null;
         
         try {
-            // طريقة 1: استخدام html2canvas (الأفضل للنصوص المعقدة)
             try {
                 const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
                 allTexts.forEach(text => text.classList.remove('active'));
@@ -599,7 +575,6 @@ class CanvasEditor {
             } catch (html2canvasError) {
                 console.warn('html2canvas failed, trying direct canvas method...', html2canvasError);
                 
-                // طريقة 2: رسم مباشر على Canvas
                 finalCanvas = await this.downloadDirectCanvas();
                 if (finalCanvas) {
                     console.log('Using direct canvas method');
@@ -610,9 +585,6 @@ class CanvasEditor {
                 throw new Error('Failed to create canvas');
             }
             
-            // محاولة التنزيل بطرق مختلفة
-            
-            // طريقة A: Android WebView Interface
             if (window.Android && typeof window.Android.saveImage === 'function') {
                 try {
                     const dataUrl = finalCanvas.toDataURL('image/png', 1.0);
@@ -625,7 +597,6 @@ class CanvasEditor {
                 }
             }
             
-            // طريقة B: استخدام Blob مع createObjectURL
             try {
                 const blob = await new Promise((resolve, reject) => {
                     finalCanvas.toBlob(blob => {
@@ -656,7 +627,6 @@ class CanvasEditor {
                 console.warn('Blob method failed, trying next method...', blobError);
             }
             
-            // طريقة C: استخدام toDataURL مباشرة
             try {
                 const dataUrl = finalCanvas.toDataURL('image/png', 1.0);
                 const link = document.createElement('a');
@@ -677,7 +647,6 @@ class CanvasEditor {
                 console.warn('DataURL method failed, trying next method...', dataUrlError);
             }
             
-            // طريقة D: فتح الصورة في نافذة جديدة للحفظ اليدوي
             try {
                 const dataUrl = finalCanvas.toDataURL('image/png', 1.0);
                 const newWindow = window.open('', '_blank');
@@ -747,7 +716,6 @@ class CanvasEditor {
                 console.warn('New window method failed...', windowError);
             }
             
-            // طريقة E: نسخ إلى الحافظة كخيار أخير
             try {
                 const blob = await new Promise(resolve => {
                     finalCanvas.toBlob(resolve, 'image/png', 1.0);
@@ -773,7 +741,6 @@ class CanvasEditor {
                 console.warn('Clipboard method failed...', clipboardError);
             }
             
-            // إذا فشلت جميع الطرق
             throw new Error('All download methods failed');
             
         } catch (error) {
