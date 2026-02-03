@@ -23,7 +23,18 @@ class CanvasEditor {
             isBold: false,
             isItalic: false,
             maxWidth: 400,
-            flipV: false
+            flipV: false,
+            flipH: false,
+            rotation: 0,
+            scaleX: 1,
+            scaleY: 1,
+            gradientEnabled: false,
+            gradientColors: ['#FF0000', '#00FF00', '#0000FF']
+        };
+        
+        this.backgroundGradient = {
+            enabled: false,
+            colors: ['#FF0000', '#00FF00', '#0000FF']
         };
         
         this.filters = {
@@ -96,7 +107,6 @@ class CanvasEditor {
         this.selectedBgColor = color;
         this.selectedRatio = ratio;
         
-        // استخدام حجم أكبر للخلفيات
         let width = 1080;
         const [w, h] = ratio.split(':').map(Number);
         let height = (width * h) / w;
@@ -104,10 +114,26 @@ class CanvasEditor {
         this.canvas.width = width;
         this.canvas.height = height;
         
-        this.ctx.fillStyle = color;
+        if (this.backgroundGradient.enabled) {
+            const gradient = this.ctx.createLinearGradient(0, 0, width, height);
+            const colors = this.backgroundGradient.colors;
+            gradient.addColorStop(0, colors[0]);
+            gradient.addColorStop(0.5, colors[1]);
+            gradient.addColorStop(1, colors[2]);
+            this.ctx.fillStyle = gradient;
+        } else {
+            this.ctx.fillStyle = color;
+        }
         this.ctx.fillRect(0, 0, width, height);
         
-        this.image = { isBackground: true, color: color, width: width, height: height };
+        this.image = { 
+            isBackground: true, 
+            color: color, 
+            width: width, 
+            height: height,
+            hasGradient: this.backgroundGradient.enabled,
+            gradientColors: [...this.backgroundGradient.colors]
+        };
         
         if (this.currentTextElement) {
             this.currentTextElement.remove();
@@ -143,11 +169,9 @@ class CanvasEditor {
             this.imageObj.onload = () => {
                 this.image = this.imageObj;
                 
-                // عرض الصورة بحجمها الطبيعي بدون تصغير
                 let width = this.image.width;
                 let height = this.image.height;
                 
-                // فقط في حالة كانت الصورة أكبر من الشاشة بشكل مبالغ فيه
                 const maxWidth = window.innerWidth * 2;
                 const maxHeight = window.innerHeight * 2;
                 
@@ -190,7 +214,15 @@ class CanvasEditor {
         this.ctx.save();
         
         if (this.image.isBackground) {
-            this.ctx.fillStyle = this.image.color;
+            if (this.image.hasGradient) {
+                const gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
+                gradient.addColorStop(0, this.image.gradientColors[0]);
+                gradient.addColorStop(0.5, this.image.gradientColors[1]);
+                gradient.addColorStop(1, this.image.gradientColors[2]);
+                this.ctx.fillStyle = gradient;
+            } else {
+                this.ctx.fillStyle = this.image.color;
+            }
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         } else {
             if (this.filters.blurValue > 0) {
@@ -250,6 +282,7 @@ class CanvasEditor {
         this.currentTextElement = textEl;
         
         this.makeDraggable(textEl);
+        this.addTextControls(textEl);
     }
     
     applyTextStyle(element) {
@@ -269,24 +302,51 @@ class CanvasEditor {
         element.style.fontSize = `${this.textProps.size}px`;
         element.style.fontWeight = fontWeight;
         element.style.fontStyle = fontStyle;
-        element.style.color = this.textProps.color;
+        
+        // تطبيق التدرج اللوني على النص
+        if (this.textProps.gradientEnabled) {
+            const colors = this.textProps.gradientColors;
+            element.style.background = `linear-gradient(90deg, ${colors[0]}, ${colors[1]}, ${colors[2]})`;
+            element.style.webkitBackgroundClip = 'text';
+            element.style.backgroundClip = 'text';
+            element.style.webkitTextFillColor = 'transparent';
+            element.style.color = 'transparent';
+        } else {
+            element.style.background = 'none';
+            element.style.webkitBackgroundClip = 'initial';
+            element.style.backgroundClip = 'initial';
+            element.style.webkitTextFillColor = 'initial';
+            element.style.color = this.textProps.color;
+        }
+        
         element.style.whiteSpace = 'pre-wrap';
         element.style.wordWrap = 'break-word';
         element.style.maxWidth = this.textProps.maxWidth + 'px';
         
-        if (this.textProps.flipV) {
-            const currentTransform = element.style.transform || 'translate(-50%, -50%)';
-            if (!currentTransform.includes('scaleY')) {
-                element.style.transform = currentTransform + ' scaleY(-1)';
-            }
-        } else {
-            element.style.transform = element.style.transform.replace(' scaleY(-1)', '');
+        let transforms = 'translate(-50%, -50%)';
+        
+        if (this.textProps.rotation !== 0) {
+            transforms += ` rotate(${this.textProps.rotation}deg)`;
         }
         
-        if (this.textProps.strokeWidth > 0) {
+        if (this.textProps.flipH) {
+            transforms += ' scaleX(-1)';
+        }
+        
+        if (this.textProps.flipV) {
+            transforms += ' scaleY(-1)';
+        }
+        
+        if (this.textProps.scaleX !== 1 || this.textProps.scaleY !== 1) {
+            transforms += ` scale(${this.textProps.scaleX}, ${this.textProps.scaleY})`;
+        }
+        
+        element.style.transform = transforms;
+        
+        if (this.textProps.strokeWidth > 0 && !this.textProps.gradientEnabled) {
             element.style.webkitTextStroke = `${this.textProps.strokeWidth}px ${this.textProps.strokeColor}`;
             element.style.textStroke = `${this.textProps.strokeWidth}px ${this.textProps.strokeColor}`;
-        } else {
+        } else if (!this.textProps.gradientEnabled) {
             element.style.webkitTextStroke = '';
             element.style.textStroke = '';
         }
@@ -312,6 +372,117 @@ class CanvasEditor {
         }
     }
     
+    addTextControls(element) {
+        const oldControls = element.querySelector('.text-controls');
+        if (oldControls) oldControls.remove();
+        
+        const controls = document.createElement('div');
+        controls.className = 'text-controls';
+        controls.innerHTML = `
+            <div class="control-row top">
+                <button class="control-btn" data-action="delete" title="Delete">
+                    <span class="material-icons">close</span>
+                </button>
+                <div class="zoom-indicator">100%</div>
+                <button class="control-btn" data-action="rotate" title="Rotate 90°">
+                    <span class="material-icons">refresh</span>
+                </button>
+            </div>
+            <div class="control-row middle">
+                <button class="control-btn left" data-action="scale-x" title="Scale Horizontal">
+                    <span class="material-icons">unfold_more</span>
+                </button>
+                <button class="control-btn right" data-action="scale-y" title="Scale Vertical">
+                    <span class="material-icons">height</span>
+                </button>
+            </div>
+            <div class="control-row bottom">
+                <button class="control-btn" data-action="edit" title="Edit Text">
+                    <span class="material-icons">keyboard</span>
+                </button>
+                <button class="control-btn" data-action="duplicate" title="Duplicate">
+                    <span class="material-icons">content_copy</span>
+                </button>
+                <button class="control-btn" data-action="flip" title="Flip Vertical">
+                    <span class="material-icons">flip</span>
+                </button>
+                <button class="control-btn" data-action="fullscreen" title="Fullscreen">
+                    <span class="material-icons">fullscreen</span>
+                </button>
+            </div>
+        `;
+        
+        element.appendChild(controls);
+        
+        controls.querySelectorAll('.control-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.handleControlAction(btn.dataset.action, element);
+            });
+        });
+    }
+    
+    handleControlAction(action, element) {
+        switch(action) {
+            case 'delete':
+                element.remove();
+                this.currentTextElement = null;
+                this.textProps.content = '';
+                if (window.editorUI) {
+                    document.getElementById('textInput').value = '';
+                }
+                break;
+                
+            case 'rotate':
+                this.textProps.rotation = (this.textProps.rotation + 90) % 360;
+                this.updateTextElement();
+                break;
+                
+            case 'scale-x':
+                this.textProps.scaleX = this.textProps.scaleX === 1 ? 1.5 : 1;
+                this.updateTextElement();
+                break;
+                
+            case 'scale-y':
+                this.textProps.scaleY = this.textProps.scaleY === 1 ? 1.5 : 1;
+                this.updateTextElement();
+                break;
+                
+            case 'edit':
+                if (window.editorUI) {
+                    document.getElementById('textInput').focus();
+                }
+                break;
+                
+            case 'duplicate':
+                this.duplicateText(element);
+                break;
+                
+            case 'flip':
+                this.textProps.flipV = !this.textProps.flipV;
+                this.updateTextElement();
+                break;
+                
+            case 'fullscreen':
+                this.textProps.scaleX = this.textProps.scaleX === 1 ? 2 : 1;
+                this.textProps.scaleY = this.textProps.scaleY === 1 ? 2 : 1;
+                this.updateTextElement();
+                break;
+        }
+    }
+    
+    duplicateText(element) {
+        const clone = element.cloneNode(true);
+        clone.style.left = `calc(${element.style.left} + 20px)`;
+        clone.style.top = `calc(${element.style.top} + 20px)`;
+        this.canvasWrapper.appendChild(clone);
+        this.makeDraggable(clone);
+        
+        const oldControls = clone.querySelector('.text-controls');
+        if (oldControls) oldControls.remove();
+        this.addTextControls(clone);
+    }
+    
     updateTextElement() {
         if (!this.currentTextElement) return;
         this.applyTextStyle(this.currentTextElement);
@@ -333,6 +504,8 @@ class CanvasEditor {
         document.addEventListener('touchend', dragEnd);
         
         function dragStart(e) {
+            if (e.target.closest('.control-btn')) return;
+            
             if (e.type === 'touchstart') {
                 initialX = e.touches[0].clientX - xOffset;
                 initialY = e.touches[0].clientY - yOffset;
@@ -374,9 +547,21 @@ class CanvasEditor {
         }
         
         function setTranslate(xPos, yPos, el) {
+            const currentTransform = el.style.transform;
             const baseTransform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
-            const scaleTransform = el.style.transform.includes('scaleY') ? ' scaleY(-1)' : '';
-            el.style.transform = baseTransform + scaleTransform;
+            
+            const rotation = currentTransform.match(/rotate\([^)]+\)/);
+            const scale = currentTransform.match(/scale\([^)]+\)/g);
+            const scaleX = currentTransform.match(/scaleX\([^)]+\)/);
+            const scaleY = currentTransform.match(/scaleY\([^)]+\)/);
+            
+            let newTransform = baseTransform;
+            if (rotation) newTransform += ' ' + rotation[0];
+            if (scaleX) newTransform += ' ' + scaleX[0];
+            if (scaleY) newTransform += ' ' + scaleY[0];
+            if (scale) scale.forEach(s => { if (!s.includes('X') && !s.includes('Y')) newTransform += ' ' + s; });
+            
+            el.style.transform = newTransform;
         }
     }
     
@@ -409,7 +594,13 @@ class CanvasEditor {
             isBold: false,
             isItalic: false,
             maxWidth: 400,
-            flipV: false
+            flipV: false,
+            flipH: false,
+            rotation: 0,
+            scaleX: 1,
+            scaleY: 1,
+            gradientEnabled: false,
+            gradientColors: ['#FF0000', '#00FF00', '#0000FF']
         };
         
         this.filters = {
@@ -438,95 +629,6 @@ class CanvasEditor {
         }
     }
     
-    async downloadDirectCanvas() {
-        try {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = this.canvas.width;
-            tempCanvas.height = this.canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            
-            if (this.image.isBackground) {
-                tempCtx.fillStyle = this.image.color;
-                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            } else {
-                if (this.filters.blurValue > 0) {
-                    tempCtx.filter = `blur(${this.filters.blurValue}px)`;
-                }
-                tempCtx.drawImage(this.image, 0, 0, tempCanvas.width, tempCanvas.height);
-                tempCtx.filter = 'none';
-            }
-            
-            if (this.currentTextElement && this.textProps.content) {
-                const rect = this.currentTextElement.getBoundingClientRect();
-                const canvasRect = this.canvas.getBoundingClientRect();
-                
-                const x = (rect.left - canvasRect.left + rect.width / 2) * (this.canvas.width / canvasRect.width);
-                const y = (rect.top - canvasRect.top + rect.height / 2) * (this.canvas.height / canvasRect.height);
-                
-                if (this.textProps.bgOpacity > 0) {
-                    const hex = this.textProps.bgColor;
-                    const r = parseInt(hex.slice(1, 3), 16);
-                    const g = parseInt(hex.slice(3, 5), 16);
-                    const b = parseInt(hex.slice(5, 7), 16);
-                    const opacity = this.textProps.bgOpacity / 100;
-                    
-                    tempCtx.save();
-                    tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                    
-                    const lines = this.textProps.content.split('\n');
-                    const fontSize = this.textProps.size * (this.canvas.width / canvasRect.width);
-                    tempCtx.font = `${this.textProps.isBold ? 'bold' : 'normal'} ${this.textProps.isItalic ? 'italic' : 'normal'} ${fontSize}px "${this.textProps.font}"`;
-                    
-                    const lineHeight = fontSize * 1.3;
-                    const maxWidth = Math.max(...lines.map(line => tempCtx.measureText(line).width));
-                    const totalHeight = lines.length * lineHeight;
-                    
-                    tempCtx.fillRect(x - maxWidth / 2 - 10, y - totalHeight / 2 - 10, maxWidth + 20, totalHeight + 20);
-                    tempCtx.restore();
-                }
-                
-                tempCtx.save();
-                tempCtx.textAlign = 'center';
-                tempCtx.textBaseline = 'middle';
-                
-                const fontSize = this.textProps.size * (this.canvas.width / canvasRect.width);
-                tempCtx.font = `${this.textProps.isBold ? 'bold' : 'normal'} ${this.textProps.isItalic ? 'italic' : 'normal'} ${fontSize}px "${this.textProps.font}"`;
-                tempCtx.fillStyle = this.textProps.color;
-                
-                if (this.textProps.strokeWidth > 0) {
-                    tempCtx.strokeStyle = this.textProps.strokeColor;
-                    tempCtx.lineWidth = this.textProps.strokeWidth * (this.canvas.width / canvasRect.width);
-                }
-                
-                if (this.textProps.shadowBlur > 0) {
-                    tempCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                    tempCtx.shadowBlur = this.textProps.shadowBlur;
-                    tempCtx.shadowOffsetX = 4;
-                    tempCtx.shadowOffsetY = 4;
-                }
-                
-                const lines = this.textProps.content.split('\n');
-                const lineHeight = fontSize * 1.3;
-                const startY = y - ((lines.length - 1) * lineHeight) / 2;
-                
-                lines.forEach((line, index) => {
-                    const lineY = startY + (index * lineHeight);
-                    if (this.textProps.strokeWidth > 0) {
-                        tempCtx.strokeText(line, x, lineY);
-                    }
-                    tempCtx.fillText(line, x, lineY);
-                });
-                
-                tempCtx.restore();
-            }
-            
-            return tempCanvas;
-        } catch (error) {
-            console.error('Direct canvas method failed:', error);
-            return null;
-        }
-    }
-    
     async download() {
         if (!this.image) {
             const lang = localStorage.getItem('language') || 'en';
@@ -542,60 +644,30 @@ class CanvasEditor {
         
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0] + '-' + Date.now();
         const filename = `edited-photo-${timestamp}.png`;
-        let finalCanvas = null;
         
         try {
-            try {
-                const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
-                allTexts.forEach(text => text.classList.remove('active'));
-                
-                const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
-                
-                const wrapperRect = this.canvasWrapper.getBoundingClientRect();
-                
-                finalCanvas = await html2canvas(this.canvasWrapper, {
-                    backgroundColor: null,
-                    scale: 3,
-                    useCORS: true,
-                    allowTaint: true,
-                    logging: false,
-                    imageTimeout: 0,
-                    removeContainer: false,
-                    width: wrapperRect.width,
-                    height: wrapperRect.height,
-                    windowWidth: wrapperRect.width,
-                    windowHeight: wrapperRect.height,
-                    x: 0,
-                    y: 0,
-                    scrollX: 0,
-                    scrollY: -window.scrollY
-                });
-                
-                console.log('Using html2canvas method');
-            } catch (html2canvasError) {
-                console.warn('html2canvas failed, trying direct canvas method...', html2canvasError);
-                
-                finalCanvas = await this.downloadDirectCanvas();
-                if (finalCanvas) {
-                    console.log('Using direct canvas method');
-                }
-            }
+            const allControls = this.canvasWrapper.querySelectorAll('.text-controls');
+            allControls.forEach(ctrl => ctrl.style.display = 'none');
             
-            if (!finalCanvas) {
-                throw new Error('Failed to create canvas');
-            }
+            const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
+            allTexts.forEach(text => text.classList.remove('active'));
             
-            if (window.Android && typeof window.Android.saveImage === 'function') {
-                try {
-                    const dataUrl = finalCanvas.toDataURL('image/png', 1.0);
-                    const base64data = dataUrl.split(',')[1];
-                    window.Android.saveImage(base64data, filename);
-                    console.log('Downloaded via Android Interface');
-                    return;
-                } catch (androidError) {
-                    console.warn('Android method failed, trying next method...', androidError);
-                }
-            }
+            const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
+            
+            const finalCanvas = await html2canvas(this.canvasWrapper, {
+                backgroundColor: null,
+                scale: 1,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                imageTimeout: 0,
+                width: this.canvas.width,
+                height: this.canvas.height,
+                windowWidth: this.canvas.width,
+                windowHeight: this.canvas.height
+            });
+            
+            allControls.forEach(ctrl => ctrl.style.display = '');
             
             try {
                 const blob = await new Promise((resolve, reject) => {
@@ -620,139 +692,16 @@ class CanvasEditor {
                         URL.revokeObjectURL(url);
                     }, 1000);
                     
-                    console.log('Downloaded via Blob method');
+                    console.log('Downloaded successfully');
                     return;
                 }
-            } catch (blobError) {
-                console.warn('Blob method failed, trying next method...', blobError);
+            } catch (error) {
+                console.error('Download failed:', error);
             }
-            
-            try {
-                const dataUrl = finalCanvas.toDataURL('image/png', 1.0);
-                const link = document.createElement('a');
-                link.download = filename;
-                link.href = dataUrl;
-                link.style.display = 'none';
-                
-                document.body.appendChild(link);
-                link.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                }, 1000);
-                
-                console.log('Downloaded via DataURL method');
-                return;
-            } catch (dataUrlError) {
-                console.warn('DataURL method failed, trying next method...', dataUrlError);
-            }
-            
-            try {
-                const dataUrl = finalCanvas.toDataURL('image/png', 1.0);
-                const newWindow = window.open('', '_blank');
-                if (newWindow) {
-                    newWindow.document.write(`
-                        <html>
-                            <head>
-                                <title>Download Image - ${filename}</title>
-                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                <style>
-                                    body {
-                                        margin: 0;
-                                        padding: 20px;
-                                        background: #000;
-                                        display: flex;
-                                        flex-direction: column;
-                                        align-items: center;
-                                        justify-content: center;
-                                        min-height: 100vh;
-                                        font-family: Arial, sans-serif;
-                                    }
-                                    img {
-                                        max-width: 90%;
-                                        height: auto;
-                                        box-shadow: 0 4px 20px rgba(255,255,255,0.3);
-                                        margin-bottom: 20px;
-                                    }
-                                    .instructions {
-                                        color: white;
-                                        text-align: center;
-                                        margin: 20px 0;
-                                    }
-                                    .download-btn {
-                                        display: inline-block;
-                                        margin: 10px;
-                                        padding: 15px 30px;
-                                        background: #4CAF50;
-                                        color: white;
-                                        text-decoration: none;
-                                        border-radius: 5px;
-                                        font-size: 16px;
-                                        cursor: pointer;
-                                        border: none;
-                                    }
-                                    .download-btn:hover {
-                                        background: #45a049;
-                                    }
-                                </style>
-                            </head>
-                            <body>
-                                <img src="${dataUrl}" alt="Edited Image" id="downloadImage"/>
-                                <div class="instructions">
-                                    <p><strong>Method 1:</strong> Right-click on the image and select "Save Image As..."</p>
-                                    <p><strong>Method 2:</strong> Click the download button below</p>
-                                    <p><strong>Method 3:</strong> Long press the image (mobile) and save</p>
-                                </div>
-                                <a href="${dataUrl}" download="${filename}" class="download-btn">💾 Download Image</a>
-                                <button onclick="window.close()" class="download-btn" style="background: #f44336;">✖ Close</button>
-                            </body>
-                        </html>
-                    `);
-                    newWindow.document.close();
-                    console.log('Opened in new window for manual download');
-                    return;
-                }
-            } catch (windowError) {
-                console.warn('New window method failed...', windowError);
-            }
-            
-            try {
-                const blob = await new Promise(resolve => {
-                    finalCanvas.toBlob(resolve, 'image/png', 1.0);
-                });
-                
-                if (navigator.clipboard && blob) {
-                    await navigator.clipboard.write([
-                        new ClipboardItem({ 'image/png': blob })
-                    ]);
-                    
-                    const lang = localStorage.getItem('language') || 'en';
-                    let message = 'Image copied to clipboard! You can paste it anywhere.';
-                    if (lang === 'ar') {
-                        message = 'تم نسخ الصورة إلى الحافظة! يمكنك لصقها في أي مكان.';
-                    } else if (lang === 'fr') {
-                        message = 'Image copiée dans le presse-papiers! Vous pouvez la coller n\'importe où.';
-                    }
-                    alert(message);
-                    console.log('Copied to clipboard');
-                    return;
-                }
-            } catch (clipboardError) {
-                console.warn('Clipboard method failed...', clipboardError);
-            }
-            
-            throw new Error('All download methods failed');
             
         } catch (error) {
             console.error('Download error:', error);
-            const lang = localStorage.getItem('language') || 'en';
-            let message = 'Failed to save image. Please try:\n1. Take a screenshot\n2. Try a different browser\n3. Check browser permissions';
-            if (lang === 'ar') {
-                message = 'فشل حفظ الصورة. يرجى المحاولة:\n1. أخذ لقطة شاشة\n2. تجربة متصفح آخر\n3. التحقق من أذونات المتصفح';
-            } else if (lang === 'fr') {
-                message = 'Échec de l\'enregistrement. Veuillez essayer:\n1. Prendre une capture d\'écran\n2. Essayer un autre navigateur\n3. Vérifier les permissions';
-            }
-            alert(message);
+            alert('Failed to save image');
         }
     }
 }
