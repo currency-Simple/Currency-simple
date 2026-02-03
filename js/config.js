@@ -1,26 +1,3 @@
-const PEXELS_API_KEY = '8wFvB5Xc4LSTsiuQVpFoyyqHpdrEi7GVgQR24HiI1sBsK2SAeOPew98m';
-
-const CATEGORIES = [
-    { name: 'Cars', query: 'Cars' },
-    { name: 'Lions', query: 'Lions' },
-    { name: 'Sky', query: 'Sky' },
-    { name: 'Forest', query: 'Forest' },
-    { name: 'Cities', query: 'Cities' },
-    { name: 'Airplane', query: 'Airplane' },
-    { name: 'Shore', query: 'Shore' },
-    { name: 'Flower', query: 'Flower' },
-    { name: 'Buildings', query: 'Buildings' },
-    { name: 'Vegetables', query: 'Vegetables' },
-    { name: 'Fruits', query: 'Fruits' },
-    { name: 'Furniture', query: 'Furniture' },
-    { name: 'Children', query: 'Children' },
-    { name: 'Food', query: 'Food' },
-    { name: 'Motorcycles', query: 'Motorcycles' },
-    { name: 'Snow', query: 'Snow Photos' },
-    { name: 'Switzerland', query: 'Free Switzerland Photos' },
-    { name: 'Birds', query: 'Birds Images' }
-];
-
 const COLORS = [
     '#F4F4F4', '#0C2B4E', '#1A3D64', '#1D546C', '#FFF8D4', '#A3B087', '#313647', '#435663', '#D6F4ED',
     '#87BAC3', '#53629E', '#473472', '#C9B59C', '#D9CFC7', '#EFE9E3', '#F9F8F6', '#703B3B', '#A18D6D',
@@ -46,21 +23,22 @@ const COLORS = [
 ];
 
 const FONTS = [
-    'Abeezee', 'Abhaya Libre', 'Aboreto', 'Abril Fatface', 'Abyssinica Sil', 'Aclonica', 'Acme',
-    'Advent Pro', 'Aguafina Script', 'Akaya Telivigala', 'Akronim', 'Aladin', 'Aldrich', 'Alegreya',
-    'Alegreya SC', 'Alex Brush', 'Alfa Slab One', 'Allan', 'Almendra', 'Almendra SC', 'Alumni Sans',
-    'Alumni Sans Inline One', 'Amatic SC', 'Amita', 'Arbutus', 'Architects Daughter', 'Are You Serious',
-    'Aref Ruqaa', 'Asset', 'Astloch', 'Atomic Age', 'Aubrey', 'Audiowide', 'Bahiana', 'Bakbak One',
-    'Ballet', 'Bangers', 'Barriecito', 'Beau Rivage', 'Berkshire Swash', 'Beth Ellen', 'Bhutuka Expanded One',
-    'Big Shoulders Display', 'Bigelow Rules', 'Biorhyme Expanded', 'Black And White Picture', 'Bonbon',
-    'Bowlby One SC', 'Bruno Ace', 'Bungee', 'Bungee Inline', 'Bungee Outline', 'Bungee Shade', 'Bungee Tint',
-    'Butcherman', 'Caesar Dressing', 'Castoro Titling', 'Chathura', 'Cinzel', 'Cute Font', 'Damion',
-    'Diplomata', 'Dokdo', 'Dorsa', 'Dr Sugiyama', 'Eagle Lake', 'Edu QLD Beginner', 'Erica One',
-    'Fascinate', 'Faster One', 'Fleur De Leah', 'Ga Maamli', 'Gajraj One', 'Great Vibes', 'Hanalei',
-    'Homemade Apple', 'Honk', 'IBM Plex Sans Arabic', 'Jacquard 12 Charted', 'Jacquard 24 Charted',
-    'Jacquarda Bastarda 9', 'Jersey 25 Charted', 'Jomhuria', 'Kablammo', 'Kalnia Glaze', 'Kumar One Outline',
-    'Libre Barcode 39 Text', 'Limelight', 'Major Mono Display', 'Moirai One', 'Monofett', 'Monoton',
-    'Mrs Sheppards', 'Nosifer', 'Noto Kufi Arabic', 'Palette Mosaic', 'Rock Salt', 'Rubik Beastly',
-    'Rubik Broken Fax', 'Rubik Gemstones', 'Rubik Glitch Pop', 'Rubik Puddles', 'Sancreek', 'Sixtyfour',
-    'Sonsie One'
+    'Agu Display', 'Allura', 'Almarai', 'Anton', 'Archivo Black', 'Aref Ruqaa Ink', 'Aref Ruqaa',
+    'Audiowide', 'BBH Bartle', 'Bahianita', 'Bangers', 'Barriecito', 'Barrio', 'Bebas Neue',
+    'Berkshire Swash', 'Bigelow Rules', 'Bitcount Single', 'Blaka', 'Blaka Hollow', 'Blaka Ink',
+    'Borel', 'Bungee', 'Bungee Shade', 'Bungee Spice', 'Bungee Tint', 'Butcherman', 'Caesar Dressing',
+    'Cairo Play', 'Codystar', 'Coral Pixels', 'Creepster', 'Dancing Script', 'Danfo', 'Dorsa',
+    'Eater', 'Edu SA Hand', 'El Messiri', 'Engagement', 'Exile', 'Faster One', 'Fjalla One',
+    'Fustat', 'Geostar', 'Gloria Hallelujah', 'Gravitas One', 'Hanalei', 'Hanalei Fill', 'Honk',
+    'Jomhuria', 'Kablammo', 'Kalnia Glaze', 'Kufam', 'Lalezar', 'Lateef', 'League Gothic',
+    'League Script', 'Lemonada', 'Libertinus Keyboard', 'Libre Barcode 39 Extended Text', 'Lobster',
+    'Lobster Two', 'Londrina Shadow', 'Luckiest Guy', 'Lugrasimo', 'Macondo', 'Mada', 'Matemasie',
+    'Moirai One', 'Molle', 'Momo Signature', 'Monofett', 'Monoton', 'Moo Lah Lah', 'Nabla',
+    'Nosifer', 'Noto Color Emoji', 'Noto Emoji', 'Noto Naskh Arabic', 'Noto Nastaliq Urdu', 'Oi',
+    'Oleo Script', 'Oswald', 'Pacifico', 'Patrick Hand SC', 'Permanent Marker', 'Pirata One',
+    'Playfair Display SC', 'Playfair Display', 'Playwrite GB J Guides', 'Qahiri', 'Rakkas',
+    'Reem Kufi Ink', 'Reem Kufi', 'Rock Salt', 'Rubik Iso', 'Rubik Puddles', 'Rubik Storm',
+    'Ruwudu', 'Sancreek', 'Six Caps', 'Sixtyfour Convergence', 'Smokum', 'Special Gothic Condensed One',
+    'Story Script', 'Sue Ellen Francisco', 'Syncopate', 'Trade Winds', 'UnifrakturCook', 'Yesteryear',
+    'Zalando Sans Expanded', 'Zen Tokyo Zoo', 'Zilla Slab Highlight'
 ];
