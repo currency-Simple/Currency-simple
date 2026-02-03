@@ -1,9 +1,7 @@
 class App {
     constructor() {
-        this.currentPage = 'categories';
+        this.currentPage = 'editor';
         this.pages = {
-            categories: document.getElementById('categoriesPage'),
-            gallery: document.getElementById('galleryPage'),
             editor: document.getElementById('editorPage'),
             settings: document.getElementById('settingsPage')
         };
@@ -12,17 +10,6 @@ class App {
     }
     
     init() {
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const page = btn.dataset.page;
-                this.switchPage(page);
-            });
-        });
-        
-        document.getElementById('editorBackBtn').addEventListener('click', () => {
-            this.switchPage('categories');
-        });
-        
         document.getElementById('resetBtn').addEventListener('click', () => {
             if (window.canvasEditor && window.canvasEditor.image) {
                 const lang = localStorage.getItem('language') || 'en';
@@ -43,6 +30,21 @@ class App {
         document.getElementById('downloadBtn').addEventListener('click', () => {
             if (window.canvasEditor) {
                 window.canvasEditor.download();
+            }
+        });
+        
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            this.openSettings();
+        });
+        
+        document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+            this.closeSettings();
+        });
+        
+        // إغلاق الإعدادات عند الضغط على الخلفية
+        document.getElementById('settingsPage').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('settingsPage')) {
+                this.closeSettings();
             }
         });
         
@@ -71,17 +73,12 @@ class App {
         this.initDrawer();
     }
     
-    switchPage(page) {
-        Object.values(this.pages).forEach(p => p.classList.remove('active'));
-        
-        if (this.pages[page]) {
-            this.pages[page].classList.add('active');
-            this.currentPage = page;
-        }
-        
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.page === page);
-        });
+    openSettings() {
+        this.pages.settings.classList.add('active');
+    }
+    
+    closeSettings() {
+        this.pages.settings.classList.remove('active');
     }
     
     changeTheme(theme) {
@@ -168,7 +165,7 @@ class App {
 window.app = new App();
 
 window.addEventListener('beforeunload', (e) => {
-    if (window.app.currentPage === 'editor' && window.canvasEditor.image) {
+    if (window.canvasEditor && window.canvasEditor.image) {
         e.preventDefault();
         e.returnValue = '';
     }
