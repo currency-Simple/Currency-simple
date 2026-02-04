@@ -94,13 +94,6 @@ class EditorUI {
                 }
                 window.canvasEditor.updateTextElement();
             });
-            
-            ['textGradient1', 'textGradient2', 'textGradient3'].forEach(id => {
-                const input = document.getElementById(id);
-                if (input) {
-                    input.addEventListener('input', () => this.updateTextGradient());
-                }
-            });
         }
         
         // Background Gradient Button
@@ -113,29 +106,16 @@ class EditorUI {
                     this.updateBgGradient();
                 }
             });
-            
-            ['bgGradient1', 'bgGradient2', 'bgGradient3'].forEach(id => {
-                const input = document.getElementById(id);
-                if (input) {
-                    input.addEventListener('input', () => this.updateBgGradient());
-                }
-            });
         }
     }
     
     updateTextGradient() {
-        const color1 = document.getElementById('textGradient1').value;
-        const color2 = document.getElementById('textGradient2').value;
-        const color3 = document.getElementById('textGradient3').value;
-        window.canvasEditor.textProps.gradientColors = [color1, color2, color3];
+        const colors = window.canvasEditor.textProps.gradientColors;
         window.canvasEditor.updateTextElement();
     }
     
     updateBgGradient() {
-        const color1 = document.getElementById('bgGradient1').value;
-        const color2 = document.getElementById('bgGradient2').value;
-        const color3 = document.getElementById('bgGradient3').value;
-        window.canvasEditor.backgroundGradient.colors = [color1, color2, color3];
+        const colors = window.canvasEditor.backgroundGradient.colors;
     }
     
     initControls() {
@@ -261,6 +241,7 @@ class EditorUI {
         const container = document.getElementById('bgCreateColorScroll');
         if (!container) return;
         
+        // إضافة الألوان العادية
         COLORS.forEach(color => {
             const item = document.createElement('div');
             item.className = 'color-item';
@@ -274,6 +255,28 @@ class EditorUI {
                 container.querySelectorAll('.color-item').forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
                 this.selectedBgColor = color;
+            });
+            container.appendChild(item);
+        });
+        
+        // إضافة مزيج الألوان الثلاثية
+        COLOR_GRADIENTS.forEach(gradientColors => {
+            const item = document.createElement('div');
+            item.className = 'color-item gradient-item';
+            item.style.background = `linear-gradient(90deg, ${gradientColors[0]}, ${gradientColors[1]}, ${gradientColors[2]})`;
+            
+            item.addEventListener('click', () => {
+                container.querySelectorAll('.color-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                window.canvasEditor.backgroundGradient.colors = [...gradientColors];
+                window.canvasEditor.backgroundGradient.enabled = true;
+                
+                // تفعيل زر التدرج
+                const bgGradientBtn = document.getElementById('bgGradientBtn');
+                if (bgGradientBtn) {
+                    bgGradientBtn.classList.add('active');
+                    document.getElementById('bgGradientColors').classList.add('active');
+                }
             });
             container.appendChild(item);
         });
