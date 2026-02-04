@@ -6,46 +6,65 @@ class App {
             settings: document.getElementById('settingsPage')
         };
         
-        this.init();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            this.init();
+        }
     }
     
     init() {
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            if (window.canvasEditor && window.canvasEditor.image) {
-                const lang = localStorage.getItem('language') || 'en';
-                let message = 'Are you sure you want to reset all edits?';
-                
-                if (lang === 'ar') {
-                    message = 'هل أنت متأكد من إعادة تعيين جميع التعديلات؟';
-                } else if (lang === 'fr') {
-                    message = 'Êtes-vous sûr de vouloir réinitialiser toutes les modifications?';
+        const resetBtn = document.getElementById('resetBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                if (window.canvasEditor && window.canvasEditor.image) {
+                    const lang = localStorage.getItem('language') || 'en';
+                    let message = 'Are you sure you want to reset all edits?';
+                    
+                    if (lang === 'ar') {
+                        message = 'هل أنت متأكد من إعادة تعيين جميع التعديلات؟';
+                    } else if (lang === 'fr') {
+                        message = 'Êtes-vous sûr de vouloir réinitialiser toutes les modifications?';
+                    }
+                    
+                    if (confirm(message)) {
+                        window.canvasEditor.reset();
+                    }
                 }
-                
-                if (confirm(message)) {
-                    window.canvasEditor.reset();
+            });
+        }
+        
+        const downloadBtn = document.getElementById('downloadBtn');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => {
+                if (window.canvasEditor) {
+                    window.canvasEditor.download();
                 }
-            }
-        });
+            });
+        }
         
-        document.getElementById('downloadBtn').addEventListener('click', () => {
-            if (window.canvasEditor) {
-                window.canvasEditor.download();
-            }
-        });
+        const settingsBtn = document.getElementById('settingsBtn');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => {
+                this.openSettings();
+            });
+        }
         
-        document.getElementById('settingsBtn').addEventListener('click', () => {
-            this.openSettings();
-        });
-        
-        document.getElementById('closeSettingsBtn').addEventListener('click', () => {
-            this.closeSettings();
-        });
-        
-        document.getElementById('settingsPage').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('settingsPage')) {
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        if (closeSettingsBtn) {
+            closeSettingsBtn.addEventListener('click', () => {
                 this.closeSettings();
-            }
-        });
+            });
+        }
+        
+        const settingsPage = document.getElementById('settingsPage');
+        if (settingsPage) {
+            settingsPage.addEventListener('click', (e) => {
+                if (e.target === settingsPage) {
+                    this.closeSettings();
+                }
+            });
+        }
         
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -60,7 +79,9 @@ class App {
         document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const lang = btn.dataset.lang;
-                window.langManager.change(lang);
+                if (window.langManager) {
+                    window.langManager.change(lang);
+                }
                 
                 document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
@@ -70,42 +91,18 @@ class App {
         this.loadTheme();
         this.loadLanguage();
         this.initDrawer();
-        this.initGradientPresets();
-    }
-    
-    initGradientPresets() {
-        const container = document.getElementById('textGradientPresets');
-        if (!container) return;
-        
-        COLOR_GRADIENTS.forEach(gradientColors => {
-            const item = document.createElement('div');
-            item.className = 'color-item gradient-item';
-            item.style.background = `linear-gradient(90deg, ${gradientColors[0]}, ${gradientColors[1]}, ${gradientColors[2]})`;
-            
-            item.addEventListener('click', () => {
-                container.querySelectorAll('.color-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                window.canvasEditor.textProps.gradientColors = [...gradientColors];
-                window.canvasEditor.textProps.gradientEnabled = true;
-                
-                const textGradientBtn = document.getElementById('textGradientBtn');
-                if (textGradientBtn) {
-                    textGradientBtn.classList.add('active');
-                    document.getElementById('textGradientColors').classList.add('active');
-                }
-                
-                window.canvasEditor.updateTextElement();
-            });
-            container.appendChild(item);
-        });
     }
     
     openSettings() {
-        this.pages.settings.classList.add('active');
+        if (this.pages.settings) {
+            this.pages.settings.classList.add('active');
+        }
     }
     
     closeSettings() {
-        this.pages.settings.classList.remove('active');
+        if (this.pages.settings) {
+            this.pages.settings.classList.remove('active');
+        }
     }
     
     changeTheme(theme) {
@@ -132,7 +129,10 @@ class App {
     
     initDrawer() {
         const drawer = document.getElementById('toolsDrawer');
+        if (!drawer) return;
+        
         const handle = drawer.querySelector('.drawer-handle');
+        if (!handle) return;
         
         let startY = 0;
         let currentY = 0;
@@ -189,7 +189,13 @@ class App {
     }
 }
 
-window.app = new App();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.app = new App();
+    });
+} else {
+    window.app = new App();
+}
 
 window.addEventListener('beforeunload', (e) => {
     if (window.canvasEditor && window.canvasEditor.image) {
