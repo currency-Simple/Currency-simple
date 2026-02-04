@@ -39,11 +39,20 @@ class CanvasEditor {
         this.longPressTimer = null;
         this.longPressDuration = 800;
         
-        this.init();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            this.init();
+        }
     }
     
     init() {
         const container = document.querySelector('.canvas-container');
+        if (!container) {
+            console.error('Canvas container not found');
+            return;
+        }
+        
         this.canvasWrapper = document.createElement('div');
         this.canvasWrapper.className = 'canvas-wrapper';
         container.appendChild(this.canvasWrapper);
@@ -228,24 +237,6 @@ class CanvasEditor {
         }
         
         this.ctx.restore();
-    }
-    
-    formatTextWithWidth(text, maxWidth) {
-        const words = text.trim().split(/\s+/);
-        
-        if (maxWidth <= 0 || maxWidth >= words.length) {
-            return words.join(' ');
-        }
-        
-        const wordsPerLine = Math.max(1, Math.floor(words.length / maxWidth));
-        const lines = [];
-        
-        for (let i = 0; i < words.length; i += wordsPerLine) {
-            const line = words.slice(i, i + wordsPerLine).join(' ');
-            lines.push(line);
-        }
-        
-        return lines.join('\n');
     }
     
     updateText(content) {
@@ -582,21 +573,17 @@ class CanvasEditor {
         const filename = `edited-photo-${timestamp}.png`;
         
         try {
-            // إخفاء أدوات التحكم مؤقتاً
             const allControls = this.canvasWrapper.querySelectorAll('.text-controls');
             allControls.forEach(ctrl => ctrl.style.display = 'none');
             
             const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
             allTexts.forEach(text => text.classList.remove('active'));
             
-            // استيراد html2canvas
             const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
             
-            // الحصول على أبعاد canvas
             const canvasRect = this.canvas.getBoundingClientRect();
             const wrapperRect = this.canvasWrapper.getBoundingClientRect();
             
-            // التقاط الصورة بنفس حجم canvas الأصلي
             const finalCanvas = await html2canvas(this.canvasWrapper, {
                 backgroundColor: null,
                 scale: 1,
@@ -611,10 +598,8 @@ class CanvasEditor {
                 y: (canvasRect.top - wrapperRect.top)
             });
             
-            // إعادة إظهار الأدوات
             allControls.forEach(ctrl => ctrl.style.display = '');
             
-            // التنزيل
             const blob = await new Promise((resolve) => {
                 finalCanvas.toBlob(resolve, 'image/png', 1.0);
             });
@@ -633,8 +618,6 @@ class CanvasEditor {
                     document.body.removeChild(link);
                     URL.revokeObjectURL(url);
                 }, 1000);
-                
-                console.log('Downloaded successfully');
             }
             
         } catch (error) {
@@ -644,4 +627,10 @@ class CanvasEditor {
     }
 }
 
-window.canvasEditor = new CanvasEditor();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.canvasEditor = new CanvasEditor();
+    });
+} else {
+    window.canvasEditor = new CanvasEditor();
+}
