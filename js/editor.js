@@ -3,6 +3,16 @@ class EditorUI {
         this.currentTool = 'text';
         this.selectedBgColor = '#FFFFFF';
         this.selectedRatio = '9:16';
+        
+        // انتظار تحميل DOM بالكامل
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            this.init();
+        }
+    }
+    
+    init() {
         this.initElements();
         this.initTools();
         this.initControls();
@@ -39,27 +49,30 @@ class EditorUI {
         this.createBackgroundBtn = document.getElementById('createBackgroundBtn');
         this.sizeBtns = document.querySelectorAll('.size-btn');
         
-        // أزرار التدرج
         this.textGradientBtn = document.getElementById('textGradientBtn');
         this.bgGradientBtn = document.getElementById('bgGradientBtn');
     }
     
     initTools() {
         // Upload
-        this.uploadArea.addEventListener('click', () => {
-            this.imageUpload.click();
-        });
+        if (this.uploadArea) {
+            this.uploadArea.addEventListener('click', () => {
+                this.imageUpload.click();
+            });
+        }
         
-        this.imageUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    window.canvasEditor.loadImage(event.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        if (this.imageUpload) {
+            this.imageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        window.canvasEditor.loadImage(event.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
         
         // Size buttons
         this.sizeBtns.forEach(btn => {
@@ -71,9 +84,11 @@ class EditorUI {
         });
         
         // Create Background Button
-        this.createBackgroundBtn.addEventListener('click', () => {
-            window.canvasEditor.createBackground(this.selectedBgColor, this.selectedRatio);
-        });
+        if (this.createBackgroundBtn) {
+            this.createBackgroundBtn.addEventListener('click', () => {
+                window.canvasEditor.createBackground(this.selectedBgColor, this.selectedRatio);
+            });
+        }
         
         // Tool buttons
         this.toolBtns.forEach(btn => {
@@ -87,11 +102,11 @@ class EditorUI {
         if (this.textGradientBtn) {
             this.textGradientBtn.addEventListener('click', () => {
                 const isActive = this.textGradientBtn.classList.toggle('active');
-                document.getElementById('textGradientColors').classList.toggle('active', isActive);
-                window.canvasEditor.textProps.gradientEnabled = isActive;
-                if (isActive) {
-                    this.updateTextGradient();
+                const colorsDiv = document.getElementById('textGradientColors');
+                if (colorsDiv) {
+                    colorsDiv.classList.toggle('active', isActive);
                 }
+                window.canvasEditor.textProps.gradientEnabled = isActive;
                 window.canvasEditor.updateTextElement();
             });
         }
@@ -100,76 +115,83 @@ class EditorUI {
         if (this.bgGradientBtn) {
             this.bgGradientBtn.addEventListener('click', () => {
                 const isActive = this.bgGradientBtn.classList.toggle('active');
-                document.getElementById('bgGradientColors').classList.toggle('active', isActive);
-                window.canvasEditor.backgroundGradient.enabled = isActive;
-                if (isActive) {
-                    this.updateBgGradient();
+                const colorsDiv = document.getElementById('bgGradientColors');
+                if (colorsDiv) {
+                    colorsDiv.classList.toggle('active', isActive);
                 }
+                window.canvasEditor.backgroundGradient.enabled = isActive;
             });
         }
     }
     
-    updateTextGradient() {
-        const colors = window.canvasEditor.textProps.gradientColors;
-        window.canvasEditor.updateTextElement();
-    }
-    
-    updateBgGradient() {
-        const colors = window.canvasEditor.backgroundGradient.colors;
-    }
-    
     initControls() {
         // Text
-        this.textInput.addEventListener('input', (e) => {
-            window.canvasEditor.updateText(e.target.value);
-        });
+        if (this.textInput) {
+            this.textInput.addEventListener('input', (e) => {
+                window.canvasEditor.updateText(e.target.value);
+            });
+        }
         
         // Font Size
-        this.fontSize.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            this.fontSizeValue.textContent = value;
-            window.canvasEditor.updateTextProp('size', value);
-        });
+        if (this.fontSize) {
+            this.fontSize.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                this.fontSizeValue.textContent = value;
+                window.canvasEditor.updateTextProp('size', value);
+            });
+        }
         
         // Stroke
-        this.strokeWidth.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            this.strokeWidthValue.textContent = value;
-            window.canvasEditor.updateTextProp('strokeWidth', value);
-        });
+        if (this.strokeWidth) {
+            this.strokeWidth.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                this.strokeWidthValue.textContent = value;
+                window.canvasEditor.updateTextProp('strokeWidth', value);
+            });
+        }
         
         // Shadow
-        this.shadowBlur.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            this.shadowBlurValue.textContent = value;
-            window.canvasEditor.updateTextProp('shadowBlur', value);
-        });
+        if (this.shadowBlur) {
+            this.shadowBlur.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                this.shadowBlurValue.textContent = value;
+                window.canvasEditor.updateTextProp('shadowBlur', value);
+            });
+        }
         
         // Background
-        this.bgOpacity.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            this.bgOpacityValue.textContent = value;
-            window.canvasEditor.updateTextProp('bgOpacity', value);
-        });
+        if (this.bgOpacity) {
+            this.bgOpacity.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                this.bgOpacityValue.textContent = value;
+                window.canvasEditor.updateTextProp('bgOpacity', value);
+            });
+        }
         
         // Blur
-        this.imageBlur.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            this.blurValue.textContent = value;
-            window.canvasEditor.updateFilter('blurValue', value);
-        });
+        if (this.imageBlur) {
+            this.imageBlur.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                this.blurValue.textContent = value;
+                window.canvasEditor.updateFilter('blurValue', value);
+            });
+        }
         
         // Bold
-        this.boldBtn.addEventListener('click', () => {
-            const isActive = this.boldBtn.classList.toggle('active');
-            window.canvasEditor.updateTextProp('isBold', isActive);
-        });
+        if (this.boldBtn) {
+            this.boldBtn.addEventListener('click', () => {
+                const isActive = this.boldBtn.classList.toggle('active');
+                window.canvasEditor.updateTextProp('isBold', isActive);
+            });
+        }
         
         // Italic
-        this.italicBtn.addEventListener('click', () => {
-            const isActive = this.italicBtn.classList.toggle('active');
-            window.canvasEditor.updateTextProp('isItalic', isActive);
-        });
+        if (this.italicBtn) {
+            this.italicBtn.addEventListener('click', () => {
+                const isActive = this.italicBtn.classList.toggle('active');
+                window.canvasEditor.updateTextProp('isItalic', isActive);
+            });
+        }
     }
     
     switchTool(tool) {
@@ -186,25 +208,22 @@ class EditorUI {
     
     createScrolls() {
         this.createFontScroll();
-        
         this.createColorScroll('colorScroll', (color) => {
             window.canvasEditor.updateTextProp('color', color);
         });
-        
         this.createColorScroll('strokeColorScroll', (color) => {
             window.canvasEditor.updateTextProp('strokeColor', color);
         });
-        
         this.createColorScroll('bgColorScroll', (color) => {
             window.canvasEditor.updateTextProp('bgColor', color);
         });
-        
         this.createBgCreationColorScroll();
+        this.createTextGradientPresets();
     }
     
     createFontScroll() {
         const container = document.getElementById('fontScroll');
-        if (!container) return;
+        if (!container || typeof FONTS === 'undefined') return;
         
         FONTS.forEach(font => {
             const item = document.createElement('div');
@@ -222,7 +241,7 @@ class EditorUI {
     
     createColorScroll(id, callback) {
         const container = document.getElementById(id);
-        if (!container) return;
+        if (!container || typeof COLORS === 'undefined') return;
         
         COLORS.forEach(color => {
             const item = document.createElement('div');
@@ -239,7 +258,7 @@ class EditorUI {
     
     createBgCreationColorScroll() {
         const container = document.getElementById('bgCreateColorScroll');
-        if (!container) return;
+        if (!container || typeof COLORS === 'undefined') return;
         
         // إضافة الألوان العادية
         COLORS.forEach(color => {
@@ -255,11 +274,44 @@ class EditorUI {
                 container.querySelectorAll('.color-item').forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
                 this.selectedBgColor = color;
+                // إلغاء تفعيل التدرج عند اختيار لون عادي
+                window.canvasEditor.backgroundGradient.enabled = false;
+                const bgGradientBtn = document.getElementById('bgGradientBtn');
+                if (bgGradientBtn) {
+                    bgGradientBtn.classList.remove('active');
+                }
             });
             container.appendChild(item);
         });
         
         // إضافة مزيج الألوان الثلاثية
+        if (typeof COLOR_GRADIENTS !== 'undefined') {
+            COLOR_GRADIENTS.forEach(gradientColors => {
+                const item = document.createElement('div');
+                item.className = 'color-item gradient-item';
+                item.style.background = `linear-gradient(90deg, ${gradientColors[0]}, ${gradientColors[1]}, ${gradientColors[2]})`;
+                
+                item.addEventListener('click', () => {
+                    container.querySelectorAll('.color-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    window.canvasEditor.backgroundGradient.colors = [...gradientColors];
+                    window.canvasEditor.backgroundGradient.enabled = true;
+                    
+                    // تفعيل زر التدرج
+                    const bgGradientBtn = document.getElementById('bgGradientBtn');
+                    if (bgGradientBtn) {
+                        bgGradientBtn.classList.add('active');
+                    }
+                });
+                container.appendChild(item);
+            });
+        }
+    }
+    
+    createTextGradientPresets() {
+        const container = document.getElementById('textGradientPresets');
+        if (!container || typeof COLOR_GRADIENTS === 'undefined') return;
+        
         COLOR_GRADIENTS.forEach(gradientColors => {
             const item = document.createElement('div');
             item.className = 'color-item gradient-item';
@@ -268,15 +320,19 @@ class EditorUI {
             item.addEventListener('click', () => {
                 container.querySelectorAll('.color-item').forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
-                window.canvasEditor.backgroundGradient.colors = [...gradientColors];
-                window.canvasEditor.backgroundGradient.enabled = true;
+                window.canvasEditor.textProps.gradientColors = [...gradientColors];
+                window.canvasEditor.textProps.gradientEnabled = true;
                 
-                // تفعيل زر التدرج
-                const bgGradientBtn = document.getElementById('bgGradientBtn');
-                if (bgGradientBtn) {
-                    bgGradientBtn.classList.add('active');
-                    document.getElementById('bgGradientColors').classList.add('active');
+                const textGradientBtn = document.getElementById('textGradientBtn');
+                if (textGradientBtn) {
+                    textGradientBtn.classList.add('active');
+                    const colorsDiv = document.getElementById('textGradientColors');
+                    if (colorsDiv) {
+                        colorsDiv.classList.add('active');
+                    }
                 }
+                
+                window.canvasEditor.updateTextElement();
             });
             container.appendChild(item);
         });
@@ -293,4 +349,11 @@ class EditorUI {
     }
 }
 
-window.editorUI = new EditorUI();
+// تأخير التهيئة حتى يتم تحميل كل شيء
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.editorUI = new EditorUI();
+    });
+} else {
+    window.editorUI = new EditorUI();
+}
