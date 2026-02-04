@@ -24,12 +24,12 @@ class CanvasEditor {
             isItalic: false,
             maxWidth: 400,
             gradientEnabled: false,
-            gradientColors: ['#FF0000', '#00FF00', '#0000FF']
+            gradientColors: ['#FF6B6B', '#4ECDC4', '#45B7D1']
         };
         
         this.backgroundGradient = {
             enabled: false,
-            colors: ['#FF0000', '#00FF00', '#0000FF']
+            colors: ['#FF6B6B', '#4ECDC4', '#45B7D1']
         };
         
         this.filters = {
@@ -230,8 +230,14 @@ class CanvasEditor {
         this.ctx.restore();
     }
     
-    formatTextWithLineBreaks(text, wordsPerLine = 4) {
+    formatTextWithWidth(text, maxWidth) {
         const words = text.trim().split(/\s+/);
+        
+        if (maxWidth <= 0 || maxWidth >= words.length) {
+            return words.join(' ');
+        }
+        
+        const wordsPerLine = Math.max(1, Math.floor(words.length / maxWidth));
         const lines = [];
         
         for (let i = 0; i < words.length; i += wordsPerLine) {
@@ -243,16 +249,20 @@ class CanvasEditor {
     }
     
     updateText(content) {
-        const formattedContent = this.formatTextWithLineBreaks(content);
-        this.textProps.content = formattedContent;
+        const rawContent = content.trim();
+        if (!rawContent && this.currentTextElement) {
+            this.currentTextElement.remove();
+            this.currentTextElement = null;
+            this.textProps.content = '';
+            return;
+        }
         
-        if (formattedContent && !this.currentTextElement) {
+        this.textProps.content = rawContent;
+        
+        if (rawContent && !this.currentTextElement) {
             this.createTextElement();
         } else if (this.currentTextElement) {
             this.updateTextElement();
-        } else if (!formattedContent && this.currentTextElement) {
-            this.currentTextElement.remove();
-            this.currentTextElement = null;
         }
     }
     
@@ -361,12 +371,11 @@ class CanvasEditor {
                 <span class="material-icons">edit</span>
             </button>
             <div class="line-width-controls">
-                <button class="line-width-btn" data-action="decrease-width" title="Fewer Lines">
-                    <span class="material-icons">remove</span>
+                <button class="line-width-btn" data-action="decrease-width" title="Wider Lines">
+                    <span class="material-icons">unfold_more</span>
                 </button>
-                <span class="line-width-value">4</span>
-                <button class="line-width-btn" data-action="increase-width" title="More Lines">
-                    <span class="material-icons">add</span>
+                <button class="line-width-btn" data-action="increase-width" title="Narrower Lines">
+                    <span class="material-icons">unfold_less</span>
                 </button>
             </div>
         `;
@@ -403,27 +412,18 @@ class CanvasEditor {
                 break;
                 
             case 'decrease-width':
-                this.adjustLineWidth(element, controls, -1);
+                this.adjustMaxWidth(element, 50);
                 break;
                 
             case 'increase-width':
-                this.adjustLineWidth(element, controls, 1);
+                this.adjustMaxWidth(element, -50);
                 break;
         }
     }
     
-    adjustLineWidth(element, controls, direction) {
-        const valueEl = controls.querySelector('.line-width-value');
-        let currentWidth = parseInt(valueEl.textContent);
-        currentWidth = Math.max(1, Math.min(10, currentWidth + direction));
-        valueEl.textContent = currentWidth;
-        
-        const textInput = document.getElementById('textInput');
-        if (textInput && textInput.value) {
-            const reformatted = this.formatTextWithLineBreaks(textInput.value, currentWidth);
-            this.textProps.content = reformatted;
-            this.updateTextElement();
-        }
+    adjustMaxWidth(element, delta) {
+        this.textProps.maxWidth = Math.max(100, Math.min(800, this.textProps.maxWidth + delta));
+        element.style.maxWidth = this.textProps.maxWidth + 'px';
     }
     
     duplicateText(element) {
@@ -536,7 +536,7 @@ class CanvasEditor {
             isItalic: false,
             maxWidth: 400,
             gradientEnabled: false,
-            gradientColors: ['#FF0000', '#00FF00', '#0000FF']
+            gradientColors: ['#FF6B6B', '#4ECDC4', '#45B7D1']
         };
         
         this.filters = {
@@ -582,7 +582,7 @@ class CanvasEditor {
         const filename = `edited-photo-${timestamp}.png`;
         
         try {
-            // إخفاء أدوات التحكم
+            // إخفاء أدوات التحكم مؤقتاً
             const allControls = this.canvasWrapper.querySelectorAll('.text-controls');
             allControls.forEach(ctrl => ctrl.style.display = 'none');
             
@@ -592,10 +592,14 @@ class CanvasEditor {
             // استيراد html2canvas
             const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
             
-            // التقاط بنفس حجم canvas الأصلي
+            // الحصول على أبعاد canvas
+            const canvasRect = this.canvas.getBoundingClientRect();
+            const wrapperRect = this.canvasWrapper.getBoundingClientRect();
+            
+            // التقاط الصورة بنفس حجم canvas الأصلي
             const finalCanvas = await html2canvas(this.canvasWrapper, {
                 backgroundColor: null,
-                scale: 2, // جودة عالية
+                scale: 1,
                 useCORS: true,
                 allowTaint: true,
                 logging: false,
@@ -603,8 +607,8 @@ class CanvasEditor {
                 height: this.canvas.height,
                 windowWidth: this.canvas.width,
                 windowHeight: this.canvas.height,
-                x: 0,
-                y: 0
+                x: (canvasRect.left - wrapperRect.left),
+                y: (canvasRect.top - wrapperRect.top)
             });
             
             // إعادة إظهار الأدوات
