@@ -41,7 +41,6 @@ class App {
             this.closeSettings();
         });
         
-        // إغلاق الإعدادات عند الضغط على الخلفية
         document.getElementById('settingsPage').addEventListener('click', (e) => {
             if (e.target === document.getElementById('settingsPage')) {
                 this.closeSettings();
@@ -71,6 +70,34 @@ class App {
         this.loadTheme();
         this.loadLanguage();
         this.initDrawer();
+        this.initGradientPresets();
+    }
+    
+    initGradientPresets() {
+        const container = document.getElementById('textGradientPresets');
+        if (!container) return;
+        
+        COLOR_GRADIENTS.forEach(gradientColors => {
+            const item = document.createElement('div');
+            item.className = 'color-item gradient-item';
+            item.style.background = `linear-gradient(90deg, ${gradientColors[0]}, ${gradientColors[1]}, ${gradientColors[2]})`;
+            
+            item.addEventListener('click', () => {
+                container.querySelectorAll('.color-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                window.canvasEditor.textProps.gradientColors = [...gradientColors];
+                window.canvasEditor.textProps.gradientEnabled = true;
+                
+                const textGradientBtn = document.getElementById('textGradientBtn');
+                if (textGradientBtn) {
+                    textGradientBtn.classList.add('active');
+                    document.getElementById('textGradientColors').classList.add('active');
+                }
+                
+                window.canvasEditor.updateTextElement();
+            });
+            container.appendChild(item);
+        });
     }
     
     openSettings() {
