@@ -53,28 +53,8 @@
                         <button class="size-btn" data-ratio="3:5">3:5</button>
                         <button class="size-btn" data-ratio="2:3">2:3</button>
                     </div>
-                    <p style="margin-bottom: 12px; margin-top: 16px; color: var(--text-secondary); font-size: 12px;" data-translate="bg-color-label">Select Color:</p>
+                    <p style="margin-bottom: 12px; margin-top: 16px; color: var(--text-secondary); font-size: 12px;" data-translate="bg-color-label">Select Color or Gradient:</p>
                     <div class="horizontal-scroll" id="bgCreateColorScroll"></div>
-                    
-                    <button class="gradient-toggle-btn" id="bgGradientBtn">
-                        <span class="material-icons">gradient</span>
-                        <span data-translate="bg-gradient">Background Gradient</span>
-                    </button>
-                    
-                    <div class="gradient-colors" id="bgGradientColors">
-                        <div class="gradient-color-row">
-                            <label>Color 1:</label>
-                            <input type="color" id="bgGradient1" value="#FF0000" class="gradient-color-input">
-                        </div>
-                        <div class="gradient-color-row">
-                            <label>Color 2:</label>
-                            <input type="color" id="bgGradient2" value="#00FF00" class="gradient-color-input">
-                        </div>
-                        <div class="gradient-color-row">
-                            <label>Color 3:</label>
-                            <input type="color" id="bgGradient3" value="#0000FF" class="gradient-color-input">
-                        </div>
-                    </div>
                     
                     <button class="create-bg-btn" id="createBackgroundBtn">
                         <span class="material-icons">add</span>
@@ -113,6 +93,7 @@
                 </div>
 
                 <div class="tool-panel" id="colorPanel">
+                    <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 12px;">Select Color:</p>
                     <div class="horizontal-scroll" id="colorScroll"></div>
                     
                     <button class="gradient-toggle-btn" id="textGradientBtn">
@@ -121,18 +102,8 @@
                     </button>
                     
                     <div class="gradient-colors" id="textGradientColors">
-                        <div class="gradient-color-row">
-                            <label>Color 1:</label>
-                            <input type="color" id="textGradient1" value="#FF0000" class="gradient-color-input">
-                        </div>
-                        <div class="gradient-color-row">
-                            <label>Color 2:</label>
-                            <input type="color" id="textGradient2" value="#00FF00" class="gradient-color-input">
-                        </div>
-                        <div class="gradient-color-row">
-                            <label>Color 3:</label>
-                            <input type="color" id="textGradient3" value="#0000FF" class="gradient-color-input">
-                        </div>
+                        <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 12px;">Or select gradient preset:</p>
+                        <div class="horizontal-scroll" id="textGradientPresets"></div>
                     </div>
                 </div>
 
