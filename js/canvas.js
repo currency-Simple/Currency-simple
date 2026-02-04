@@ -23,11 +23,6 @@ class CanvasEditor {
             isBold: false,
             isItalic: false,
             maxWidth: 400,
-            flipV: false,
-            flipH: false,
-            rotation: 0,
-            scaleX: 1,
-            scaleY: 1,
             gradientEnabled: false,
             gradientColors: ['#FF0000', '#00FF00', '#0000FF']
         };
@@ -60,7 +55,6 @@ class CanvasEditor {
     initLongPress() {
         this.canvasWrapper.addEventListener('touchstart', (e) => {
             if (!this.image) return;
-            
             this.longPressTimer = setTimeout(() => {
                 this.download();
             }, this.longPressDuration);
@@ -82,7 +76,6 @@ class CanvasEditor {
         
         this.canvasWrapper.addEventListener('mousedown', (e) => {
             if (!this.image) return;
-            
             this.longPressTimer = setTimeout(() => {
                 this.download();
             }, this.longPressDuration);
@@ -237,12 +230,12 @@ class CanvasEditor {
         this.ctx.restore();
     }
     
-    formatTextWithLineBreaks(text) {
+    formatTextWithLineBreaks(text, wordsPerLine = 4) {
         const words = text.trim().split(/\s+/);
         const lines = [];
         
-        for (let i = 0; i < words.length; i += 4) {
-            const line = words.slice(i, i + 4).join(' ');
+        for (let i = 0; i < words.length; i += wordsPerLine) {
+            const line = words.slice(i, i + wordsPerLine).join(' ');
             lines.push(line);
         }
         
@@ -303,7 +296,6 @@ class CanvasEditor {
         element.style.fontWeight = fontWeight;
         element.style.fontStyle = fontStyle;
         
-        // تطبيق التدرج اللوني على النص
         if (this.textProps.gradientEnabled) {
             const colors = this.textProps.gradientColors;
             element.style.background = `linear-gradient(90deg, ${colors[0]}, ${colors[1]}, ${colors[2]})`;
@@ -322,26 +314,6 @@ class CanvasEditor {
         element.style.whiteSpace = 'pre-wrap';
         element.style.wordWrap = 'break-word';
         element.style.maxWidth = this.textProps.maxWidth + 'px';
-        
-        let transforms = 'translate(-50%, -50%)';
-        
-        if (this.textProps.rotation !== 0) {
-            transforms += ` rotate(${this.textProps.rotation}deg)`;
-        }
-        
-        if (this.textProps.flipH) {
-            transforms += ' scaleX(-1)';
-        }
-        
-        if (this.textProps.flipV) {
-            transforms += ' scaleY(-1)';
-        }
-        
-        if (this.textProps.scaleX !== 1 || this.textProps.scaleY !== 1) {
-            transforms += ` scale(${this.textProps.scaleX}, ${this.textProps.scaleY})`;
-        }
-        
-        element.style.transform = transforms;
         
         if (this.textProps.strokeWidth > 0 && !this.textProps.gradientEnabled) {
             element.style.webkitTextStroke = `${this.textProps.strokeWidth}px ${this.textProps.strokeColor}`;
@@ -379,50 +351,37 @@ class CanvasEditor {
         const controls = document.createElement('div');
         controls.className = 'text-controls';
         controls.innerHTML = `
-            <div class="control-row top">
-                <button class="control-btn" data-action="delete" title="Delete">
-                    <span class="material-icons">close</span>
+            <button class="control-btn delete" data-action="delete" title="Delete">
+                <span class="material-icons">close</span>
+            </button>
+            <button class="control-btn copy" data-action="duplicate" title="Copy">
+                <span class="material-icons">content_copy</span>
+            </button>
+            <button class="control-btn edit" data-action="edit" title="Edit">
+                <span class="material-icons">edit</span>
+            </button>
+            <div class="line-width-controls">
+                <button class="line-width-btn" data-action="decrease-width" title="Fewer Lines">
+                    <span class="material-icons">remove</span>
                 </button>
-                <div class="zoom-indicator">100%</div>
-                <button class="control-btn" data-action="rotate" title="Rotate 90°">
-                    <span class="material-icons">refresh</span>
-                </button>
-            </div>
-            <div class="control-row middle">
-                <button class="control-btn left" data-action="scale-x" title="Scale Horizontal">
-                    <span class="material-icons">unfold_more</span>
-                </button>
-                <button class="control-btn right" data-action="scale-y" title="Scale Vertical">
-                    <span class="material-icons">height</span>
-                </button>
-            </div>
-            <div class="control-row bottom">
-                <button class="control-btn" data-action="edit" title="Edit Text">
-                    <span class="material-icons">keyboard</span>
-                </button>
-                <button class="control-btn" data-action="duplicate" title="Duplicate">
-                    <span class="material-icons">content_copy</span>
-                </button>
-                <button class="control-btn" data-action="flip" title="Flip Vertical">
-                    <span class="material-icons">flip</span>
-                </button>
-                <button class="control-btn" data-action="fullscreen" title="Fullscreen">
-                    <span class="material-icons">fullscreen</span>
+                <span class="line-width-value">4</span>
+                <button class="line-width-btn" data-action="increase-width" title="More Lines">
+                    <span class="material-icons">add</span>
                 </button>
             </div>
         `;
         
         element.appendChild(controls);
         
-        controls.querySelectorAll('.control-btn').forEach(btn => {
+        controls.querySelectorAll('.control-btn, .line-width-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.handleControlAction(btn.dataset.action, element);
+                this.handleControlAction(btn.dataset.action, element, controls);
             });
         });
     }
     
-    handleControlAction(action, element) {
+    handleControlAction(action, element, controls) {
         switch(action) {
             case 'delete':
                 element.remove();
@@ -431,21 +390,6 @@ class CanvasEditor {
                 if (window.editorUI) {
                     document.getElementById('textInput').value = '';
                 }
-                break;
-                
-            case 'rotate':
-                this.textProps.rotation = (this.textProps.rotation + 90) % 360;
-                this.updateTextElement();
-                break;
-                
-            case 'scale-x':
-                this.textProps.scaleX = this.textProps.scaleX === 1 ? 1.5 : 1;
-                this.updateTextElement();
-                break;
-                
-            case 'scale-y':
-                this.textProps.scaleY = this.textProps.scaleY === 1 ? 1.5 : 1;
-                this.updateTextElement();
                 break;
                 
             case 'edit':
@@ -458,16 +402,27 @@ class CanvasEditor {
                 this.duplicateText(element);
                 break;
                 
-            case 'flip':
-                this.textProps.flipV = !this.textProps.flipV;
-                this.updateTextElement();
+            case 'decrease-width':
+                this.adjustLineWidth(element, controls, -1);
                 break;
                 
-            case 'fullscreen':
-                this.textProps.scaleX = this.textProps.scaleX === 1 ? 2 : 1;
-                this.textProps.scaleY = this.textProps.scaleY === 1 ? 2 : 1;
-                this.updateTextElement();
+            case 'increase-width':
+                this.adjustLineWidth(element, controls, 1);
                 break;
+        }
+    }
+    
+    adjustLineWidth(element, controls, direction) {
+        const valueEl = controls.querySelector('.line-width-value');
+        let currentWidth = parseInt(valueEl.textContent);
+        currentWidth = Math.max(1, Math.min(10, currentWidth + direction));
+        valueEl.textContent = currentWidth;
+        
+        const textInput = document.getElementById('textInput');
+        if (textInput && textInput.value) {
+            const reformatted = this.formatTextWithLineBreaks(textInput.value, currentWidth);
+            this.textProps.content = reformatted;
+            this.updateTextElement();
         }
     }
     
@@ -504,7 +459,7 @@ class CanvasEditor {
         document.addEventListener('touchend', dragEnd);
         
         function dragStart(e) {
-            if (e.target.closest('.control-btn')) return;
+            if (e.target.closest('.control-btn') || e.target.closest('.line-width-btn')) return;
             
             if (e.type === 'touchstart') {
                 initialX = e.touches[0].clientX - xOffset;
@@ -547,21 +502,7 @@ class CanvasEditor {
         }
         
         function setTranslate(xPos, yPos, el) {
-            const currentTransform = el.style.transform;
-            const baseTransform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
-            
-            const rotation = currentTransform.match(/rotate\([^)]+\)/);
-            const scale = currentTransform.match(/scale\([^)]+\)/g);
-            const scaleX = currentTransform.match(/scaleX\([^)]+\)/);
-            const scaleY = currentTransform.match(/scaleY\([^)]+\)/);
-            
-            let newTransform = baseTransform;
-            if (rotation) newTransform += ' ' + rotation[0];
-            if (scaleX) newTransform += ' ' + scaleX[0];
-            if (scaleY) newTransform += ' ' + scaleY[0];
-            if (scale) scale.forEach(s => { if (!s.includes('X') && !s.includes('Y')) newTransform += ' ' + s; });
-            
-            el.style.transform = newTransform;
+            el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
         }
     }
     
@@ -594,11 +535,6 @@ class CanvasEditor {
             isBold: false,
             isItalic: false,
             maxWidth: 400,
-            flipV: false,
-            flipH: false,
-            rotation: 0,
-            scaleX: 1,
-            scaleY: 1,
             gradientEnabled: false,
             gradientColors: ['#FF0000', '#00FF00', '#0000FF']
         };
@@ -646,57 +582,55 @@ class CanvasEditor {
         const filename = `edited-photo-${timestamp}.png`;
         
         try {
+            // إخفاء أدوات التحكم
             const allControls = this.canvasWrapper.querySelectorAll('.text-controls');
             allControls.forEach(ctrl => ctrl.style.display = 'none');
             
             const allTexts = this.canvasWrapper.querySelectorAll('.draggable-text');
             allTexts.forEach(text => text.classList.remove('active'));
             
+            // استيراد html2canvas
             const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
             
+            // التقاط بنفس حجم canvas الأصلي
             const finalCanvas = await html2canvas(this.canvasWrapper, {
                 backgroundColor: null,
-                scale: 1,
+                scale: 2, // جودة عالية
                 useCORS: true,
                 allowTaint: true,
                 logging: false,
-                imageTimeout: 0,
                 width: this.canvas.width,
                 height: this.canvas.height,
                 windowWidth: this.canvas.width,
-                windowHeight: this.canvas.height
+                windowHeight: this.canvas.height,
+                x: 0,
+                y: 0
             });
             
+            // إعادة إظهار الأدوات
             allControls.forEach(ctrl => ctrl.style.display = '');
             
-            try {
-                const blob = await new Promise((resolve, reject) => {
-                    finalCanvas.toBlob(blob => {
-                        if (blob) resolve(blob);
-                        else reject(new Error('Blob creation failed'));
-                    }, 'image/png', 1.0);
-                });
+            // التنزيل
+            const blob = await new Promise((resolve) => {
+                finalCanvas.toBlob(resolve, 'image/png', 1.0);
+            });
+            
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = url;
+                link.style.display = 'none';
                 
-                if (blob) {
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.download = filename;
-                    link.href = url;
-                    link.style.display = 'none';
-                    
-                    document.body.appendChild(link);
-                    link.click();
-                    
-                    setTimeout(() => {
-                        document.body.removeChild(link);
-                        URL.revokeObjectURL(url);
-                    }, 1000);
-                    
-                    console.log('Downloaded successfully');
-                    return;
-                }
-            } catch (error) {
-                console.error('Download failed:', error);
+                document.body.appendChild(link);
+                link.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 1000);
+                
+                console.log('Downloaded successfully');
             }
             
         } catch (error) {
