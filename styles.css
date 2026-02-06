@@ -1,0 +1,632 @@
+/* ============================================
+   CSS Variables & Reset
+   ============================================ */
+:root {
+    --primary-bg: #000000;
+    --secondary-bg: #0a0a0a;
+    --card-bg: #1a1a1a;
+    --accent-gold: #FFD700;
+    --live-price-color: #E4FF30;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b3c1;
+    --success-color: #00ff88;
+    --danger-color: #ff4757;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --price-color: #ffffff;
+    --karat-title-color: #FFD700;
+}
+
+body.light-theme {
+    --primary-bg: #f5f5f5;
+    --secondary-bg: #ffffff;
+    --card-bg: #ffffff;
+    --text-primary: #1a1a2e;
+    --text-secondary: #666666;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    --price-color: #000000;
+    --karat-title-color: #000000;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--primary-bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    transition: var(--transition);
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ============================================
+   Settings Button (Hamburger Menu)
+   ============================================ */
+.settings-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    z-index: 1000;
+    box-shadow: var(--shadow);
+}
+
+.settings-btn:hover {
+    border-color: var(--accent-gold);
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.settings-btn svg {
+    transition: var(--transition);
+}
+
+.settings-btn:hover svg {
+    transform: scale(1.1);
+}
+
+/* ============================================
+   Modal
+   ============================================ */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.close-btn:hover {
+    color: var(--danger-color);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.setting-group {
+    margin-bottom: 24px;
+}
+
+.setting-group label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+}
+
+.theme-switch {
+    display: flex;
+    gap: 12px;
+}
+
+.theme-btn {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    background: transparent;
+    color: var(--text-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+}
+
+.theme-btn.active {
+    background: var(--accent-gold);
+    color: #000;
+    border-color: var(--accent-gold);
+}
+
+.language-select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.setting-link {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    transition: var(--transition);
+    text-align: right;
+}
+
+.setting-link:hover {
+    background: rgba(255, 215, 0, 0.1);
+}
+
+/* ============================================
+   Main Content
+   ============================================ */
+.main-content {
+    padding: 40px 0;
+    min-height: calc(100vh - 200px);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 20px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 215, 0, 0.1);
+    border-top-color: var(--accent-gold);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error Message */
+.error-message {
+    background: rgba(255, 71, 87, 0.1);
+    border: 1px solid var(--danger-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--danger-color);
+    margin: 20px 0;
+}
+
+/* ============================================
+   Main Gold Card with Integrated Day Range
+   ============================================ */
+.main-gold-section {
+    margin-bottom: 30px;
+}
+
+.main-gold-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 32px;
+    border: 2px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.main-gold-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.gold-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.gold-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.main-gold-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.main-gold-price {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--price-color);
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.main-gold-change {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+
+.main-gold-change.positive {
+    color: var(--success-color);
+}
+
+.main-gold-change.negative {
+    color: var(--danger-color);
+}
+
+/* Day Range Integrated */
+.day-range-integrated {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+.day-range-title {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.range-bar {
+    position: relative;
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+.range-indicator {
+    position: absolute;
+    top: -8px;
+    width: 4px;
+    height: 24px;
+    background: var(--accent-gold);
+    border-radius: 2px;
+    transform: translateX(-50%);
+}
+
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.range-label-item {
+    flex: 1;
+    text-align: center;
+}
+
+.range-label-title {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.range-value {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.live-price-btn {
+    width: 100%;
+    padding: 16px;
+    background: #FF0000;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.live-price-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 0, 0, 0.4);
+}
+
+/* ============================================
+   Karats Row - Single Line Design
+   ============================================ */
+.karats-section {
+    margin: 40px 0;
+}
+
+.karats-row {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.karat-card-inline {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px 24px;
+    border: 2px solid var(--border-color);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 280px;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.karat-card-inline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent-gold), #FFA500);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.karat-card-inline:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(255, 215, 0, 0.2);
+    border-color: var(--accent-gold);
+}
+
+.karat-card-inline:hover::before {
+    opacity: 1;
+}
+
+.karat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.karat-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.karat-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.karat-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--karat-title-color);
+    white-space: nowrap;
+}
+
+.karat-price-inline {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--price-color);
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.karat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.footer {
+    background: var(--secondary-bg);
+    border-top: 1px solid var(--border-color);
+    padding: 30px 0;
+    margin-top: 60px;
+}
+
+.footer-info {
+    text-align: center;
+}
+
+.update-info {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+}
+
+.update-info span span {
+    color: var(--accent-gold);
+    font-weight: 600;
+}
+
+.footer-info p {
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.disclaimer {
+    font-size: 0.85rem;
+    color: var(--danger-color);
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 768px) {
+    .main-gold-price,
+    .range-current,
+    .karat-price-inline {
+        font-size: 2.5rem;
+    }
+    
+    .main-gold-change {
+        font-size: 1.3rem;
+    }
+    
+    .karats-row {
+        flex-direction: column;
+    }
+    
+    .karat-card-inline {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .settings-btn {
+        top: 15px;
+        left: 15px;
+        width: 45px;
+        height: 45px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-gold-price,
+    .range-current,
+    .karat-price-inline {
+        font-size: 2rem;
+    }
+    
+    .main-gold-change {
+        font-size: 1.1rem;
+    }
+    
+    .karat-card-inline {
+        padding: 16px 20px;
+        gap: 12px;
+    }
+    
+    .karat-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .karat-name {
+        font-size: 1rem;
+    }
+    
+    .update-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.karat-card-inline,
+.main-gold-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.updating {
+    animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}

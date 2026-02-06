@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Price - أسعار الذهب</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Settings Button (Hamburger Menu) -->
+    <button class="settings-btn" id="settingsBtn" aria-label="Settings">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    </button>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-translate="settings">الإعدادات</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Theme Settings -->
+                <div class="setting-group">
+                    <label data-translate="theme">السمة</label>
+                    <div class="theme-switch">
+                        <button class="theme-btn active" data-theme="dark">
+                            <span data-translate="dark">داكن</span>
+                        </button>
+                        <button class="theme-btn" data-theme="light">
+                            <span data-translate="light">فاتح</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Language Settings -->
+                <div class="setting-group">
+                    <label data-translate="language">اللغة</label>
+                    <select id="languageSelect" class="language-select">
+                        <option value="ar">العربية</option>
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                    </select>
+                </div>
+
+                <!-- Links -->
+                <div class="setting-group">
+                    <button class="setting-link" id="privacyBtn">
+                        <span data-translate="privacy">سياسة الخصوصية</span>
+                        <span>›</span>
+                    </button>
+                    <button class="setting-link" id="aboutBtn">
+                        <span data-translate="about">حول التطبيق</span>
+                        <span>›</span>
+                    </button>
+                    <button class="setting-link" id="copyrightBtn">
+                        <span data-translate="copyright">حقوق الملكية</span>
+                        <span>›</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="loading-spinner">
+                <div class="spinner"></div>
+                <p data-translate="loading">جاري تحميل الأسعار...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message" style="display: none;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span id="errorText">حدث خطأ في تحميل البيانات</span>
+            </div>
+
+            <!-- Main Gold Price Card with Integrated Day Range -->
+            <section class="main-gold-section">
+                <button class="live-price-btn" data-translate="livePrice">Live price</button>
+                <div class="main-gold-card" id="mainGoldCard">
+                    <!-- Main gold price with day range will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Gold Karats Section -->
+            <section class="karats-section">
+                <div class="karats-row" id="karatsRow">
+                    <!-- Karat cards will be inserted here -->
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-info">
+                <div class="update-info">
+                    <span class="last-update"><span data-translate="lastUpdate">آخر تحديث</span>: <span id="lastUpdate">...</span></span>
+                    <span class="next-update"><span data-translate="nextUpdate">التحديث القادم</span>: <span id="nextUpdate">--:--</span></span>
+                </div>
+                <p class="api-credit" data-translate="apiCredit">البيانات مقدمة من TwelveData API | يتم التحديث كل 7.5 دقيقة</p>
+                <p class="disclaimer" data-translate="disclaimer">⚠️ الأسعار للإشارة فقط وليست للتداول الفعلي</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="api-service.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
