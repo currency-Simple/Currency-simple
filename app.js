@@ -203,7 +203,7 @@ class MetalsApp {
     showInfo(type) {
         if (type === 'privacy') {
             // فتح رابط سياسة الخصوصية في نافذة جديدة
-            window.open('https://sites.google.com/view/wallpaper-maker-1/%D8%A7%D9%84%D8%B5%D9%81%D8%AD%D8%A9-%D8%A7%D9%84%D8%B1%D8%A6%D9%8A%D8%B3%D9%8A%D8%A9', '_blank');
+            window.open('https://sites.google.com/view/goldpricelivenew/home-policy', '_blank');
             return;
         }
         
@@ -214,9 +214,9 @@ class MetalsApp {
                 fr: 'À propos de l\'application\n\nApplication Prix de l\'Or - Version 1.0\n\nCette application est conçue pour afficher les prix de l\'or en différents carats à titre informatif uniquement.\n\nL\'application ne fournit aucun conseil financier ou d\'investissement et ne prend pas en charge les opérations de trading. Les prix affichés sont fournis à titre indicatif uniquement et ne doivent pas être utilisés pour prendre des décisions financières.\n\nVeuillez consulter un conseiller financier qualifié avant de prendre toute décision d\'investissement.'
             },
             copyright: {
-                ar: 'حقوق الملكية\n\n© 2024 تطبيق أسعار الذهب\nجميع الحقوق محفوظة\n\nالبيانات مقدمة من TwelveData API\n\nيستخدم هذا التطبيق واجهة برمجة التطبيقات (API) من TwelveData لعرض أسعار الذهب الحالية. جميع البيانات المعروضة هي ملك لـ TwelveData وتخضع لشروط الخدمة الخاصة بهم.\n\nالتطبيق مقدم "كما هو" دون أي ضمانات من أي نوع.',
-                en: 'Copyright\n\n© 2024 Gold Price App\nAll rights reserved\n\nData provided by TwelveData API\n\nThis application uses the TwelveData API to display current gold prices. All data displayed is owned by TwelveData and subject to their terms of service.\n\nThe application is provided "as is" without any warranties of any kind.',
-                fr: 'Droits d\'auteur\n\n© 2024 Application Prix de l\'Or\nTous droits réservés\n\nDonnées fournies par l\'API TwelveData\n\nCette application utilise l\'API TwelveData pour afficher les prix actuels de l\'or. Toutes les données affichées appartiennent à TwelveData et sont soumises à leurs conditions d\'utilisation.\n\nL\'application est fournie "telle quelle" sans garantie d\'aucune sorte.'
+                ar: ' البيانات مقدمة من TwelveData API\n\nيستخدم هذا التطبيق واجهة برمجة التطبيقات (API) من TwelveData لعرض أسعار الذهب الحالية. جميع البيانات المعروضة هي ملك لـ TwelveData وتخضع لشروط الخدمة الخاصة بهم.\n\nالتطبيق مقدم "كما هو" دون أي ضمانات من أي نوع.',
+                en: 'CnAll rights reserved\n\nData provided by TwelveData API\n\nThis application uses the TwelveData API to display current gold prices. All data displayed is owned by TwelveData and subject to their terms of service.\n\nThe application is provided "as is" without any warranties of any kind.',
+                fr: ''Or\nTous droits réservés\n\nDonnées fournies par l\'API TwelveData\n\nCette application utilise l\'API TwelveData pour afficher les prix actuels de l\'or. Toutes les données affichées appartiennent à TwelveData et sont soumises à leurs conditions d\'utilisation.\n\nL\'application est fournie "telle quelle" sans garantie d\'aucune sorte.'
             }
         };
 
