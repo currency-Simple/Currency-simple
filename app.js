@@ -12,7 +12,7 @@ const translations = {
         about: 'حول التطبيق',
         copyright: 'حقوق الملكية',
         loading: 'جاري تحميل الأسعار...',
-        livePrice: 'Live price',
+        livePrice: 'Price updated every 7.5 minutes ',
         lastUpdate: 'آخر تحديث',
         nextUpdate: 'التحديث القادم',
         apiCredit: 'البيانات مقدمة من TwelveData API | يتم التحديث كل 7.5 دقيقة',
